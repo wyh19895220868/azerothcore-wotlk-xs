@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by the
+ * Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -18,12 +18,17 @@
 #ifndef AZEROTHCORE_CREATUREDATA_H
 #define AZEROTHCORE_CREATUREDATA_H
 
+#include "Cell.h"
+#include "Common.h"
 #include "DBCEnums.h"
 #include "DatabaseEnv.h"
 #include "ItemTemplate.h"
 #include "LootMgr.h"
 #include "SpawnData.h"
 #include "Unit.h"
+#include "UpdateMask.h"
+#include "World.h"
+#include <limits>
 #include <list>
 
 #define MAX_AGGRO_RESET_TIME 10 // in seconds
@@ -35,11 +40,20 @@
 
 #define MAX_EQUIPMENT_ITEMS 3
 
+enum TrainerType : uint8
+{
+    TRAINER_TYPE_CLASS       = 0,
+    TRAINER_TYPE_MOUNTS      = 1,
+    TRAINER_TYPE_TRADESKILLS = 2,
+    TRAINER_TYPE_PETS        = 3,
+    MAX_TRAINER_TYPE         = 4
+};
+
 constexpr Milliseconds PET_FOCUS_REGEN_INTERVAL = 4s;
 
 enum class VisibilityDistanceType : uint8;
 
-/// @todo: Implement missing flags from TC in places that custom flags from xinef&pussywizzard use flag values.
+// TODO: Implement missing flags from TC in places that custom flags from xinef&pussywizzard use flag values.
 // EnumUtils: DESCRIBE THIS
 enum CreatureFlagsExtra : uint32
 {
@@ -68,15 +82,14 @@ enum CreatureFlagsExtra : uint32
     CREATURE_FLAG_EXTRA_AVOID_AOE                       = 0x00400000,   // pussywizard: ignored by aoe attacks (for icc blood prince council npc - Dark Nucleus)
     CREATURE_FLAG_EXTRA_NO_DODGE                        = 0x00800000,   // xinef: target cannot dodge
     CREATURE_FLAG_EXTRA_MODULE                          = 0x01000000,
-    CREATURE_FLAG_EXTRA_DONT_CALL_ASSISTANCE            = 0x02000000,   // Prevent creatures from calling for assistance on initial aggro
-    CREATURE_FLAG_EXTRA_IGNORE_ALL_ASSISTANCE_CALLS     = 0x04000000,   // Prevents creature from responding to assistance calls
-    CREATURE_FLAG_EXTRA_DONT_OVERRIDE_ENTRY_SAI         = 0x08000000,   // Load both ENTRY and GUID specific SAI
+    CREATURE_FLAG_EXTRA_DONT_CALL_ASSISTANCE            = 0x02000000,   // prevent calling for assistance on initial aggro
+    CREATURE_FLAG_EXTRA_IGNORE_ALL_ASSISTANCE_CALLS     = 0x04000000,   // prevent responding to assistance calls
+    CREATURE_FLAG_EXTRA_DONT_OVERRIDE_ENTRY_SAI         = 0x08000000,   // load both entry and GUID specific SAI
     CREATURE_FLAG_EXTRA_DUNGEON_BOSS                    = 0x10000000,   // creature is a dungeon boss (SET DYNAMICALLY, DO NOT ADD IN DB)
     CREATURE_FLAG_EXTRA_IGNORE_PATHFINDING              = 0x20000000,   // creature ignore pathfinding
     CREATURE_FLAG_EXTRA_IMMUNITY_KNOCKBACK              = 0x40000000,   // creature is immune to knockback effects
     CREATURE_FLAG_EXTRA_HARD_RESET                      = 0x80000000,
 
-    // Masks
     CREATURE_FLAG_EXTRA_DB_ALLOWED                      = (0xFFFFFFFF & ~CREATURE_FLAG_EXTRA_DUNGEON_BOSS) // SKIP
 };
 
@@ -100,18 +113,18 @@ enum class CreatureFlightMovementType : uint8
 
 enum class CreatureChaseMovementType : uint8
 {
-    Run         = 0,
-    CanWalk     = 1,
-    AlwaysWalk  = 2,
+    Run,
+    CanWalk,
+    AlwaysWalk,
 
     Max
 };
 
 enum class CreatureRandomMovementType : uint8
 {
-    Walk        = 0,
-    CanRun      = 1,
-    AlwaysRun   = 2,
+    Walk,
+    CanRun,
+    AlwaysRun,
 
     Max
 };
@@ -166,29 +179,16 @@ struct CreatureMovementData
     std::string ToString() const;
 };
 
-struct CreatureModel
-{
-    static CreatureModel const DefaultInvisibleModel;
-    static CreatureModel const DefaultVisibleModel;
-
-    CreatureModel() :
-        CreatureDisplayID(0), DisplayScale(0.0f), Probability(0.0f) { }
-
-    CreatureModel(uint32 creatureDisplayID, float displayScale, float probability) :
-        CreatureDisplayID(creatureDisplayID), DisplayScale(displayScale), Probability(probability) { }
-
-    uint32 CreatureDisplayID;
-    float DisplayScale;
-    float Probability;
-};
-
 // from `creature_template` table
 struct CreatureTemplate
 {
     uint32  Entry;
     uint32  DifficultyEntry[MAX_DIFFICULTY - 1];
     uint32  KillCredit[MAX_KILL_CREDIT];
-    std::vector<CreatureModel> Models;
+    uint32  Modelid1;
+    uint32  Modelid2;
+    uint32  Modelid3;
+    uint32  Modelid4;
     std::string  Name;
     std::string  SubName;
     std::string  IconName;
@@ -203,9 +203,11 @@ struct CreatureTemplate
     float   speed_swim;
     float   speed_flight;
     float   detection_range;                                // Detection Range for Line of Sight aggro
+    float   scale;
     uint32  rank;
     uint32  dmgschool;
     float   DamageModifier;
+    AsInt64 AsDamageModifier;
     uint32  BaseAttackTime;
     uint32  RangeAttackTime;
     float   BaseVariance;
@@ -215,6 +217,10 @@ struct CreatureTemplate
     uint32  unit_flags2;                                    // enum UnitFlags2 mask values
     uint32  dynamicflags;
     uint32  family;                                         // enum CreatureFamily values (optional)
+    uint32  trainer_type;
+    uint32  trainer_spell;
+    uint32  trainer_class;
+    uint32  trainer_race;
     uint32  type;                                           // enum CreatureType values
     uint32  type_flags;                                     // enum CreatureTypeFlags mask values
     uint32  lootid;
@@ -231,22 +237,23 @@ struct CreatureTemplate
     CreatureMovementData  Movement;
     float   HoverHeight;
     float   ModHealth;
+    AsInt64 AsModHealth;
     float   ModMana;
+    AsInt64 AsModMana;
     float   ModArmor;
+    AsInt64 AsModArmor;
     float   ModExperience;
     bool    RacialLeader;
     uint32  movementId;
     bool    RegenHealth;
-    int32   CreatureImmunitiesId;
+    uint32  MechanicImmuneMask;
+    uint8   SpellSchoolImmuneMask;
+    int32   CreatureImmunitiesId{-1};
     uint32  flags_extra;
     uint32  ScriptID;
     WorldPacket queryData; // pussywizard
-    CreatureModel const* GetModelByIdx(uint32 idx) const;
-    CreatureModel const* GetRandomValidModel() const;
-    CreatureModel const* GetFirstValidModel() const;
-    CreatureModel const* GetModelWithDisplayId(uint32 displayId) const;
-    CreatureModel const* GetFirstInvisibleModel() const;
-    CreatureModel const* GetFirstVisibleModel() const;
+    [[nodiscard]] uint32  GetRandomValidModelId() const;
+    [[nodiscard]] uint32  GetFirstValidModelId() const;
 
     // helpers
     [[nodiscard]] SkillType GetRequiredLootSkill() const
@@ -297,41 +304,79 @@ typedef std::unordered_map<uint32, CreatureTemplate> CreatureTemplateContainer;
 struct CreatureBaseStats
 {
     uint32 BaseHealth[MAX_EXPANSIONS];
+    AsInt64 AsBaseHealth[MAX_EXPANSIONS];
     uint32 BaseMana;
-    float  BaseArmor;
+    AsInt64 AsBaseMana;
+    uint32 BaseArmor;
+    AsInt64 AsBaseArmor;
     uint32 AttackPower;
+    AsInt64 AsAttackPower;
     uint32 RangedAttackPower;
+    AsInt64 AsRangedAttackPower;
     float BaseDamage[MAX_EXPANSIONS];
-    uint32 Strength;
-    uint32 Agility;
-    uint32 Stamina;
-    uint32 Intellect;
-    uint32 Spirit;
+    AsInt64 AsBaseDamage[MAX_EXPANSIONS];
 
     // Helpers
 
+    static AsInt64 ScaleAsInt64(AsInt64 const& value, float modifier)
+    {
+        return ScaleAsInt64ByDouble(value, modifier);
+    }
+
+    AsInt64 GenerateAsHealth(CreatureTemplate const* info) const
+    {
+        AsInt64 baseHealth = AsBaseHealth[info->expansion] > 0 ? AsBaseHealth[info->expansion] : AsInt64(BaseHealth[info->expansion]);
+        if (info->AsModHealth > 0)
+            return ScaleAsInt64ByScaled(baseHealth, info->AsModHealth);
+
+        return ScaleAsInt64(baseHealth, info->ModHealth);
+    }
+
     uint32 GenerateHealth(CreatureTemplate const* info) const
     {
-        return uint32(std::ceil(BaseHealth[info->expansion] * info->ModHealth));
+        return AsInt64ToUInt32Clamp(GenerateAsHealth(info), uint32(std::numeric_limits<int32>::max()));
+    }
+
+    AsInt64 GenerateAsMana(CreatureTemplate const* info) const
+    {
+        AsInt64 baseMana = AsBaseMana > 0 ? AsBaseMana : AsInt64(BaseMana);
+        if (baseMana <= 0)
+            return AsInt64Zero();
+
+        if (info->AsModMana > 0)
+            return ScaleAsInt64ByScaled(baseMana, info->AsModMana);
+
+        return ScaleAsInt64(baseMana, info->ModMana);
     }
 
     uint32 GenerateMana(CreatureTemplate const* info) const
     {
-        // Mana can be 0.
-        if (!BaseMana)
-            return 0;
-
-        return uint32(std::ceil(BaseMana * info->ModMana));
+        return AsInt64ToUInt32Clamp(GenerateAsMana(info), uint32(std::numeric_limits<int32>::max()));
     }
 
-    float GenerateArmor(CreatureTemplate const* info) const
+    AsInt64 GenerateAsArmor(CreatureTemplate const* info) const
     {
-        return std::ceil(BaseArmor * info->ModArmor);
+        AsInt64 baseArmor = AsBaseArmor > 0 ? AsBaseArmor : AsInt64(BaseArmor);
+        if (info->AsModArmor > 0)
+            return ScaleAsInt64ByScaled(baseArmor, info->AsModArmor);
+
+        return ScaleAsInt64(baseArmor, info->ModArmor);
+    }
+
+    uint32 GenerateArmor(CreatureTemplate const* info) const
+    {
+        return AsInt64ToUInt32Clamp(GenerateAsArmor(info), uint32(std::numeric_limits<int32>::max()));
     }
 
     float GenerateBaseDamage(CreatureTemplate const* info) const
     {
         return BaseDamage[info->expansion];
+    }
+
+    AsInt64 GenerateAsBaseDamage(CreatureTemplate const* info) const
+    {
+        AsInt64 baseDamage = AsBaseDamage[info->expansion] > 0 ? AsBaseDamage[info->expansion] : AsInt64(int64(BaseDamage[info->expansion]));
+        return baseDamage > 0 ? baseDamage : AsInt64Zero();
     }
 
     static CreatureBaseStats const* GetBaseStats(uint8 level, uint8 unitClass);
@@ -368,10 +413,14 @@ typedef std::unordered_map<uint32, EquipmentInfoContainerInternal> EquipmentInfo
 // from `creature` table
 struct CreatureData : public SpawnData
 {
-    CreatureData() : SpawnData(SPAWN_TYPE_CREATURE) {}
-    uint32 id{0};                                              // entry in creature_template
-    uint32 id2{0};                                             // entry in creature_template (from creature_multispawn)
-    uint32 id3{0};                                             // entry in creature_template (from creature_multispawn)
+    CreatureData() : SpawnData(SPAWN_TYPE_CREATURE) { }
+    union
+    {
+        uint32 id{0};                                          // entry in creature_template
+        uint32 id1;
+    };
+    uint32 id2{0};                                             // entry in creature_template
+    uint32 id3{0};                                             // entry in creature_template
     uint32 displayid{0};
     int8 equipmentId{0};
     uint32 spawntimesecs{0};
@@ -379,10 +428,29 @@ struct CreatureData : public SpawnData
     uint32 currentwaypoint{0};
     uint32 curhealth{0};
     uint32 curmana{0};
+    AsInt64 asCurHealth{0};
+    AsInt64 asCurMana{0};
     uint8 movementType{0};
     uint32 npcflag{0};
     uint32 unit_flags{0};                                      // enum UnitFlags mask values
     uint32 dynamicflags{0};
+    bool overwrittenZ{false};
+};
+
+struct CreatureModel
+{
+    static CreatureModel const DefaultInvisibleModel;
+    static CreatureModel const DefaultVisibleModel;
+
+    CreatureModel() :
+        CreatureDisplayID(0), DisplayScale(0.0f), Probability(0.0f) { }
+
+    CreatureModel(uint32 creatureDisplayID, float displayScale, float probability) :
+        CreatureDisplayID(creatureDisplayID), DisplayScale(displayScale), Probability(probability) { }
+
+    uint32 CreatureDisplayID;
+    float DisplayScale;
+    float Probability;
 };
 
 struct CreatureModelInfo
@@ -391,7 +459,6 @@ struct CreatureModelInfo
     float combat_reach;
     uint8 gender;
     uint32 modelid_other_gender;
-    float is_trigger;
 };
 
 // Benchmarked: Faster than std::map (insert/find)
@@ -452,7 +519,7 @@ struct VendorItem
     uint32 ExtendedCost;
 
     //helpers
-    bool IsGoldRequired(ItemTemplate const* pProto) const { return pProto->HasFlag2(ITEM_FLAG2_DONT_IGNORE_BUY_PRICE) || !ExtendedCost; }
+    bool IsGoldRequired(ItemTemplate const* pProto) const { return pProto->Flags2 & ITEM_FLAGS_EXTRA_EXT_COST_REQUIRES_GOLD || !ExtendedCost; }
 };
 typedef std::vector<VendorItem*> VendorItemList;
 
@@ -481,6 +548,7 @@ struct VendorItemData
             delete (*itr);
         m_items.clear();
     }
+    void DoClear() { m_items.clear(); }
 };
 
 struct VendorItemCount
@@ -493,6 +561,39 @@ struct VendorItemCount
 };
 
 typedef std::list<VendorItemCount> VendorItemCounts;
+
+struct TrainerSpell
+{
+    TrainerSpell()
+    {
+        for (unsigned int & i : learnedSpell)
+            i = 0;
+    }
+
+    uint32 spell{0};
+    uint32 spellCost{0};
+    uint32 reqSkill{0};
+    uint32 reqSkillValue{0};
+    uint32 reqLevel{0};
+    uint32 learnedSpell[3];
+    uint32 reqSpell{0};
+
+    // helpers
+    [[nodiscard]] bool IsCastable() const { return learnedSpell[0] != spell; }
+};
+
+typedef std::unordered_map<uint32 /*spellid*/, TrainerSpell> TrainerSpellMap;
+
+struct TrainerSpellData
+{
+    TrainerSpellData()  = default;
+    ~TrainerSpellData() { spellList.clear(); }
+
+    TrainerSpellMap spellList;
+    uint32 trainerType{0};                                     // trainer type based at trainer spells, can be different from creature_template value.
+    // req. for correct show non-prof. trainers like weaponmaster, allowed values 0 and 2.
+    [[nodiscard]] TrainerSpell const* Find(uint32 spell_id) const;
+};
 
 struct CreatureSpellCooldown
 {

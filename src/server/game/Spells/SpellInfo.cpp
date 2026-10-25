@@ -1308,6 +1308,38 @@ bool SpellInfo::IsActionAllowedChannel() const
     return IsChanneled() && HasAttribute(SPELL_ATTR5_ALLOW_ACTION_DURING_CHANNEL);
 }
 
+bool SpellInfo::CheckElixirStacking(Unit const* caster) const
+{
+    if (!caster)
+        return true;
+
+    uint32 groupId = sSpellMgr->GetSpellGroup(Id);
+    if (groupId != SPELL_GROUP_GUARDIAN_AND_BATTLE_ELIXIRS)
+        return true;
+
+    SpellGroupSpecialFlags flags = sSpellMgr->GetSpellGroupSpecialFlags(Id);
+    for (uint8 i = EFFECT_0; i < MAX_SPELL_EFFECTS; ++i)
+    {
+        if (!Effects[i].IsAura())
+            continue;
+
+        for (auto const& [auraId, auraApplication] : caster->GetAppliedAuras())
+        {
+            if (sSpellMgr->GetSpellGroup(auraId) != groupId)
+                continue;
+
+            if (flags == SPELL_GROUP_SPECIAL_FLAG_ELIXIR_BATTLE || flags == SPELL_GROUP_SPECIAL_FLAG_ELIXIR_GUARDIAN)
+            {
+                SpellGroupSpecialFlags auraFlags = sSpellMgr->GetSpellGroupSpecialFlags(auraId);
+                if ((auraFlags & SPELL_GROUP_SPECIAL_FLAG_FLASK) == SPELL_GROUP_SPECIAL_FLAG_FLASK)
+                    return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 bool SpellInfo::NeedsComboPoints() const
 {
     return (AttributesEx & (SPELL_ATTR1_FINISHING_MOVE_DAMAGE | SPELL_ATTR1_FINISHING_MOVE_DURATION));

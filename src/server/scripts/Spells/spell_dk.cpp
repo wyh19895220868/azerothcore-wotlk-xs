@@ -355,7 +355,7 @@ class spell_dk_death_and_decay : public SpellScript
 
         // Xinef: include AOE damage reducing auras
         if (target)
-            damage = target->CalculateAOEDamageReduction(damage, GetSpellInfo()->SchoolMask, false);
+            damage = target->CalculateAOEDamageReduction(damage, GetSpellInfo()->SchoolMask, caster);
 
         SetHitDamage(damage);
     }
@@ -725,12 +725,11 @@ class spell_dk_dancing_rune_weapon : public AuraScript
         {
             target = player->GetMeleeHitRedirectTarget(target);
             CalcDamageInfo damageInfo;
-            player->CalculateMeleeDamage(target, &damageInfo, eventInfo.GetDamageInfo()->GetAttackType());
-            for (uint8 i = 0; i < MAX_ITEM_PROTO_DAMAGES; ++i)
-            {
-                Unit::DealDamageMods(target, damageInfo.damages[i].damage, &damageInfo.damages[i].absorb);
-                damageInfo.damages[i].damage /= 2.0f;
-            }
+            player->CalculateMeleeDamage(target, 0, &damageInfo, eventInfo.GetDamageInfo()->GetAttackType());
+            Unit::DealDamageMods(target, damageInfo.damage, &damageInfo.absorb);
+            damageInfo.damage /= 2;
+            damageInfo.asDamage /= 2;
+            damageInfo.asCleanDamage /= 2;
             damageInfo.attacker = dancingRuneWeapon;
             dancingRuneWeapon->SendAttackStateUpdate(&damageInfo);
             dancingRuneWeapon->DealMeleeDamage(&damageInfo, true);

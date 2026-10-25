@@ -77,6 +77,11 @@ void ScriptMgr::OnPlayerPVPKill(Player* killer, Player* killed)
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_PVP_KILL, script->OnPlayerPVPKill(killer, killed));
 }
 
+void ScriptMgr::OnUseGameObject(Player* player, GameObject* gameObject)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_USE_GAME_OBJECT, script->OnUseGameObject(player, gameObject));
+}
+
 void ScriptMgr::OnPlayerPVPFlagChange(Player* player, bool state)
 {
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_PLAYER_PVP_FLAG_CHANGE, script->OnPlayerPVPFlagChange(player, state));
@@ -127,7 +132,7 @@ void ScriptMgr::OnPlayerAfterSpecSlotChanged(Player* player, uint8 newSlot)
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_AFTER_SPEC_SLOT_CHANGED, script->OnPlayerAfterSpecSlotChanged(player, newSlot));
 }
 
-void ScriptMgr::OnPlayerMoneyChanged(Player* player, int32& amount)
+void ScriptMgr::OnPlayerMoneyChanged(Player* player, int64& amount)
 {
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_MONEY_CHANGED, script->OnPlayerMoneyChanged(player, amount));
 }
@@ -387,6 +392,26 @@ void ScriptMgr::OnPlayerLootItem(Player* player, Item* item, uint32 count, Objec
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_LOOT_ITEM, script->OnPlayerLootItem(player, item, count, lootguid));
 }
 
+void ScriptMgr::OnLootAddItemForCount(Player const* player, uint32& count)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_LOOT_ADD_ITEM_FOR_COUNT, script->OnLootAddItemForCount(player, count));
+}
+
+void ScriptMgr::OnPlayerAddAura(Player* player, uint32 auraId)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_PLAYER_ADD_AURA, script->OnPlayerAddAura(player, auraId));
+}
+
+void ScriptMgr::OnPlayerAuraRemove(Player* player, uint32 auraId)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_PLAYER_AURA_REMOVE, script->OnPlayerAuraRemove(player, auraId));
+}
+
+void ScriptMgr::OnPlayerModeChanged(Player* player, uint32 modeId)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_PLAYER_MODE_CHANGED, script->OnPlayerModeChanged(player, modeId));
+}
+
 void ScriptMgr::OnPlayerBeforeFillQuestLootItem(Player* player, LootItem& item)
 {
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_BEFORE_FILL_QUEST_LOOT_ITEM, script->OnPlayerBeforeFillQuestLootItem(player, item));
@@ -537,7 +562,12 @@ bool ScriptMgr::OnPlayerCanSellItem(Player* player, Item* item, Creature* creatu
     CALL_ENABLED_BOOLEAN_HOOKS(PlayerScript, PLAYERHOOK_CAN_SELL_ITEM, !script->OnPlayerCanSellItem(player, item, creature));
 }
 
-bool ScriptMgr::OnPlayerCanSendMail(Player* player, ObjectGuid receiverGuid, ObjectGuid mailbox, std::string& subject, std::string& body, uint32 money, uint32 COD, Item* item)
+void ScriptMgr::OnPlayerSellItem(Player* player, Item* item, uint32 count)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_SELL_ITEM, script->OnPlayerSellItem(player, item, count));
+}
+
+bool ScriptMgr::OnPlayerCanSendMail(Player* player, ObjectGuid receiverGuid, ObjectGuid mailbox, std::string& subject, std::string& body, uint64 money, uint64 COD, Item* item)
 {
     CALL_ENABLED_BOOLEAN_HOOKS(PlayerScript, PLAYERHOOK_CAN_SEND_MAIL, !script->OnPlayerCanSendMail(player, receiverGuid, mailbox, subject, body, money, COD, item));
 }
@@ -893,6 +923,11 @@ void ScriptMgr::AnticheatSetCanFlybyServer(Player* player, bool apply)
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ANTICHEAT_SET_CAN_FLY_BY_SERVER, script->AnticheatSetCanFlybyServer(player, apply));
 }
 
+void ScriptMgr::AnticheatSetSkipOnePacketForASH(Player* player, bool apply)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ANTICHEAT_SET_SKIP_ONE_PACKET, script->AnticheatSetSkipOnePacketForASH(player, apply));
+}
+
 void ScriptMgr::AnticheatSetUnderACKmount(Player* player)
 {
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ANTICHEAT_SET_UNDER_ACK_MOUNT, script->AnticheatSetUnderACKmount(player));
@@ -921,6 +956,67 @@ bool ScriptMgr::AnticheatHandleDoubleJump(Player* player, Unit* mover)
 bool ScriptMgr::AnticheatCheckMovementInfo(Player* player, MovementInfo const& movementInfo, Unit* mover, bool jump)
 {
     CALL_ENABLED_BOOLEAN_HOOKS(PlayerScript, PLAYERHOOK_ANTICHEAT_CHECK_MOVEMENT_INFO, !script->AnticheatCheckMovementInfo(player, movementInfo, mover, jump));
+}
+
+void ScriptMgr::OnBeforeGuardianInitStatsForLevel(Player* player, Guardian* guardian,
+    CreatureTemplate const* cinfo, PetType& petType)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_BEFORE_GUARDIAN_INIT_STATS_FOR_LEVEL,
+        script->OnBeforeGuardianInitStatsForLevel(player, guardian, cinfo, petType));
+}
+
+void ScriptMgr::OnAfterGuardianInitStatsForLevel(Player* player, Guardian* guardian)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_AFTER_GUARDIAN_INIT_STATS_FOR_LEVEL,
+        script->OnAfterGuardianInitStatsForLevel(player, guardian));
+}
+
+void ScriptMgr::OnBeforeLoadPetFromDB(Player* player, uint32& petEntry, uint32& petNumber,
+    bool& current, bool& forceLoadFromDB)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_BEFORE_LOAD_PET_FROM_DB,
+        script->OnBeforeLoadPetFromDB(player, petEntry, petNumber, current, forceLoadFromDB));
+}
+
+void ScriptMgr::OnPlayerSoloCustomDuelEnd(Player* winner, Player* loser)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_PLAYER_SOLO_CUSTOM_DUEL_END,
+        script->OnCustomSoloDuelEnd(winner, loser));
+}
+
+void ScriptMgr::OnCustomScalingStatValueBefore(Player* player, ItemTemplate const* proto, uint8 slot,
+    bool apply, uint32& customScalingStatValue)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_CUSTOM_SCALING_STAT_VALUE_BEFORE,
+        script->OnCustomScalingStatValueBefore(player, proto, slot, apply, customScalingStatValue));
+}
+
+bool ScriptMgr::CanApplyItemTemplateStats(Player* player, Item* item, ItemTemplate const* proto,
+    uint8 slot, bool apply)
+{
+    CALL_ENABLED_BOOLEAN_HOOKS(PlayerScript, PLAYERHOOK_CAN_APPLY_ITEM_TEMPLATE_STATS,
+        !script->CanApplyItemTemplateStats(player, item, proto, slot, apply));
+}
+
+void ScriptMgr::OnCustomScalingStatValue(Player* player, ItemTemplate const* proto, uint32& statType,
+    int32& value, uint8 itemProtoStatNumber, uint32 scalingStatValue,
+    ScalingStatValuesEntry const* scalingStatValues)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_CUSTOM_SCALING_STAT_VALUE,
+        script->OnCustomScalingStatValue(player, proto, statType, value, itemProtoStatNumber,
+            scalingStatValue, scalingStatValues));
+}
+
+void ScriptMgr::OnAfterGameObjectLootGenerated(Player* player, GameObject* gameObject, Loot* loot)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_AFTER_GAMEOBJECT_LOOT_GENERATED,
+        script->OnAfterGameObjectLootGenerated(player, gameObject, loot));
+}
+
+void ScriptMgr::OnAfterItemLootGenerated(Player* player, Item* item, Loot* loot)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_AFTER_ITEM_LOOT_GENERATED,
+        script->OnAfterItemLootGenerated(player, item, loot));
 }
 
 bool ScriptMgr::OnPlayerCanUpdateSkill(Player* player, uint32 skillId)

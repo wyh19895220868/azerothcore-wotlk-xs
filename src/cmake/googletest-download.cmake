@@ -15,21 +15,22 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
 project(googletest-download NONE)
 
+if (POLICY CMP0135)
+    cmake_policy(SET CMP0135 NEW)
+endif()
+
 include(ExternalProject)
 
 ExternalProject_Add(
         googletest
         SOURCE_DIR "@GOOGLETEST_DOWNLOAD_ROOT@/googletest-src"
         BINARY_DIR "@GOOGLETEST_DOWNLOAD_ROOT@/googletest-build"
-        GIT_REPOSITORY
-        https://github.com/google/googletest.git
-        # Pinned to a main-branch commit rather than a tag: gtest-printers.h
-        # converted char8_t/char16_t to char32_t implicitly, which clang-21
-        # rejects under -Werror (-Wcharacter-conversion). Upstream fixed it in
-        # fa8438ae, three weeks after v1.17.0 was cut, so no release carries it
-        # yet. Move back to a tag once one ships that commit.
-        GIT_TAG
-        3940de91897160fea4815998e08d0fa3c2fb077e
+        # This post-v1.17.0 pin includes the Clang 21 printer fix from upstream fa8438ae.
+        # Use an archive of the same pinned commit to avoid cloning the complete history.
+        URL https://codeload.github.com/google/googletest/zip/3940de91897160fea4815998e08d0fa3c2fb077e
+        URL_HASH SHA256=a2e975f6191baa5fe052f0b034ee4df942ae780102c91ce5a742421269307828
+        TIMEOUT 120
+        INACTIVITY_TIMEOUT 30
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""

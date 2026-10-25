@@ -2242,7 +2242,7 @@ void Player::TalkedToCreature(uint32 entry, ObjectGuid guid)
     }
 }
 
-void Player::MoneyChanged(uint32 count)
+void Player::MoneyChanged(uint64 count)
 {
     for (uint8 i = 0; i < MAX_QUEST_LOG_SIZE; ++i)
     {
@@ -2259,7 +2259,7 @@ void Player::MoneyChanged(uint32 count)
 
                 if (q_status.Status == QUEST_STATUS_INCOMPLETE)
                 {
-                    if (int32(count) >= -rewOrReqMoney)
+                    if (count >= static_cast<uint64>(-int64(rewOrReqMoney)))
                     {
                         if (CanCompleteQuest(questid))
                         {
@@ -2269,7 +2269,7 @@ void Player::MoneyChanged(uint32 count)
                 }
                 else if (q_status.Status == QUEST_STATUS_COMPLETE)
                 {
-                    if (int32(count) < -rewOrReqMoney)
+                    if (count < static_cast<uint64>(-int64(rewOrReqMoney)))
                     {
                         IncompleteQuest(questid);
                     }

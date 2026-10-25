@@ -1544,7 +1544,7 @@ class spell_sha_flametongue_weapon : public AuraScript
         if (!item || !item->IsEquipped())
             return false;
 
-        WeaponAttackType attType = Player::GetAttackBySlot(item->GetSlot());
+        WeaponAttackType attType = WeaponAttackType(Player::GetAttackBySlot(item->GetSlot()));
         if (attType != BASE_ATTACK && attType != OFF_ATTACK)
             return false;
 
@@ -2126,7 +2126,7 @@ class spell_sha_windfury_weapon : public AuraScript
         if (!item || !item->IsEquipped())
             return false;
 
-        WeaponAttackType attType = Player::GetAttackBySlot(item->GetSlot());
+        WeaponAttackType attType = WeaponAttackType(Player::GetAttackBySlot(item->GetSlot()));
         if (attType != BASE_ATTACK && attType != OFF_ATTACK)
             return false;
 

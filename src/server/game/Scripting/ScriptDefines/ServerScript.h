@@ -62,7 +62,13 @@ public:
      * @param packet Contains information about the WorldPacket
      * @return True if you want to continue sending the packet, false if you want to disallow sending the packet
      */
-    [[nodiscard]] virtual bool CanPacketSend(WorldSession* /*session*/, WorldPacket const& /*packet*/) { return true; }
+    [[nodiscard]] virtual bool CanPacketSend(WorldSession* session, WorldPacket const& packet)
+    {
+        return CanPacketSend(session, const_cast<WorldPacket&>(packet));
+    }
+
+    // Compatibility overload for older modules using a mutable packet reference.
+    [[nodiscard]] virtual bool CanPacketSend(WorldSession* /*session*/, WorldPacket& /*packet*/) { return true; }
 
     /**
      * @brief Called when a (valid) packet is received by a client.
@@ -72,7 +78,13 @@ public:
      * @param packet Contains information about the WorldPacket
      * @return True if you want to continue receiving the packet, false if you want to disallow receiving the packet
      */
-    [[nodiscard]] virtual bool CanPacketReceive(WorldSession* /*session*/, WorldPacket const& /*packet*/) { return true; }
+    [[nodiscard]] virtual bool CanPacketReceive(WorldSession* session, WorldPacket const& packet)
+    {
+        return CanPacketReceive(session, const_cast<WorldPacket&>(packet));
+    }
+
+    // Compatibility overload for older modules using a mutable packet reference.
+    [[nodiscard]] virtual bool CanPacketReceive(WorldSession* /*session*/, WorldPacket& /*packet*/) { return true; }
 
     /**
      * @brief Called for every packet queued for sending to a session, before the socket check.

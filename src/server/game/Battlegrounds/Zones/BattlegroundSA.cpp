@@ -685,7 +685,7 @@ void BattlegroundSA::HandleKillUnit(Creature* creature, Player* killer)
 {
     if (creature->GetEntry() == NPC_DEMOLISHER_SA)
     {
-        UpdatePlayerScore(killer, SCORE_DESTROYED_DEMOLISHER, 1);
+        UpdatePlayerScore(killer, SCORE_DESTROYED_DEMOLISHER, uint32(1));
         _notEvenAScratch[Attackers] = false;
         creature->SetVisible(false);
     }
@@ -789,7 +789,7 @@ void BattlegroundSA::DestroyGate(Player* player, GameObject* go)
 
             if (player)
             {
-                UpdatePlayerScore(player, SCORE_DESTROYED_WALL, 1);
+                UpdatePlayerScore(player, SCORE_DESTROYED_WALL, uint32(1));
                 if (rewardHonor)
                     UpdatePlayerScore(player, SCORE_BONUS_HONOR, GetBonusHonorFromKill(1));
             }

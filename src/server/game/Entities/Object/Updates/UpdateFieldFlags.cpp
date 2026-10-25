@@ -1331,7 +1331,7 @@ uint32 UnitUpdateFieldFlags[PLAYER_END] =
     UF_FLAG_PRIVATE,                                        // PLAYER_EXPLORED_ZONES_1+126
     UF_FLAG_PRIVATE,                                        // PLAYER_EXPLORED_ZONES_1+127
     UF_FLAG_PRIVATE,                                        // PLAYER_REST_STATE_EXPERIENCE
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_COINAGE
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_COINAGE_LEGACY
     UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_MOD_DAMAGE_DONE_POS
     UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_MOD_DAMAGE_DONE_POS+1
     UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_MOD_DAMAGE_DONE_POS+2
@@ -1362,18 +1362,18 @@ uint32 UnitUpdateFieldFlags[PLAYER_END] =
     UF_FLAG_PRIVATE,                                        // PLAYER_AMMO_ID
     UF_FLAG_PRIVATE,                                        // PLAYER_SELF_RES_SPELL
     UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_PVP_MEDALS
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_1
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_1+1
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_1+2
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_1+3
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_1+4
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_1+5
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_1+6
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_1+7
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_1+8
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_1+9
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_1+10
-    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_1+11
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_LEGACY
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_LEGACY+1
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_LEGACY+2
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_LEGACY+3
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_LEGACY+4
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_LEGACY+5
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_LEGACY+6
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_LEGACY+7
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_LEGACY+8
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_LEGACY+9
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_LEGACY+10
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_PRICE_LEGACY+11
     UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_TIMESTAMP_1
     UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_TIMESTAMP_1+1
     UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_BUYBACK_TIMESTAMP_1+2
@@ -1487,6 +1487,32 @@ uint32 UnitUpdateFieldFlags[PLAYER_END] =
     UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_GLYPHS_1+5
     UF_FLAG_PRIVATE,                                        // PLAYER_GLYPHS_ENABLED
     UF_FLAG_PRIVATE,                                        // PLAYER_PET_SPELL_POWER
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_COINAGE
+    UF_FLAG_PRIVATE,                                        // PLAYER_FIELD_COINAGE+1
+    UF_FLAG_PRIVATE, // Native buyback dword 0
+    UF_FLAG_PRIVATE, // Native buyback dword 1
+    UF_FLAG_PRIVATE, // Native buyback dword 2
+    UF_FLAG_PRIVATE, // Native buyback dword 3
+    UF_FLAG_PRIVATE, // Native buyback dword 4
+    UF_FLAG_PRIVATE, // Native buyback dword 5
+    UF_FLAG_PRIVATE, // Native buyback dword 6
+    UF_FLAG_PRIVATE, // Native buyback dword 7
+    UF_FLAG_PRIVATE, // Native buyback dword 8
+    UF_FLAG_PRIVATE, // Native buyback dword 9
+    UF_FLAG_PRIVATE, // Native buyback dword 10
+    UF_FLAG_PRIVATE, // Native buyback dword 11
+    UF_FLAG_PRIVATE, // Native buyback dword 12
+    UF_FLAG_PRIVATE, // Native buyback dword 13
+    UF_FLAG_PRIVATE, // Native buyback dword 14
+    UF_FLAG_PRIVATE, // Native buyback dword 15
+    UF_FLAG_PRIVATE, // Native buyback dword 16
+    UF_FLAG_PRIVATE, // Native buyback dword 17
+    UF_FLAG_PRIVATE, // Native buyback dword 18
+    UF_FLAG_PRIVATE, // Native buyback dword 19
+    UF_FLAG_PRIVATE, // Native buyback dword 20
+    UF_FLAG_PRIVATE, // Native buyback dword 21
+    UF_FLAG_PRIVATE, // Native buyback dword 22
+    UF_FLAG_PRIVATE, // Native buyback dword 23
 };
 
 uint32 GameObjectUpdateFieldFlags[GAMEOBJECT_END] =

@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by the
+ * Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -20,18 +20,18 @@
 
 #include "Define.h"
 #include "Optional.h"
+#include "../../../scripts/Custom/_Helper/AsInt64.h"
 #include <array>
 #include <string>
 #include <vector>
-#include <numbers>
 
 enum ReactStates : uint8;
 
 enum PetType : uint8
 {
-    SUMMON_PET                  = 0,
-    HUNTER_PET                  = 1,
-    MAX_PET_TYPE                = 4
+    SUMMON_PET              = 0,
+    HUNTER_PET              = 1,
+    MAX_PET_TYPE            = 4
 };
 
 constexpr auto MAX_PET_STABLES = 4;
@@ -39,54 +39,60 @@ constexpr auto MAX_PET_STABLES = 4;
 // stored in character_pet.slot
 enum PetSaveMode : int8
 {
-    PET_SAVE_AS_DELETED         = -1,                        // not saved in fact
-    PET_SAVE_AS_CURRENT         =  0,                        // in current slot (with player)
-    PET_SAVE_FIRST_STABLE_SLOT  =  1,
-    PET_SAVE_LAST_STABLE_SLOT   =  MAX_PET_STABLES,          // last in DB stable slot index (including), all higher have same meaning as PET_SAVE_NOT_IN_SLOT
-    PET_SAVE_NOT_IN_SLOT        =  100                       // for avoid conflict with stable size grow will use 100
+    PET_SAVE_AS_DELETED        = -1,                        // not saved in fact
+    PET_SAVE_AS_CURRENT        =  0,                        // in current slot (with player)
+    PET_SAVE_FIRST_STABLE_SLOT =  1,
+    PET_SAVE_LAST_STABLE_SLOT  =  MAX_PET_STABLES,          // last in DB stable slot index (including), all higher have same meaning as PET_SAVE_NOT_IN_SLOT
+    PET_SAVE_NOT_IN_SLOT       =  100                       // for avoid conflict with stable size grow will use 100
 };
 
 enum HappinessState
 {
-    UNHAPPY                     = 1,
-    CONTENT                     = 2,
-    HAPPY                       = 3
+    UNHAPPY = 1,
+    CONTENT = 2,
+    HAPPY   = 3
 };
 
 enum PetSpellState
 {
-    PETSPELL_UNCHANGED          = 0,
-    PETSPELL_CHANGED            = 1,
-    PETSPELL_NEW                = 2,
-    PETSPELL_REMOVED            = 3
+    PETSPELL_UNCHANGED = 0,
+    PETSPELL_CHANGED   = 1,
+    PETSPELL_NEW       = 2,
+    PETSPELL_REMOVED   = 3
 };
 
 enum PetSpellType
 {
-    PETSPELL_NORMAL             = 0,
-    PETSPELL_FAMILY             = 1,
-    PETSPELL_TALENT             = 2
+    PETSPELL_NORMAL = 0,
+    PETSPELL_FAMILY = 1,
+    PETSPELL_TALENT = 2
 };
 
 enum ActionFeedback
 {
-    FEEDBACK_NONE               = 0,
-    FEEDBACK_PET_DEAD           = 1,
-    FEEDBACK_NOTHING_TO_ATT     = 2,
-    FEEDBACK_CANT_ATT_TARGET    = 3
+    FEEDBACK_NONE            = 0,
+    FEEDBACK_PET_DEAD        = 1,
+    FEEDBACK_NOTHING_TO_ATT  = 2,
+    FEEDBACK_CANT_ATT_TARGET = 3
+};
+
+enum PetTalk
+{
+    PET_TALK_SPECIAL_SPELL  = 0,
+    PET_TALK_ATTACK         = 1
 };
 
 enum PetAction : int32
 {
-    PET_ACTION_SPECIAL_SPELL    = 0,
-    PET_ACTION_ATTACK           = 1
+    PET_ACTION_SPECIAL_SPELL    = PET_TALK_SPECIAL_SPELL,
+    PET_ACTION_ATTACK           = PET_TALK_ATTACK
 };
 
 enum PetLoadState
 {
-    PET_LOAD_OK                 = 0,
-    PET_LOAD_NO_RESULT          = 1,
-    PET_LOAD_ERROR              = 2
+    PET_LOAD_OK                                 = 0,
+    PET_LOAD_NO_RESULT                          = 1,
+    PET_LOAD_ERROR                              = 2
 };
 
 enum NPCEntries
@@ -124,8 +130,8 @@ enum NPCEntries
     NPC_EBON_GARGOYLE           = 27829,
 
     // Hunter
-    NPC_VENOMOUS_SNAKE          = 19833,
-    NPC_VIPER                   = 19921,
+    NPC_VENOMOUS_SNAKE           = 19833,
+    NPC_VIPER                    = 19921,
 
     // Generic
     NPC_GENERIC_IMP             = 12922,
@@ -135,10 +141,7 @@ enum NPCEntries
 enum PetScalingSpells
 {
     SPELL_PET_AVOIDANCE                 = 32233,
-    SPELL_PET_SCALING_MASTER_03         = 67557, // Serverside - Pet Scaling - Master Spell 03 - Intellect, Spirit, Resilience
-    SPELL_PET_SCALING_MASTER_06         = 67561, // Serverside - Pet Scaling - Master Spell 06 - Spell Hit, Expertise, Spell Penetration
 
-    // Hunter
     SPELL_HUNTER_PET_SCALING_01         = 34902,
     SPELL_HUNTER_PET_SCALING_02         = 34903,
     SPELL_HUNTER_PET_SCALING_03         = 34904,
@@ -151,7 +154,6 @@ enum PetScalingSpells
     SPELL_WARLOCK_PET_SCALING_04        = 34958,
     SPELL_WARLOCK_PET_SCALING_05        = 61013, // Hit / Expertise
     SPELL_GLYPH_OF_FELGUARD             = 56246,
-    SPELL_GLYPH_OF_VOIDWALKER           = 56247,
     SPELL_INFERNAL_SCALING_01           = 36186,
     SPELL_INFERNAL_SCALING_02           = 36188,
     SPELL_INFERNAL_SCALING_03           = 36189,
@@ -171,7 +173,6 @@ enum PetScalingSpells
     SPELL_EARTH_ELEMENTAL_SCALING_02    = 65226,
     SPELL_EARTH_ELEMENTAL_SCALING_03    = 65227,
     SPELL_EARTH_ELEMENTAL_SCALING_04    = 65228,
-    SPELL_ORC_RACIAL_COMMAND_SHAMAN     = 65223,
 
     // Priest
     SPELL_SHADOWFIEND_SCALING_01        = 35661,
@@ -192,21 +193,16 @@ enum PetScalingSpells
     SPELL_MAGE_PET_SCALING_04           = 35660,
 
     // Death Knight
-    SPELL_ORC_RACIAL_COMMAND_DK         = 65221,
+    SPELL_ORC_RACIAL_COMMAND            = 65221,
     SPELL_NIGHT_OF_THE_DEAD_AVOIDANCE   = 62137,
-    SPELL_DK_PET_SCALING_01             = 54566,
-    SPELL_DK_PET_SCALING_02             = 51996,
-    SPELL_DK_PET_SCALING_03             = 61697,
-    SPELL_DK_AVOIDANCE                  = 65220,
-    SPELL_DK_ARMY_OF_THE_DEAD_PASSIVE   = 49040,
-    SPELL_SUMMON_HEAL                   = 36492, // Serverside - Summon Heal
-    SPELL_RISEN_GHOUL_SELF_STUN         = 47466,
+    SPELL_DK_PET_SCALING_01             = 51996,
+    SPELL_DK_PET_SCALING_02             = 54566,
+    SPELL_DK_PET_SCALING_03             = 61697
 };
 
-constexpr float PET_FOLLOW_DIST = 2.0f;
-constexpr float PET_FOLLOW_ANGLE = std::numbers::pi_v<float> / 2;
-constexpr float MINI_PET_SUMMON_ANGLE = std::numbers::pi_v<float> / 4;
-constexpr float MINI_PET_FOLLOW_ANGLE = std::numbers::pi_v<float>;
+#define PET_FOLLOW_DIST  1.0f
+#define PET_FOLLOW_ANGLE (M_PI/2)
+constexpr float MINI_PET_FOLLOW_ANGLE = M_PI;
 
 class PetStable
 {
@@ -223,6 +219,8 @@ public:
         uint32 Experience = 0;
         uint32 Health = 0;
         uint32 Mana = 0;
+        AsInt64 AsHealth = 0;
+        AsInt64 AsMana = 0;
         uint32 Happiness = 0;
         uint32 LastSaveTime = 0;
         uint32 CreatedBySpellId = 0;

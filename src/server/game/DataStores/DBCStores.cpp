@@ -749,6 +749,15 @@ ContentLevels GetContentLevelsForMapAndZone(uint32 mapid, uint32 zoneId)
     }
 }
 
+int32 GetMapIdByZone(uint32 zoneId)
+{
+    if (!zoneId)
+        return -1;
+
+    AreaTableEntry const* area = sAreaTableStore.LookupEntry(zoneId);
+    return area ? int32(area->mapid) : -1;
+}
+
 void Zone2MapCoordinates(float& x, float& y, uint32 zone)
 {
     WorldMapAreaEntry const* maEntry = sWorldMapAreaStore.LookupEntry(zone);

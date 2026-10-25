@@ -24,6 +24,17 @@
 #include <fmt/printf.h>
 #include <locale>
 
+// Decimal formatting keeps custom SQL/log arguments independent of native integer width.
+template <>
+struct fmt::formatter<AsInt256> : fmt::formatter<std::string>
+{
+    template <typename Context>
+    auto format(AsInt256 const& value, Context& context) const
+    {
+        return fmt::formatter<std::string>::format(value.str(), context);
+    }
+};
+
 namespace Acore
 {
     template<typename... Args>

@@ -124,6 +124,12 @@ namespace Acore::Containers
         container = std::move(containerCopy);
     }
 
+    template<class C>
+    void AtRandomResize(C& container, std::size_t requestedSize)
+    {
+        RandomResize(container, requestedSize);
+    }
+
     /*
      * Select a random element from a container.
      *

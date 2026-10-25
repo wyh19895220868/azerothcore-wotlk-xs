@@ -390,7 +390,7 @@ bool LootStoreItem::IsValid(LootStore const& store, uint32 entry) const
 //
 
 // Constructor, copies most fields from LootStoreItem and generates random count
-LootItem::LootItem(LootStoreItem const& li)
+LootItem::LootItem(LootStoreItem const& li, int32 tempGroupId)
 {
     itemid       = li.itemid;
     itemIndex    = 0;
@@ -411,6 +411,7 @@ LootItem::LootItem(LootStoreItem const& li)
     is_counted = false;
     rollWinnerGUID = ObjectGuid::Empty;
     groupid = li.groupid;
+    TempGroupId = tempGroupId;
 }
 
 // Basic checks for player/item compatibility - if false no chance to see the item in the loot
@@ -478,13 +479,15 @@ void LootItem::AddAllowedLooter(Player const* player)
 //
 
 // Inserts the item into the loot (called by LootTemplate processors)
-void Loot::AddItem(LootStoreItem const& item)
+void Loot::AddItem(LootStoreItem const& item, Player const* player, int32 tempGroupId)
 {
     ItemTemplate const* proto = sObjectMgr->GetItemTemplate(item.itemid);
     if (!proto)
         return;
 
     uint32 count = urand(item.mincount, item.maxcount);
+    if (player)
+        sScriptMgr->OnLootAddItemForCount(player, count);
     uint32 stacks = count / proto->GetMaxStackSize() + (count % proto->GetMaxStackSize() ? 1 : 0);
 
     std::vector<LootItem>& lootItems = item.needs_quest ? quest_items : items;
@@ -492,7 +495,7 @@ void Loot::AddItem(LootStoreItem const& item)
 
     for (uint32 i = 0; i < stacks && lootItems.size() < limit; ++i)
     {
-        LootItem generatedLoot(item);
+        LootItem generatedLoot(item, tempGroupId);
         generatedLoot.count = std::min(count, proto->GetMaxStackSize());
         generatedLoot.itemIndex = lootItems.size();
         lootItems.push_back(generatedLoot);
@@ -810,11 +813,11 @@ void Loot::generateMoneyLoot(uint32 minAmount, uint32 maxAmount)
     if (maxAmount > 0)
     {
         if (maxAmount <= minAmount)
-            gold = uint32(maxAmount * sWorld->getRate(RATE_DROP_MONEY));
+            gold = uint64(maxAmount * sWorld->getRate(RATE_DROP_MONEY));
         else if ((maxAmount - minAmount) < 32700)
-            gold = uint32(urand(minAmount, maxAmount) * sWorld->getRate(RATE_DROP_MONEY));
+            gold = uint64(urand(minAmount, maxAmount) * sWorld->getRate(RATE_DROP_MONEY));
         else
-            gold = uint32(urand(minAmount >> 8, maxAmount >> 8) * sWorld->getRate(RATE_DROP_MONEY)) << 8;
+            gold = uint64(urand(minAmount >> 8, maxAmount >> 8) * sWorld->getRate(RATE_DROP_MONEY)) << 8;
     }
 }
 
@@ -975,7 +978,7 @@ ByteBuffer& operator<<(ByteBuffer& b, LootView const& lv)
 {
     if (lv.permission == NONE_PERMISSION)
     {
-        b << uint32(0);                                     //gold
+        b << uint64(0);                                     //gold
         b << uint8(0);                                      // item count
         return b;                                           // nothing output more
     }
@@ -984,7 +987,7 @@ ByteBuffer& operator<<(ByteBuffer& b, LootView const& lv)
 
     uint8 itemsShown = 0;
 
-    b << uint32(l.gold);                                    //gold
+    b << uint64(l.gold);                                    //gold
 
     std::size_t count_pos = b.wpos();                            // pos of item count byte
     b << uint8(0);                                          // item count placeholder

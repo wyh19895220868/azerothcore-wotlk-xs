@@ -140,6 +140,7 @@ WorldSession::WorldSession(uint32 id, std::string&& name, uint32 accountFlags, s
     recruiterId(recruiter),
     isRecruiter(isARecruiter),
     m_currentVendorEntry(0),
+    m_currentTrainerEntry(0),
     _calendarEventCreationCooldown(0),
     _addonMessageReceiveCount(0),
     _timeSyncClockDeltaQueue(6),
@@ -164,6 +165,11 @@ WorldSession::WorldSession(uint32 id, std::string&& name, uint32 accountFlags, s
     }
     else
         m_Address = "headless";
+}
+
+ObjectGuid::LowType WorldSession::GetGUIDLow() const
+{
+    return _player ? _player->GetGUID().GetCounter() : 0;
 }
 
 /// WorldSession destructor
@@ -294,6 +300,17 @@ void WorldSession::SendAreaTriggerMessage(std::string_view str)
         uint32 length = line.size() + 1;
         WorldPacket data(SMSG_AREA_TRIGGER_MESSAGE, 4 + length);
         data << length;
+        data << line.data();
+        SendPacket(&data);
+    }
+}
+
+void WorldSession::SendNotification(std::string_view str)
+{
+    std::vector<std::string_view> lines = Acore::Tokenize(str, '\n', true);
+    for (std::string_view line : lines)
+    {
+        WorldPacket data(SMSG_NOTIFICATION, line.size() + 1);
         data << line.data();
         SendPacket(&data);
     }

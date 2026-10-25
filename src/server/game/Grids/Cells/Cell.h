@@ -105,6 +105,12 @@ struct Cell
 
     template<class T> static void VisitObjects(WorldObject const* obj, T& visitor, float radius);
     template<class T> static void VisitObjects(float x, float y, Map* map, T& visitor, float radius);
+    template<class T> static void VisitGridObjects(WorldObject const* obj, T& visitor, float radius, bool dontLoad = true);
+    template<class T> static void VisitGridObjects(float x, float y, Map* map, T& visitor, float radius, bool dontLoad = true);
+    template<class T> static void VisitWorldObjects(WorldObject const* obj, T& visitor, float radius, bool dontLoad = true);
+    template<class T> static void VisitWorldObjects(float x, float y, Map* map, T& visitor, float radius, bool dontLoad = true);
+    template<class T> static void VisitAllObjects(WorldObject const* obj, T& visitor, float radius, bool dontLoad = true);
+    template<class T> static void VisitAllObjects(float x, float y, Map* map, T& visitor, float radius, bool dontLoad = true);
 
     template<class T> static void VisitFarVisibleObjects(WorldObject const* obj, T& visitor, float radius);
     template<class T> static void VisitFarVisibleObjects(float x, float y, Map* map, T& visitor, float radius);

@@ -33,7 +33,7 @@ public:
     void AddToWorld() override;
     void RemoveFromWorld() override;
 
-    bool Create(ObjectGuid::LowType guidlow, uint32 itemid, Player const* owner) override;
+    bool Create(ObjectGuid::LowType guidlow, uint32 itemid, Player const* owner, int32 TempGroupId = -1) override;
 
     void StoreItem(uint8 slot, Item* pItem, bool update);
     void RemoveItem(uint8 slot, bool update);

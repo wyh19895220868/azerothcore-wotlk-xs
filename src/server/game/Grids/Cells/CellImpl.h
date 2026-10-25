@@ -178,6 +178,42 @@ inline void Cell::VisitObjects(float x, float y, Map* map, T& visitor, float rad
 }
 
 template<class T>
+inline void Cell::VisitGridObjects(WorldObject const* center_obj, T& visitor, float radius, bool /*dontLoad*/)
+{
+    VisitObjects(center_obj, visitor, radius);
+}
+
+template<class T>
+inline void Cell::VisitGridObjects(float x, float y, Map* map, T& visitor, float radius, bool /*dontLoad*/)
+{
+    VisitObjects(x, y, map, visitor, radius);
+}
+
+template<class T>
+inline void Cell::VisitAllObjects(WorldObject const* center_obj, T& visitor, float radius, bool /*dontLoad*/)
+{
+    VisitObjects(center_obj, visitor, radius);
+}
+
+template<class T>
+inline void Cell::VisitAllObjects(float x, float y, Map* map, T& visitor, float radius, bool /*dontLoad*/)
+{
+    VisitObjects(x, y, map, visitor, radius);
+}
+
+template<class T>
+inline void Cell::VisitWorldObjects(WorldObject const* center_obj, T& visitor, float radius, bool /*dontLoad*/)
+{
+    VisitObjects(center_obj, visitor, radius);
+}
+
+template<class T>
+inline void Cell::VisitWorldObjects(float x, float y, Map* map, T& visitor, float radius, bool /*dontLoad*/)
+{
+    VisitObjects(x, y, map, visitor, radius);
+}
+
+template<class T>
 inline void Cell::VisitFarVisibleObjects(WorldObject const* center_obj, T& visitor, float radius)
 {
     VisitFarVisibleObjects(center_obj->GetPositionX(), center_obj->GetPositionY(), center_obj->GetMap(), visitor, radius);

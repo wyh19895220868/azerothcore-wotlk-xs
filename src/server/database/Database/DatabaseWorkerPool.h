@@ -20,6 +20,7 @@
 
 #include "DatabaseEnvFwd.h"
 #include "Define.h"
+#include "QueryResult.h"
 #include "StringFormat.h"
 #include <array>
 #include <vector>

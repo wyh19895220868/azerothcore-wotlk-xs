@@ -67,7 +67,6 @@ public:
     void FillPetInfo(PetStable::PetInfo* petInfo) const;
     void Remove(PetSaveMode mode, bool returnreagent = false);
     static void DeleteFromDB(ObjectGuid::LowType guidlow);
-
     void setDeathState(DeathState s, bool despawn = false) override;                   // overwrite virtual Creature::setDeathState and Unit::setDeathState
     void Update(uint32 diff) override;                           // overwrite virtual Creature::Update and Unit::Update
 

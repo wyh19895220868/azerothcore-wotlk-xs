@@ -92,6 +92,7 @@ class Vehicle;
 class CreatureAI;
 class ZoneScript;
 class Unit;
+class ElunaEventProcessor;
 class Transport;
 class StaticTransport;
 class MotionTransport;
@@ -119,6 +120,8 @@ public:
 
     [[nodiscard]] static ObjectGuid GetGUID(Object const* o) { return o ? o->GetGUID() : ObjectGuid::Empty; }
     [[nodiscard]] ObjectGuid GetGUID() const { return GetGuidValue(OBJECT_FIELD_GUID); }
+    [[nodiscard]] ObjectGuid::LowType GetGUIDLow() const { return GetGUID().GetCounter(); }
+    [[nodiscard]] uint64 GetGUIDHigh() const { return GetGUID().GetRawValue(); }
     [[nodiscard]] PackedGuid const& GetPackGUID() const { return m_PackGUID; }
     [[nodiscard]] uint32 GetEntry() const { return GetUInt32Value(OBJECT_FIELD_ENTRY); }
     void SetEntry(uint32 entry) { SetUInt32Value(OBJECT_FIELD_ENTRY, entry); }
@@ -172,6 +175,7 @@ public:
     void ApplyModUInt64Value(uint16 index, int32 val, bool apply);
     void ApplyModPositiveFloatValue(uint16 index, float val, bool apply);
     void ApplyModSignedFloatValue(uint16 index, float val, bool apply);
+    void ApplyPercentModFloatValue(uint16 index, float val, bool apply);
 
     void SetFlag(uint16 index, uint32 newFlag);
     void RemoveFlag(uint16 index, uint32 oldFlag);
@@ -483,6 +487,9 @@ class WorldObject : public Object, public WorldLocation
 protected:
     explicit WorldObject();
 public:
+    // Optional per-object Eluna timer processor, populated by mod-eluna when enabled.
+    ElunaEventProcessor* elunaEvents = nullptr;
+
     ~WorldObject() override;
 
     virtual void Update(uint32 diff);
@@ -689,6 +696,8 @@ public:
     bool IsFarVisible() const { return _visibilityDistanceOverrideType == VisibilityDistanceType::Large || _visibilityDistanceOverrideType == VisibilityDistanceType::Gigantic; }
     float GetVisibilityOverrideDistance() const;
     void SetVisibilityDistanceOverride(VisibilityDistanceType type);
+    void SetVisibilityDistanceOverride(float distance);
+    void ResetVisibilityDistanceOverride();
 
     [[nodiscard]] bool IsInWintergrasp() const
     {
@@ -799,6 +808,7 @@ protected:
     std::string m_name;
     bool m_isActive;
     VisibilityDistanceType _visibilityDistanceOverrideType;
+    float _playerVisibilityDistanceOverride = 0.0f;
     ZoneScript* m_zoneScript;
 
     virtual void ProcessPositionDataChanged(PositionFullTerrainStatus const& data);

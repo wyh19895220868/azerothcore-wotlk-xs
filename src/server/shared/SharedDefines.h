@@ -91,6 +91,18 @@ enum Races
     //RACE_ICE_TROLL      = 21
 };
 
+#define MAX_RACES 12
+#define RACEMASK_ALL_PLAYABLE \
+    ((1<<(RACE_HUMAN-1)) | (1<<(RACE_ORC-1)) | (1<<(RACE_DWARF-1)) | \
+     (1<<(RACE_NIGHTELF-1)) | (1<<(RACE_UNDEAD_PLAYER-1)) | (1<<(RACE_TAUREN-1)) | \
+     (1<<(RACE_GNOME-1)) | (1<<(RACE_TROLL-1)) | (1<<(RACE_BLOODELF-1)) | (1<<(RACE_DRAENEI-1)))
+
+#define RACEMASK_ALLIANCE \
+    ((1<<(RACE_HUMAN-1)) | (1<<(RACE_DWARF-1)) | (1<<(RACE_NIGHTELF-1)) | \
+     (1<<(RACE_GNOME-1)) | (1<<(RACE_DRAENEI-1)))
+
+#define RACEMASK_HORDE (RACEMASK_ALL_PLAYABLE & ~RACEMASK_ALLIANCE)
+
 // DisplayRace values from CreatureDisplayInfoExtra.dbc
 enum class DisplayRace : uint8
 {
@@ -549,6 +561,10 @@ enum SpellAttr4 : uint32
     SPELL_ATTR4_USE_FACING_FROM_SPELL              = 0x80000000  // TITLE Unknown attribute 31@Attr4 DESCRIPTION Polymorph (chicken) 228 and Sonic Boom (38052,38488)
 };
 
+#define SPELL_ATTR3_SUPRESS_CASTER_PROCS SPELL_ATTR3_SUPPRESS_CASTER_PROCS
+#define SPELL_ATTR3_SUPRESS_TARGET_PROCS SPELL_ATTR3_SUPPRESS_TARGET_PROCS
+#define SPELL_ATTR4_SUPRESS_WEAPON_PROCS SPELL_ATTR4_SUPPRESS_WEAPON_PROCS
+
 // EnumUtils: DESCRIBE THIS
 enum SpellAttr5 : uint32
 {
@@ -569,6 +585,7 @@ enum SpellAttr5 : uint32
     SPELL_ATTR5_NOT_AVALIABLE_WHILE_CHARMED                    = 0x00004000, // TITLE Charmed units cannot cast this spell
     SPELL_ATTR5_TREAT_AS_AREA_EFFECT                           = 0x00008000, // TITLE Unknown attribute 15@Attr5 DESCRIPTION Related to multi-target spells?
     SPELL_ATTR5_AURA_AFFECTS_NOT_JUST_REQ_EQUIPPED_ITEM        = 0x00010000, // TITLE DESCRIPTION this allows spells with EquippedItemClass to affect spells from other items if the required item is equipped
+    SPELL_ATTR5_AURA_AFFECTS_NOT_JUST_REQ_EQUIPED_ITEM         = SPELL_ATTR5_AURA_AFFECTS_NOT_JUST_REQ_EQUIPPED_ITEM,
     SPELL_ATTR5_ALLOW_WHILE_FLEEING                            = 0x00020000, // TITLE Usable while feared
     SPELL_ATTR5_ALLOW_WHILE_CONFUSED                           = 0x00040000, // TITLE Usable while confused
     SPELL_ATTR5_AI_DOESNT_FACE_TARGET                          = 0x00080000, // TITLE Do not auto-turn while casting

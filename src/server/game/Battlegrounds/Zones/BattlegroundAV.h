@@ -1765,6 +1765,7 @@ class AC_GAME_API BattlegroundAV : public Battleground
 public:
     BattlegroundAV();
     ~BattlegroundAV() override = default;
+    uint32 KillStore[TEAM_NEUTRAL] {};
 
     /* inherited from BattlegroundClass */
     void AddPlayer(Player* player) override;

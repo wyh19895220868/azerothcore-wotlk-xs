@@ -466,7 +466,7 @@ void WorldSession::HandleLogoutRequestOpcode(WorldPackets::Character::LogoutRequ
             GetPlayer()->SetStandState(UNIT_STAND_STATE_SIT);
         }
 
-        GetPlayer()->SetRooted(true, true, true);
+        GetPlayer()->SetRooted(true, true);
         GetPlayer()->SetUnitFlag(UNIT_FLAG_STUNNED);
     }
 
@@ -490,7 +490,7 @@ void WorldSession::HandleLogoutCancelOpcode(WorldPackets::Character::LogoutCance
     // not remove flags if can't free move - its not set in Logout request code.
     if (GetPlayer()->CanFreeMove())
     {
-        GetPlayer()->SetRooted(false, true, true);
+        GetPlayer()->SetRooted(false, true);
 
         GetPlayer()->SetStandState(UNIT_STAND_STATE_STAND);
         GetPlayer()->RemoveUnitFlag(UNIT_FLAG_STUNNED);
@@ -531,12 +531,19 @@ void WorldSession::HandleZoneUpdateOpcode(WorldPacket& recv_data)
     //GetPlayer()->SendInitWorldStates(true, newZone);
 }
 
+// Defined in ChatHandler.cpp next to the rest of the NativeUI snapshot code.
+void NativeUISendTargetNow(WorldSession* session);
+
 void WorldSession::HandleSetSelectionOpcode(WorldPacket& recv_data)
 {
     ObjectGuid guid;
     recv_data >> guid;
 
     _player->SetSelection(guid);
+
+    // Refresh the NativeUI target snapshot now that the selection changed; waiting
+    // for the periodic tick left the custom health bar text blank for up to 250ms.
+    NativeUISendTargetNow(this);
 
     // Change target of current autoshoot spell
     if (guid)
@@ -940,13 +947,13 @@ void WorldSession::HandleSetActionButtonOpcode(WorldPacket& recv_data)
 void WorldSession::HandleCompleteCinematic(WorldPacket& /*recv_data*/)
 {
     // End the current cinematic and restore the normal player view
-    GetPlayer()->GetCinematicMgr().EndCinematic();
+    GetPlayer()->GetCinematicMgr()->EndCinematic();
 }
 
 void WorldSession::HandleNextCinematicCamera(WorldPacket& /*recv_data*/)
 {
     // Sent by client when cinematic actually begun. So we begin the server side process
-    GetPlayer()->GetCinematicMgr().StartCinematicCamera();
+    GetPlayer()->GetCinematicMgr()->StartCinematicCamera();
 }
 
 void WorldSession::HandleSetActionBarToggles(WorldPacket& recv_data)

@@ -1,0 +1,156 @@
+#
+# 动态幻境系统配置文件
+#
+
+[worldserver]
+
+###################################################################################################
+# 幻境系统设置
+###################################################################################################
+
+#
+#    HuanJingSystem.Enable
+#        描述: 启用/禁用幻境系统
+#        默认值: 1 (启用)
+#                0 (禁用)
+
+HuanJingSystem.Enable = 1
+
+#
+#    HuanJingSystem.MaxLevel
+#        描述: 最大幻境等级
+#        默认值: 2000
+
+HuanJingSystem.MaxLevel = 5000
+
+#
+#    HuanJingSystem.Debug
+#        描述: 启用调试模式
+#        默认值: 0 (禁用)
+#                1 (启用)
+
+HuanJingSystem.Debug = 1
+
+###################################################################################################
+# 属性上限保护设置
+###################################################################################################
+
+#
+#    HuanJingSystem.MaxHealth
+#        描述: 生物血量上限，防止数值溢出
+#        默认值: 0 (不额外限制)
+#        说明: 大于0时作为自定义上限；0表示仅受服务端字段可承载范围保护
+
+HuanJingSystem.MaxHealth = 0
+
+#
+#    HuanJingSystem.MaxDamage
+#        描述: 生物伤害上限，防止数值溢出
+#        默认值: 0.0 (不额外限制)
+#        说明: 大于0时作为自定义上限
+
+HuanJingSystem.MaxDamage = 0.0
+
+#
+#    HuanJingSystem.MaxArmor
+#        描述: 生物护甲上限，防止数值溢出
+#        默认值: 0 (不额外限制)
+#        说明: 大于0时作为自定义上限
+
+HuanJingSystem.MaxArmor = 0
+
+#
+#    HuanJingSystem.MaxAttackPower
+#        描述: 生物攻击强度上限，防止数值溢出
+#        默认值: 0 (不额外限制)
+#        说明: 大于0时作为自定义上限
+
+HuanJingSystem.MaxAttackPower = 0
+
+#
+#    HuanJingSystem.MaxResistance
+#        描述: 生物抗性上限，防止数值溢出
+#        默认值: 0 (不额外限制)
+#        说明: 大于0时作为自定义上限
+
+HuanJingSystem.MaxResistance = 0
+
+#
+#    HuanJingSystem.MaxMana
+#        描述: 生物法力值上限，防止数值溢出
+#        默认值: 0 (不额外限制)
+#        说明: 大于0时作为自定义上限
+
+HuanJingSystem.MaxMana = 0
+
+#
+#    HuanJingSystem.MaxSpellPower
+#        描述: 生物法术强度上限，防止数值溢出
+#        默认值: 0 (不额外限制)
+#        说明: 大于0时作为自定义上限
+
+HuanJingSystem.MaxSpellPower = 0
+
+#
+#    HuanJingSystem.MaxCritChance
+#        描述: 生物暴击几率上限，防止数值溢出
+#        默认值: 95.0 (95%)
+#        说明: 当生物暴击几率超过此值时，会被自动限制在此范围内
+
+HuanJingSystem.MaxCritChance = 95.0
+
+#
+#    HuanJingSystem.MaxHitChance
+#        描述: 生物命中几率上限，防止数值溢出
+#        默认值: 100.0 (100%)
+#        说明: 当生物命中几率超过此值时，会被自动限制在此范围内
+
+HuanJingSystem.MaxHitChance = 100.0
+
+#
+#    HuanJingSystem.MaxHaste
+#        描述: 生物急速等级上限，防止数值溢出
+#        默认值: 0 (不额外限制)
+#        说明: 大于0时作为自定义上限
+
+HuanJingSystem.MaxHaste = 0
+
+#
+#    HuanJingSystem.MaxExpertise
+#        描述: 生物精准等级上限，防止数值溢出
+#        默认值: 0 (不额外限制)
+#        说明: 大于0时作为自定义上限
+
+HuanJingSystem.MaxExpertise = 0
+
+#
+#    HuanJingSystem.MaxDodgeChance
+#        描述: 生物闪避几率上限，防止数值溢出
+#        默认值: 95.0 (95%)
+#        说明: 当生物闪避几率超过此值时，会被自动限制在此范围内
+
+HuanJingSystem.MaxDodgeChance = 95.0
+
+#
+#    HuanJingSystem.MaxParryChance
+#        描述: 生物招架几率上限，防止数值溢出
+#        默认值: 95.0 (95%)
+#        说明: 当生物招架几率超过此值时，会被自动限制在此范围内
+
+HuanJingSystem.MaxParryChance = 95.0
+
+#
+#    HuanJingSystem.MaxBlockChance
+#        描述: 生物格挡几率上限，防止数值溢出
+#        默认值: 95.0 (95%)
+#        说明: 当生物格挡几率超过此值时，会被自动限制在此范围内
+
+HuanJingSystem.MaxBlockChance = 95.0
+
+#
+#    HuanJingSystem.MaxMovementSpeed
+#        描述: 生物移动速度上限，防止数值溢出
+#        默认值: 100.0 (100%官方速度)
+#        说明: 当生物移动速度超过此值时，会被自动限制在此范围内
+
+HuanJingSystem.MaxMovementSpeed = 100.0

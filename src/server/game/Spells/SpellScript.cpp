@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by the
+ * Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -21,11 +21,30 @@
 #include "SpellMgr.h"
 #include <string>
 
+namespace
+{
+AsInt64 ScaleScriptHitValue(AsInt64 const& value, uint32 beforeValue, uint32 afterValue)
+{
+    if (value <= 0 || afterValue == 0)
+        return AsInt64Zero();
+
+    if (beforeValue == 0 || beforeValue == afterValue)
+        return value;
+
+    return (value * afterValue) / beforeValue;
+}
+
+bool IsScriptHitValueProjection(AsInt64 const& value, uint32 projectedValue)
+{
+    return uint32(std::max(0, AsInt64ToInt32Clamp(value, std::numeric_limits<int32>::max()))) == projectedValue;
+}
+}
+
 bool _SpellScript::_Validate(SpellInfo const* entry)
 {
     if (!Validate(entry))
     {
-        LOG_ERROR("spells.scripts", "_SpellScript::_Validate: Spell `{}` did not pass Validate() function of script `{}` - script will not be added to the spell", entry->Id, m_scriptName->c_str());
+        LOG_ERROR("scripts.spells", "_SpellScript::_Validate: Spell `{}` did not pass Validate() function of script `{}` - script will not be added to the spell", entry->Id, m_scriptName->c_str());
         return false;
     }
     return true;
@@ -35,7 +54,7 @@ bool _SpellScript::_ValidateSpellInfo(uint32 spellId)
 {
     if (!sSpellMgr->GetSpellInfo(spellId))
     {
-        LOG_ERROR("spells.scripts", "_SpellScript::ValidateSpellInfo: Spell {} does not exist.", spellId);
+        LOG_ERROR("scripts.spells", "_SpellScript::ValidateSpellInfo: Spell {} does not exist.", spellId);
         return false;
     }
 
@@ -75,7 +94,7 @@ _SpellScript::EffectHook::EffectHook(uint8 _effIndex)
     effIndex = _effIndex;
 }
 
-uint8 _SpellScript::EffectHook::GetAffectedEffectsMask(SpellInfo const* spellInfo)
+uint8 _SpellScript::EffectHook::GetAffectedEffectsMask(SpellInfo const* spellEntry)
 {
     uint8 mask = 0;
     if ((effIndex == EFFECT_ALL) || (effIndex == EFFECT_FIRST_FOUND))
@@ -84,21 +103,21 @@ uint8 _SpellScript::EffectHook::GetAffectedEffectsMask(SpellInfo const* spellInf
         {
             if ((effIndex == EFFECT_FIRST_FOUND) && mask)
                 return mask;
-            if (CheckEffect(spellInfo, i))
+            if (CheckEffect(spellEntry, i))
                 mask |= (uint8)1 << i;
         }
     }
     else
     {
-        if (CheckEffect(spellInfo, effIndex))
+        if (CheckEffect(spellEntry, effIndex))
             mask |= (uint8)1 << effIndex;
     }
     return mask;
 }
 
-bool _SpellScript::EffectHook::IsEffectAffected(SpellInfo const* spellInfo, uint8 effIndex)
+bool _SpellScript::EffectHook::IsEffectAffected(SpellInfo const* spellEntry, uint8 effIndex)
 {
-    return GetAffectedEffectsMask(spellInfo) & 1 << effIndex;
+    return GetAffectedEffectsMask(spellEntry) & 1 << effIndex;
 }
 
 std::string _SpellScript::EffectHook::EffIndexToString()
@@ -119,13 +138,13 @@ std::string _SpellScript::EffectHook::EffIndexToString()
     return "Invalid Value";
 }
 
-bool _SpellScript::EffectNameCheck::Check(SpellInfo const* spellInfo, uint8 effIndex)
+bool _SpellScript::EffectNameCheck::Check(SpellInfo const* spellEntry, uint8 effIndex)
 {
-    if (!spellInfo->Effects[effIndex].Effect && !effName)
+    if (!spellEntry->Effects[effIndex].Effect && !effName)
         return true;
-    if (!spellInfo->Effects[effIndex].Effect)
+    if (!spellEntry->Effects[effIndex].Effect)
         return false;
-    return (effName == SPELL_EFFECT_ANY) || (spellInfo->Effects[effIndex].Effect == effName);
+    return (effName == SPELL_EFFECT_ANY) || (spellEntry->Effects[effIndex].Effect == effName);
 }
 
 std::string _SpellScript::EffectNameCheck::ToString()
@@ -136,18 +155,18 @@ std::string _SpellScript::EffectNameCheck::ToString()
             return "SPELL_EFFECT_ANY";
         default:
             char num[10];
-            snprintf(num, sizeof(num), "%u", effName);
+            sprintf (num, "%u", effName);
             return num;
     }
 }
 
-bool _SpellScript::EffectAuraNameCheck::Check(SpellInfo const* spellInfo, uint8 effIndex)
+bool _SpellScript::EffectAuraNameCheck::Check(SpellInfo const* spellEntry, uint8 effIndex)
 {
-    if (!spellInfo->Effects[effIndex].ApplyAuraName && !effAurName)
+    if (!spellEntry->Effects[effIndex].ApplyAuraName && !effAurName)
         return true;
-    if (!spellInfo->Effects[effIndex].ApplyAuraName)
+    if (!spellEntry->Effects[effIndex].ApplyAuraName)
         return false;
-    return (effAurName == SPELL_AURA_ANY) || (spellInfo->Effects[effIndex].ApplyAuraName == effAurName);
+    return (effAurName == SPELL_AURA_ANY) || (spellEntry->Effects[effIndex].ApplyAuraName == effAurName);
 }
 
 std::string _SpellScript::EffectAuraNameCheck::ToString()
@@ -158,7 +177,7 @@ std::string _SpellScript::EffectAuraNameCheck::ToString()
             return "SPELL_AURA_ANY";
         default:
             char num[10];
-            snprintf(num, sizeof(num), "%u", effAurName);
+            sprintf (num, "%u", effAurName);
             return num;
     }
 }
@@ -194,9 +213,9 @@ std::string SpellScript::EffectHandler::ToString()
     return "Index: " + EffIndexToString() + " Name: " + _SpellScript::EffectNameCheck::ToString();
 }
 
-bool SpellScript::EffectHandler::CheckEffect(SpellInfo const* spellInfo, uint8 effIndex)
+bool SpellScript::EffectHandler::CheckEffect(SpellInfo const* spellEntry, uint8 effIndex)
 {
-    return _SpellScript::EffectNameCheck::Check(spellInfo, effIndex);
+    return _SpellScript::EffectNameCheck::Check(spellEntry, effIndex);
 }
 
 void SpellScript::EffectHandler::Call(SpellScript* spellScript, SpellEffIndex effIndex)
@@ -234,13 +253,13 @@ std::string SpellScript::TargetHook::ToString()
     return oss.str();
 }
 
-bool SpellScript::TargetHook::CheckEffect(SpellInfo const* spellInfo, uint8 effIndex)
+bool SpellScript::TargetHook::CheckEffect(SpellInfo const* spellEntry, uint8 effIndex)
 {
     if (!targetType)
         return false;
 
-    if (spellInfo->Effects[effIndex].TargetA.GetTarget() != targetType &&
-            spellInfo->Effects[effIndex].TargetB.GetTarget() != targetType)
+    if (spellEntry->Effects[effIndex].TargetA.GetTarget() != targetType &&
+            spellEntry->Effects[effIndex].TargetB.GetTarget() != targetType)
         return false;
 
     SpellImplicitTargetInfo targetInfo(targetType);
@@ -400,7 +419,7 @@ bool SpellScript::IsInEffectHook() const
 
 Unit* SpellScript::GetCaster()
 {
-    return m_spell->GetCaster()->ToUnit();
+    return m_spell->GetCaster();
 }
 
 GameObject* SpellScript::GetGObjCaster()
@@ -533,6 +552,27 @@ void SpellScript::SetHitDamage(int32 damage)
         LOG_ERROR("spells.scripts", "Script: `{}` Spell: `{}`: function SpellScript::SetHitDamage was called, but function has no effect in current hook!", m_scriptName->c_str(), m_scriptSpellId);
         return;
     }
+
+    Unit* target = m_spell->unitTarget;
+    Unit* caster = m_spell->GetCaster();
+    if (target && caster)
+    {
+        uint32 beforeDamage = uint32(std::max(0, m_spell->m_damage));
+        uint32 afterDamage = uint32(std::max(0, damage));
+        AsInt64 asDamage = caster->PeekAsDamageOverride(target, beforeDamage);
+        // A script may set the exact wide value before passing its int32 client
+        // projection to SetHitDamage. That projection is not a second damage
+        // modification and must not scale the wide value again.
+        if (asDamage > beforeDamage && !IsScriptHitValueProjection(asDamage, afterDamage))
+        {
+            asDamage = ScaleScriptHitValue(asDamage, beforeDamage, afterDamage);
+            if (asDamage > afterDamage)
+                caster->SetAsDamageOverride(target->GetGUID(), asDamage);
+            else
+                caster->SetAsDamageOverride(target->GetGUID(), AsInt64Zero());
+        }
+    }
+
     m_spell->m_damage = damage;
 }
 
@@ -553,6 +593,24 @@ void SpellScript::SetHitHeal(int32 heal)
         LOG_ERROR("spells.scripts", "Script: `{}` Spell: `{}`: function SpellScript::SetHitHeal was called, but function has no effect in current hook!", m_scriptName->c_str(), m_scriptSpellId);
         return;
     }
+
+    Unit* target = m_spell->unitTarget;
+    Unit* caster = m_spell->GetCaster();
+    if (target && caster)
+    {
+        uint32 beforeHeal = uint32(std::max(0, m_spell->m_healing));
+        uint32 afterHeal = uint32(std::max(0, heal));
+        AsInt64 asHeal = caster->PeekAsHealOverride(target, beforeHeal);
+        if (asHeal > beforeHeal && !IsScriptHitValueProjection(asHeal, afterHeal))
+        {
+            asHeal = ScaleScriptHitValue(asHeal, beforeHeal, afterHeal);
+            if (asHeal > afterHeal)
+                caster->SetAsHealOverride(target->GetGUID(), asHeal);
+            else
+                caster->SetAsHealOverride(target->GetGUID(), AsInt64Zero());
+        }
+    }
+
     m_spell->m_healing = heal;
 }
 
@@ -738,14 +796,6 @@ bool AuraScript::_Validate(SpellInfo const* entry)
         if (!entry->HasEffect(SPELL_EFFECT_APPLY_AURA) && !entry->HasAreaAuraEffect())
             LOG_ERROR("spells.scripts", "Spell `{}` of script `{}` does not have apply aura effect - handler bound to hook `DoCheckProc` of AuraScript won't be executed", entry->Id, m_scriptName->c_str());
 
-    for (std::list<CheckEffectProcHandler>::iterator itr = DoCheckEffectProc.begin(); itr != DoCheckEffectProc.end(); ++itr)
-        if (!itr->GetAffectedEffectsMask(entry))
-            LOG_ERROR("spells.scripts", "Spell `{}` Effect `{}` of script `{}` did not match dbc effect data - handler bound to hook `DoCheckEffectProc` of AuraScript won't be executed", entry->Id, itr->ToString(), m_scriptName->c_str());
-
-    for (std::list<AfterCheckProcHandler>::iterator itr = DoAfterCheckProc.begin(); itr != DoAfterCheckProc.end(); ++itr)
-        if (!entry->HasEffect(SPELL_EFFECT_APPLY_AURA) && !entry->HasAreaAuraEffect())
-            LOG_ERROR("spells.scripts", "Spell `{}` of script `{}` does not have apply aura effect - handler bound to hook `DoAfterCheckProc` of AuraScript won't be executed", entry->Id, m_scriptName->c_str());
-
     for (std::list<AuraProcHandler>::iterator itr = DoPrepareProc.begin(); itr != DoPrepareProc.end(); ++itr)
         if (!entry->HasEffect(SPELL_EFFECT_APPLY_AURA) && !entry->HasAreaAuraEffect())
             LOG_ERROR("spells.scripts", "Spell `{}` of script `{}` does not have apply aura effect - handler bound to hook `DoPrepareProc` of AuraScript won't be executed", entry->Id, m_scriptName->c_str());
@@ -794,9 +844,9 @@ AuraScript::EffectBase::EffectBase(uint8 _effIndex, uint16 _effName)
 {
 }
 
-bool AuraScript::EffectBase::CheckEffect(SpellInfo const* spellInfo, uint8 effIndex)
+bool AuraScript::EffectBase::CheckEffect(SpellInfo const* spellEntry, uint8 effIndex)
 {
-    return _SpellScript::EffectAuraNameCheck::Check(spellInfo, effIndex);
+    return _SpellScript::EffectAuraNameCheck::Check(spellEntry, effIndex);
 }
 
 std::string AuraScript::EffectBase::ToString()
@@ -957,6 +1007,46 @@ void AuraScript::EffectProcHandler::Call(AuraScript* auraScript, AuraEffect cons
     (auraScript->*_EffectHandlerScript)(aurEff, eventInfo);
 }
 
+AuraScript::AuraOnHitHandler::AuraOnHitHandler(AuraOnHitFnType AuraHitHandlerScript)
+{
+    _AuraHitHandlerScript = AuraHitHandlerScript;
+}
+
+void AuraScript::AuraOnHitHandler::Call(AuraScript* auraScript, Unit* HitUnit, SpellInfo const* Info)
+{
+    (auraScript->*_AuraHitHandlerScript)(HitUnit, Info);
+}
+
+AuraScript::AuraOnUpdateHandler::AuraOnUpdateHandler(AuraOnUpdateFnType AuraUpdateHandlerScript)
+{
+    _AuraUpdateHandlerScript = AuraUpdateHandlerScript;
+}
+
+void AuraScript::AuraOnUpdateHandler::Call(AuraScript* auraScript)
+{
+    (auraScript->*_AuraUpdateHandlerScript)();
+}
+
+AuraScript::AuraOnDamageCritEndHandler::AuraOnDamageCritEndHandler(AuraOnDamageCritEndFnType AuraDamageCritEndHandlerScript)
+{
+    _AuraDamageCritEndHandlerScript = AuraDamageCritEndHandlerScript;
+}
+
+void AuraScript::AuraOnDamageCritEndHandler::Call(AuraScript* auraScript, bool MeCrit)
+{
+    (auraScript->*_AuraDamageCritEndHandlerScript)(MeCrit);
+}
+
+AuraScript::AuraOnDamageInfoTypeHandler::AuraOnDamageInfoTypeHandler(AuraOnDamageInfoTypeFnType AuraDamageInfoTypeHandlerScript)
+{
+    _AuraDamageInfoTypeHandlerScript = AuraDamageInfoTypeHandlerScript;
+}
+
+void AuraScript::AuraOnDamageInfoTypeHandler::Call(AuraScript* auraScript, CalcDamageInfo* CDmgInfo, bool MeDmg)
+{
+    (auraScript->*_AuraDamageInfoTypeHandlerScript)(CDmgInfo, MeDmg);
+}
+
 bool AuraScript::_Load(Aura* aura)
 {
     m_aura = aura;
@@ -1042,13 +1132,6 @@ Unit* AuraScript::GetCaster() const
     return m_aura->GetCaster();
 }
 
-GameObject* AuraScript::GetGObjCaster() const
-{
-    if (WorldObject* caster = m_aura->GetCaster())
-        return caster->ToGameObject();
-    return nullptr;
-}
-
 WorldObject* AuraScript::GetOwner() const
 {
     return m_aura->GetOwner();
@@ -1057,6 +1140,11 @@ WorldObject* AuraScript::GetOwner() const
 Unit* AuraScript::GetUnitOwner() const
 {
     return m_aura->GetUnitOwner();
+}
+
+Unit* AuraScript::GetUseUnitOwner() const
+{
+    return m_aura->GetUseUnitOwner();
 }
 
 DynamicObject* AuraScript::GetDynobjOwner() const
@@ -1204,8 +1292,6 @@ Unit* AuraScript::GetTarget() const
         case AURA_SCRIPT_HOOK_EFFECT_AFTER_MANASHIELD:
         case AURA_SCRIPT_HOOK_EFFECT_SPLIT:
         case AURA_SCRIPT_HOOK_CHECK_PROC:
-        case AURA_SCRIPT_HOOK_CHECK_EFFECT_PROC:
-        case AURA_SCRIPT_HOOK_AFTER_CHECK_PROC:
         case AURA_SCRIPT_HOOK_PREPARE_PROC:
         case AURA_SCRIPT_HOOK_PROC:
         case AURA_SCRIPT_HOOK_AFTER_PROC:

@@ -169,9 +169,14 @@ struct LootItem
     bool    follow_loot_rules : 1;
     uint8   groupid           : 7;
 
+    int32 TempGroupId = -1;
+    uint32 CustomCount = 0;
+
+    [[nodiscard]] uint32 GetCount() const { return CustomCount ? CustomCount : count; }
+
     // Constructor, copies most fields from LootStoreItem, generates random count and random suffixes/properties
     // Should be called for non-reference LootStoreItem entries only (reference = 0)
-    explicit LootItem(LootStoreItem const& li);
+    explicit LootItem(LootStoreItem const& li, int32 tempGroupId = -1);
 
     LootItem() = default;
 
@@ -319,7 +324,7 @@ struct Loot
 
     std::vector<LootItem> items;
     std::vector<LootItem> quest_items;
-    uint32 gold;
+    uint64 gold;
     uint8 unlootedCount{0};
     ObjectGuid roundRobinPlayer;        // GUID of the player having the Round-Robin ownership for the loot. If 0, round robin owner has released.
     ObjectGuid lootOwnerGUID;
@@ -330,7 +335,7 @@ struct Loot
     ObjectGuid sourceWorldObjectGUID;
     GameObject* sourceGameObject{nullptr};
 
-    Loot(uint32 _gold = 0) : gold(_gold) { }
+    Loot(uint64 _gold = 0) : gold(_gold) { }
     ~Loot() { clear(); }
 
     // if loot becomes invalid this reference is used to inform the listener
@@ -377,7 +382,7 @@ struct Loot
     bool FillLoot(uint32 lootId, LootStore const& store, Player* lootOwner, bool personal, bool noEmptyError = false, uint16 lootMode = LOOT_MODE_DEFAULT, WorldObject* lootSource = nullptr);
 
     // Inserts the item into the loot (called by LootTemplate processors)
-    void AddItem(LootStoreItem const& item);
+    void AddItem(LootStoreItem const& item, Player const* player = nullptr, int32 tempGroupId = -1);
 
     LootItem* LootItemInSlot(uint32 lootslot, Player* player, QuestItem** qitem = nullptr, QuestItem** ffaitem = nullptr, QuestItem** conditem = nullptr);
     uint32 GetMaxSlotInLootFor(Player* player) const;

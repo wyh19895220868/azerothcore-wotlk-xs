@@ -16,7 +16,9 @@
  */
 
 #include "OpenSSLCrypto.h"
+#include "Errors.h"
 #include <openssl/crypto.h> // NOTE: this import is NEEDED (even though some IDEs report it as unused)
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
 #include <openssl/provider.h>
 
 OSSL_PROVIDER* LegacyProvider;
@@ -38,18 +40,24 @@ void SetupLibrariesForWindows()
 }
 #endif
 
+#endif // OpenSSL 3 providers
+
 void OpenSSLCrypto::threadsSetup()
 {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
 #if AC_PLATFORM == AC_PLATFORM_WINDOWS
     SetupLibrariesForWindows();
 #endif
     LegacyProvider = OSSL_PROVIDER_load(nullptr, "legacy");
     DefaultProvider = OSSL_PROVIDER_load(nullptr, "default");
+#endif
 }
 
 void OpenSSLCrypto::threadsCleanup()
 {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     OSSL_PROVIDER_unload(LegacyProvider);
     OSSL_PROVIDER_unload(DefaultProvider);
     OSSL_PROVIDER_set_default_search_path(nullptr, nullptr);
+#endif
 }

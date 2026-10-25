@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by the
+ * Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -27,8 +27,8 @@ class ChatHandler;
 // from blizzard lua
 enum GMTicketSystemStatus
 {
-    GMTICKET_QUEUE_STATUS_DISABLED               = 0,
-    GMTICKET_QUEUE_STATUS_ENABLED                = 1
+    GMTICKET_QUEUE_STATUS_DISABLED = 0,
+    GMTICKET_QUEUE_STATUS_ENABLED  = 1
 };
 
 enum GMTicketStatus
@@ -48,9 +48,9 @@ enum GMTicketResponse
 };
 
 // from Blizzard LUA:
-// GMTICKET_ASSIGNEDTOGM_STATUS_NOT_ASSIGNED      = 0;    -- ticket is not currently assigned to a gm
-// GMTICKET_ASSIGNEDTOGM_STATUS_ASSIGNED          = 1;    -- ticket is assigned to a normal gm
-// GMTICKET_ASSIGNEDTOGM_STATUS_ESCALATED         = 2;    -- ticket is in the escalation queue
+// GMTICKET_ASSIGNEDTOGM_STATUS_NOT_ASSIGNED = 0;    -- ticket is not currently assigned to a gm
+// GMTICKET_ASSIGNEDTOGM_STATUS_ASSIGNED = 1;        -- ticket is assigned to a normal gm
+// GMTICKET_ASSIGNEDTOGM_STATUS_ESCALATED = 2;        -- ticket is in the escalation queue
 // 3 is a custom value and should never actually be sent
 enum GMTicketEscalationStatus
 {
@@ -63,25 +63,25 @@ enum GMTicketEscalationStatus
 // from blizzard lua
 enum GMTicketOpenedByGMStatus
 {
-    GMTICKET_OPENEDBYGM_STATUS_NOT_OPENED         = 0,      // ticket has never been opened by a gm
-    GMTICKET_OPENEDBYGM_STATUS_OPENED             = 1       // ticket has been opened by a gm
+    GMTICKET_OPENEDBYGM_STATUS_NOT_OPENED = 0,      // ticket has never been opened by a gm
+    GMTICKET_OPENEDBYGM_STATUS_OPENED     = 1       // ticket has been opened by a gm
 };
 
 enum LagReportType
 {
-    LAG_REPORT_TYPE_LOOT                          = 1,
-    LAG_REPORT_TYPE_AUCTION_HOUSE                 = 2,
-    LAG_REPORT_TYPE_MAIL                          = 3,
-    LAG_REPORT_TYPE_CHAT                          = 4,
-    LAG_REPORT_TYPE_MOVEMENT                      = 5,
-    LAG_REPORT_TYPE_SPELL                         = 6
+    LAG_REPORT_TYPE_LOOT = 1,
+    LAG_REPORT_TYPE_AUCTION_HOUSE = 2,
+    LAG_REPORT_TYPE_MAIL = 3,
+    LAG_REPORT_TYPE_CHAT = 4,
+    LAG_REPORT_TYPE_MOVEMENT = 5,
+    LAG_REPORT_TYPE_SPELL = 6
 };
 
 enum TicketType
 {
-    TICKET_TYPE_OPEN                              = 0,
-    TICKET_TYPE_CLOSED                            = 1,
-    TICKET_TYPE_CHARACTER_DELETED                 = 2,
+    TICKET_TYPE_OPEN = 0,
+    TICKET_TYPE_CLOSED = 1,
+    TICKET_TYPE_CHARACTER_DELETED = 2,
 };
 
 class GmTicket
@@ -139,7 +139,7 @@ public:
 
     void AppendResponse(std::string const& response) { _response += response; }
     std::string GetResponse() { return _response; }
-    void DeleteResponse() { _response = ""; }
+    void DeleteResponse() { _response.clear(); }
 
     bool LoadFromDB(Field* fields);
     void SaveToDB(CharacterDatabaseTransaction trans) const;
@@ -150,7 +150,7 @@ public:
 
     void TeleportTo(Player* player) const;
     std::string FormatMessageString(ChatHandler& handler, bool detailed = false) const;
-    std::string FormatMessageString(ChatHandler& handler, char const* szClosedName, char const* szAssignedToName, char const* szUnassignedName, char const* szDeletedName) const;
+    std::string FormatMessageString(ChatHandler& handler, const char* szClosedName, const char* szAssignedToName, const char* szUnassignedName, const char* szDeletedName) const;
 
     void SetChatLog(std::list<uint32> time, std::string const& log);
     std::string const& GetChatLog() const { return _chatLog; }
@@ -174,7 +174,7 @@ private:
     bool _completed;
     GMTicketEscalationStatus _escalatedStatus;
     bool _viewed;
-    bool _needResponse; /// @todo: find out the use of this, and then store it in DB
+    bool _needResponse; // TODO: find out the use of this, and then store it in DB
     bool _needMoreHelp;
     std::string _response;
     std::string _chatLog; // No need to store in db, will be refreshed every session client side
@@ -230,7 +230,7 @@ public:
     void SetStatus(bool status) { _status = status; }
 
     uint64 GetLastChange() const { return _lastChange; }
-    void UpdateLastChange(GmTicket* ticket);
+    void UpdateLastChange(GmTicket* ticket = nullptr);
 
     uint32 GenerateTicketId() { return ++_lastTicketId; }
     uint32 GetOpenTicketCount() const { return _openTicketCount; }

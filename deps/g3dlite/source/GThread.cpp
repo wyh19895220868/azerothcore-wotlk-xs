@@ -92,6 +92,12 @@ typedef struct tagTHREADNAME_INFO {
 #pragma pack(pop)
 
 static void SetThreadName(DWORD dwThreadID, const char* threadName) {
+#if defined(__MINGW32__)
+   // MinGW does not implement MSVC's structured exception syntax. Thread
+   // naming is diagnostic only, so leave it disabled for the MinGW build.
+   (void)dwThreadID;
+   (void)threadName;
+#else
    THREADNAME_INFO info;
    info.dwType = 0x1000;
    info.szName = threadName;
@@ -101,12 +107,13 @@ static void SetThreadName(DWORD dwThreadID, const char* threadName) {
    __try {
       RaiseException( MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info );
    } __except(EXCEPTION_EXECUTE_HANDLER) {}
+#endif
 }
 #endif
 
 
 bool GThread::start(SpawnBehavior behavior) {
-    
+
     debugAssertM(! started(), "Thread has already executed.");
     if (started()) {
         return false;

@@ -489,7 +489,7 @@ public:
 
                     if (GetTeamIdInInstance() == TEAM_ALLIANCE)
                     {
-                        creature->UpdateEntry(NPC_SE_MURADIN_BRONZEBEARD, true);
+                        creature->UpdateEntry(NPC_SE_MURADIN_BRONZEBEARD, nullptr, true);
                         creature->LoadEquipment();
                     }
                     DeathbringerSaurfangEventGUID = creature->GetGUID();

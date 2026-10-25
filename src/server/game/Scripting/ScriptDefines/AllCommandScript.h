@@ -46,7 +46,10 @@ public:
      * @param handler Contains information about the ChatHandler
      * @param cmdStr Contains information about the command name
      */
-    [[nodiscard]] virtual bool OnTryExecuteCommand(ChatHandler& /*handler*/, std::string_view /*cmdStr*/) { return true; }
+    [[nodiscard]] virtual bool OnTryExecuteCommand(ChatHandler& handler, std::string_view cmdStr) { return CanExecuteCommand(handler, cmdStr); }
+
+    // Compatibility hook used by older modules (for example Eluna).
+    [[nodiscard]] virtual bool CanExecuteCommand(ChatHandler& /*handler*/, std::string_view /*cmdStr*/) { return true; }
 
     [[nodiscard]] virtual bool OnBeforeIsInvokerVisible(std::string /*name*/, Acore::Impl::ChatCommands::CommandPermissions /*permissions*/, ChatHandler const& /*who*/) { return true; }
 };

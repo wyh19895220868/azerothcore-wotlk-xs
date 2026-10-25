@@ -52,6 +52,8 @@ void MapGridManager::UnloadGrid(uint16 const x, uint16 const y)
     if (!grid)
         return;
 
+    bool const wasLoaded = grid->IsObjectDataLoaded();
+
     {
         GridObjectCleaner worker;
         TypeContainerVisitor<GridObjectCleaner, GridTypeMapContainer> visitor(worker);
@@ -67,6 +69,16 @@ void MapGridManager::UnloadGrid(uint16 const x, uint16 const y)
     }
 
     _mapGrid[x][y] = nullptr;
+
+    // 335XS fix: IsGridsFullyCreated()/IsGridsFullyLoaded() compare these counters
+    // with 64*64, but they were only ever incremented. After enough load/unload
+    // cycles the counters reached that value and LoadGridsInRange() returned
+    // early forever, leaving newly logged-in players without creature grids.
+    if (wasLoaded && _loadedGridsCount)
+        --_loadedGridsCount;
+
+    if (_createdGridsCount)
+        --_createdGridsCount;
 }
 
 bool MapGridManager::IsGridCreated(uint16 const x, uint16 const y) const

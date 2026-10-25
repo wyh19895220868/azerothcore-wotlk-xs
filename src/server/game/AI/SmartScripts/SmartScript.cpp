@@ -504,10 +504,10 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
                     {
                         if (CreatureTemplate const* ci = sObjectMgr->GetCreatureTemplate(e.action.morphOrMount.creature))
                         {
-                            CreatureModel const* model = ObjectMgr::ChooseDisplayId(ci);
-                            target->ToCreature()->SetDisplayId(model->CreatureDisplayID, model->DisplayScale);
+                            uint32 modelId = ObjectMgr::ChooseDisplayId(ci);
+                            target->ToCreature()->SetDisplayId(modelId, ci->scale);
                             LOG_DEBUG("scripts.ai", "SmartScript::ProcessAction:: SMART_ACTION_MORPH_TO_ENTRY_OR_MODEL: Creature entry {}, GuidLow {} set displayid to {}",
-                                      target->GetEntry(), target->GetGUID().ToString(), model->CreatureDisplayID);
+                                      target->GetEntry(), target->GetGUID().ToString(), modelId);
                         }
                     }
                         //if no param1, then use value from param2 (modelId)
@@ -1438,7 +1438,7 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
                     if (e.action.morphOrMount.creature > 0)
                     {
                         if (CreatureTemplate const* cInfo = sObjectMgr->GetCreatureTemplate(e.action.morphOrMount.creature))
-                            target->ToUnit()->Mount(ObjectMgr::ChooseDisplayId(cInfo)->CreatureDisplayID);
+                            target->ToUnit()->Mount(ObjectMgr::ChooseDisplayId(cInfo));
                     }
                     else
                         target->ToUnit()->Mount(e.action.morphOrMount.model);
@@ -3044,7 +3044,7 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
                 if (!IsPlayer(target))
                     continue;
 
-                target->ToPlayer()->GetCinematicMgr().StartCinematic(e.action.cinematic.entry);
+                target->ToPlayer()->GetCinematicMgr()->StartCinematic(e.action.cinematic.entry);
             }
             break;
         }

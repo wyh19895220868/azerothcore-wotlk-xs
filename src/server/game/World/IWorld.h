@@ -31,6 +31,9 @@ class WorldPacket;
 class WorldSession;
 class Player;
 
+// Legacy custom-script compatibility.
+using SessionMap = std::unordered_map<uint32, WorldSession*>;
+
 /// Storage class for commands issued for delayed execution
 struct AC_GAME_API CliCommandHolder
 {
@@ -133,6 +136,19 @@ public:
     [[nodiscard]] virtual std::string const& GetRealmName() const = 0;
     virtual void SetRealmName(std::string name) = 0;
     virtual void ReloadRBAC() = 0;
+
+    // Legacy custom-script compatibility. World overrides this with the live session map.
+    [[nodiscard]] virtual SessionMap const& GetAllSessions() const
+    {
+        static SessionMap const empty;
+        return empty;
+    }
+
+    virtual void SendServerMessage(ServerMessageType /*messageID*/, std::string /*stringParam*/ = "", Player* /*player*/ = nullptr) { }
+    virtual void setWorldState(uint32 /*index*/, uint64 /*value*/) { }
+    [[nodiscard]] virtual uint64 getWorldState(uint32 /*index*/) const { return 0; }
+    virtual void SendGlobalMessage(WorldPacket const* /*packet*/, WorldSession* /*self*/ = nullptr, TeamId /*teamId*/ = TEAM_NEUTRAL) { }
+    virtual void SendGlobalGMMessage(WorldPacket const* /*packet*/, WorldSession* /*self*/ = nullptr, TeamId /*teamId*/ = TEAM_NEUTRAL) { }
 };
 
 #endif //AZEROTHCORE_IWORLD_H

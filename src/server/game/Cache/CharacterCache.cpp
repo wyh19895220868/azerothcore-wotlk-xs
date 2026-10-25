@@ -203,6 +203,29 @@ void CharacterCache::UpdateCharacterArenaTeamId(ObjectGuid const& guid, uint8 sl
     itr->second.ArenaTeamId[slot] = arenaTeamId;
 }
 
+void CharacterCache::UpdateCharacterDataOnClass(ObjectGuid const& guid, uint8 playerClass)
+{
+    auto itr = _characterCacheStore.find(guid);
+    if (itr != _characterCacheStore.end())
+        itr->second.Class = playerClass;
+}
+
+void CharacterCache::DoUpdateNamePrefix(ObjectGuid const& guid, std::string prefix)
+{
+    if (prefix.empty())
+        return;
+
+    auto itr = _characterCacheStore.find(guid);
+    if (itr != _characterCacheStore.end())
+        itr->second.VipPrefix = std::move(prefix);
+}
+
+std::string CharacterCache::GetNamePrefix(ObjectGuid const& guid) const
+{
+    auto itr = _characterCacheStore.find(guid);
+    return itr != _characterCacheStore.end() ? itr->second.VipPrefix : std::string();
+}
+
 void CharacterCache::UpdateCharacterMailCount(ObjectGuid const& guid, int32 count, bool update)
 {
     auto itr = _characterCacheStore.find(guid);
@@ -363,4 +386,10 @@ ObjectGuid CharacterCache::GetCharacterGroupGuidByGuid(ObjectGuid guid) const
     }
 
     return itr->second.GroupGuid;
+}
+
+std::string CharacterCache::GetCharacterNameForGuid(ObjectGuid guid) const
+{
+    auto itr = _characterCacheStore.find(guid);
+    return itr != _characterCacheStore.end() ? itr->second.Name : std::string();
 }

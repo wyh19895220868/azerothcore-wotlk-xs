@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by the
+ * Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -17,6 +17,7 @@
 
 #include "Item.h"
 #include "Common.h"
+#include "ConditionMgr.h"
 #include "DatabaseEnv.h"
 #include "GameTime.h"
 #include "ItemEnchantmentMgr.h"
@@ -25,10 +26,19 @@
 #include "ScriptMgr.h"
 #include "SpellInfo.h"
 #include "SpellMgr.h"
-#include "StringConvert.h"
-#include "TC9Sidecar.h"
-#include "Tokenize.h"
 #include "WorldPacket.h"
+#include "WorldSession.h"
+#include "Tokenize.h"
+#include "StringConvert.h"
+#include "..\..\..\scripts\Custom\_Helper\Helper.h"
+#include "..\..\..\scripts\Custom\ItemFuncMgr\ItemFuncMgr.h"
+#include "..\..\..\scripts\Custom\ItemRandomAtMgr\ItemRandomAtMgr.h"
+#include "..\..\..\scripts\Custom\ItemRunesMgr\ItemRunesMgr.h"
+#include "../../../scripts/Custom/AddonActive/DoAddon.h"
+#include "../../../scripts/Custom/PlayerModMgr/PlayerModMgr.h"
+#include "../../../scripts/Custom/ItemDevelopMgr/ItemDevelopMgr.h"
+
+ItemTempKtCacheMap ItemTempKtCacheStore;
 
 void AddItemsSetItem(Player* player, Item* item)
 {
@@ -39,7 +49,7 @@ void AddItemsSetItem(Player* player, Item* item)
 
     if (!set)
     {
-        LOG_ERROR("sql.sql", "Item set {} for item (id {}) not found, mods not applied.", setid, proto->ItemId);
+        //LOG_ERROR("sql.sql", "Item set {} for item (id {}) not found, mods not applied.", setid, proto->ItemId);
         return;
     }
 
@@ -48,7 +58,7 @@ void AddItemsSetItem(Player* player, Item* item)
 
     ItemSetEffect* eff = nullptr;
 
-    for (std::size_t x = 0; x < player->ItemSetEff.size(); ++x)
+    for (size_t x = 0; x < player->ItemSetEff.size(); ++x)
     {
         if (player->ItemSetEff[x] && player->ItemSetEff[x]->setid == setid)
         {
@@ -62,7 +72,7 @@ void AddItemsSetItem(Player* player, Item* item)
         eff = new ItemSetEffect();
         eff->setid = setid;
 
-        std::size_t x = 0;
+        size_t x = 0;
         for (; x < player->ItemSetEff.size(); ++x)
             if (!player->ItemSetEff[x])
                 break;
@@ -99,7 +109,7 @@ void AddItemsSetItem(Player* player, Item* item)
                 SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(set->spells[x]);
                 if (!spellInfo)
                 {
-                    LOG_ERROR("entities.item", "WORLD: unknown spell id {} in items set {} effects", set->spells[x], setid);
+                    //LOG_ERROR("entities.item", "WORLD: unknown spell id {} in items set {} effects", set->spells[x], setid);
                     break;
                 }
 
@@ -124,12 +134,12 @@ void RemoveItemsSetItem(Player* player, ItemTemplate const* proto)
 
     if (!set)
     {
-        LOG_ERROR("sql.sql", "Item set #{} for item #{} not found, mods not removed.", setid, proto->ItemId);
+        //LOG_ERROR("sql.sql", "Item set #{} for item #{} not found, mods not removed.", setid, proto->ItemId);
         return;
     }
 
     ItemSetEffect* eff = nullptr;
-    std::size_t setindex = 0;
+    size_t setindex = 0;
     for (; setindex < player->ItemSetEff.size(); setindex++)
     {
         if (player->ItemSetEff[setindex] && player->ItemSetEff[setindex]->setid == setid)
@@ -182,64 +192,46 @@ bool ItemCanGoIntoBag(ItemTemplate const* pProto, ItemTemplate const* pBagProto)
     switch (pBagProto->Class)
     {
         case ITEM_CLASS_CONTAINER:
-        {
-            if (pBagProto->SubClass == ITEM_SUBCLASS_CONTAINER)
+            switch (pBagProto->SubClass)
             {
-                return true;
-            }
-            else
-            {
-                if (pProto->Class == ITEM_CLASS_CONTAINER)
-                {
-                    return false;
-                }
-
-                switch (pBagProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_SOUL_CONTAINER:
-                        if (!(pProto->BagFamily & BAG_FAMILY_MASK_SOUL_SHARDS))
-                            return false;
-                        return true;
-                    case ITEM_SUBCLASS_HERB_CONTAINER:
-                        if (!(pProto->BagFamily & BAG_FAMILY_MASK_HERBS))
-                            return false;
-                        return true;
-                    case ITEM_SUBCLASS_ENCHANTING_CONTAINER:
-                        if (!(pProto->BagFamily & BAG_FAMILY_MASK_ENCHANTING_SUPP))
-                            return false;
-                        return true;
-                    case ITEM_SUBCLASS_MINING_CONTAINER:
-                        if (!(pProto->BagFamily & BAG_FAMILY_MASK_MINING_SUPP))
-                            return false;
-                        return true;
-                    case ITEM_SUBCLASS_ENGINEERING_CONTAINER:
-                        if (!(pProto->BagFamily & BAG_FAMILY_MASK_ENGINEERING_SUPP))
-                            return false;
-                        return true;
-                    case ITEM_SUBCLASS_GEM_CONTAINER:
-                        if (!(pProto->BagFamily & BAG_FAMILY_MASK_GEMS))
-                            return false;
-                        return true;
-                    case ITEM_SUBCLASS_LEATHERWORKING_CONTAINER:
-                        if (!(pProto->BagFamily & BAG_FAMILY_MASK_LEATHERWORKING_SUPP))
-                            return false;
-                        return true;
-                    case ITEM_SUBCLASS_INSCRIPTION_CONTAINER:
-                        if (!(pProto->BagFamily & BAG_FAMILY_MASK_INSCRIPTION_SUPP))
-                            return false;
-                        return true;
-                    default:
+                case ITEM_SUBCLASS_CONTAINER:
+                    return true;
+                case ITEM_SUBCLASS_SOUL_CONTAINER:
+                    if (!(pProto->BagFamily & BAG_FAMILY_MASK_SOUL_SHARDS))
                         return false;
-                }
+                    return true;
+                case ITEM_SUBCLASS_HERB_CONTAINER:
+                    if (!(pProto->BagFamily & BAG_FAMILY_MASK_HERBS))
+                        return false;
+                    return true;
+                case ITEM_SUBCLASS_ENCHANTING_CONTAINER:
+                    if (!(pProto->BagFamily & BAG_FAMILY_MASK_ENCHANTING_SUPP))
+                        return false;
+                    return true;
+                case ITEM_SUBCLASS_MINING_CONTAINER:
+                    if (!(pProto->BagFamily & BAG_FAMILY_MASK_MINING_SUPP))
+                        return false;
+                    return true;
+                case ITEM_SUBCLASS_ENGINEERING_CONTAINER:
+                    if (!(pProto->BagFamily & BAG_FAMILY_MASK_ENGINEERING_SUPP))
+                        return false;
+                    return true;
+                case ITEM_SUBCLASS_GEM_CONTAINER:
+                    if (!(pProto->BagFamily & BAG_FAMILY_MASK_GEMS))
+                        return false;
+                    return true;
+                case ITEM_SUBCLASS_LEATHERWORKING_CONTAINER:
+                    if (!(pProto->BagFamily & BAG_FAMILY_MASK_LEATHERWORKING_SUPP))
+                        return false;
+                    return true;
+                case ITEM_SUBCLASS_INSCRIPTION_CONTAINER:
+                    if (!(pProto->BagFamily & BAG_FAMILY_MASK_INSCRIPTION_SUPP))
+                        return false;
+                    return true;
+                default:
+                    return false;
             }
-        }
         case ITEM_CLASS_QUIVER:
-        {
-            if (pProto->Class == ITEM_CLASS_QUIVER)
-            {
-                return false;
-            }
-
             switch (pBagProto->SubClass)
             {
                 case ITEM_SUBCLASS_QUIVER:
@@ -253,9 +245,7 @@ bool ItemCanGoIntoBag(ItemTemplate const* pProto, ItemTemplate const* pBagProto)
                 default:
                     return false;
             }
-        }
     }
-
     return false;
 }
 
@@ -278,9 +268,49 @@ Item::Item()
     m_refundRecipient = 0;
     m_paidMoney = 0;
     m_paidExtendedCost = 0;
+
+    //-------------------------------------------------
+
+    UnBinded = false;
+    Prefix = "nullptr";
+    Suffix = "nullptr";
+    LevelStr = "nullptr";
+    MinWDmg = 0;
+    MaxWDmg = 0;
+    AsMinWDmg = AsInt64Zero();
+    AsMaxWDmg = AsInt64Zero();
+    for (uint8 i = 0; i < MAX_AT_A_COUNT; ++i)
+        RmAtStatStore.push_back(std::make_pair(-1, 0));
+
+    for (uint8 i = 0; i < MAX_AT_B_COUNT; ++i)
+        RmAtSpell[i] = 0;
+
+    //------------   随机属性倍率   ------------
+    for (uint8 i = 0; i < MAX_SX_B_COUNT; ++i)
+        _Attribute[i] = AsInt64(1);
+    //------------   随机属性倍率   ------------
+
+    RmAtLevel = 0;
+    NowCount = 0;
+    RunesCount = 0;
+    for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
+        ResItems[i] = 0;
+    for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
+        OSpells[i] = 0;
+
+    GSpellName = "";
+    GSpellListStr = "";
+    ItemRtsCount = 0;
+
+    LastSellVendorId = 0;
+
+    DeveLopRank = 0;
+    DeveLopXp = 0;
+
+    //-------------------------------------------------
 }
 
-bool Item::Create(ObjectGuid::LowType guidlow, uint32 itemid, Player const* owner)
+bool Item::Create(ObjectGuid::LowType guidlow, uint32 itemid, Player const* owner, int32 TempGroupId)
 {
     Object::_Create(guidlow, 0, HighGuid::Item);
 
@@ -304,6 +334,20 @@ bool Item::Create(ObjectGuid::LowType guidlow, uint32 itemid, Player const* owne
     SetUInt32Value(ITEM_FIELD_DURATION, itemProto->Duration);
     SetUInt32Value(ITEM_FIELD_CREATE_PLAYED_TIME, 0);
     sScriptMgr->OnItemCreate(this, itemProto, owner);
+
+    SetUInt32Value(ITEM_FIELD_PROPERTY_SEED, MAX_GUID_INDEX + guidlow);
+    uint32 NewLevel = sItemRandomAtMgr->GetNewAddToLevel(itemid);
+    bool OnReset = sItemRandomAtMgr->GetUOnSave(itemid, NewLevel);
+
+    if (TempGroupId > 0)
+        sItemRandomAtMgr->DoGenerateItemAtLoot(this, NewLevel, TempGroupId);
+    else
+        sItemRandomAtMgr->DoGenerateItemAt(this, NewLevel, OnReset);
+
+    sItemRunesMgr->AutoGenerateRandomRunesCount(this);
+    sItemFuncMgr->DoCreateRts(this);
+    sItemDevelopMgr->CreateSendDataDevelop(this);
+
     return true;
 }
 
@@ -349,7 +393,7 @@ void Item::SaveToDB(CharacterDatabaseTransaction trans)
                 uint8 index = 0;
                 CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(uState == ITEM_NEW ? CHAR_REP_ITEM_INSTANCE : CHAR_UPD_ITEM_INSTANCE);
                 stmt->SetData(  index, GetEntry());
-                stmt->SetData(++index, GetOwnerGUID().GetRawValue());
+                stmt->SetData(++index, GetOwnerGUID().GetCounter());
                 stmt->SetData(++index, GetGuidValue(ITEM_FIELD_CREATOR).GetCounter());
                 stmt->SetData(++index, GetGuidValue(ITEM_FIELD_GIFTCREATOR).GetCounter());
                 stmt->SetData(++index, GetCount());
@@ -379,10 +423,10 @@ void Item::SaveToDB(CharacterDatabaseTransaction trans)
 
                 trans->Append(stmt);
 
-                if ((uState == ITEM_CHANGED) && IsWrapped())
+                if ((uState == ITEM_CHANGED) && HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_WRAPPED))
                 {
                     stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_GIFT_OWNER);
-                    stmt->SetData(0, GetOwnerGUID().GetRawValue());
+                    stmt->SetData(0, GetOwnerGUID().GetCounter());
                     stmt->SetData(1, guid);
                     trans->Append(stmt);
                 }
@@ -394,7 +438,7 @@ void Item::SaveToDB(CharacterDatabaseTransaction trans)
                 stmt->SetData(0, guid);
                 trans->Append(stmt);
 
-                if (IsWrapped())
+                if (HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_WRAPPED))
                 {
                     stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_GIFT);
                     stmt->SetData(0, guid);
@@ -493,7 +537,7 @@ bool Item::LoadFromDB(ObjectGuid::LowType guid, ObjectGuid owner_guid, Field* fi
     // update max durability (and durability) if need
     // xinef: do not overwrite durability for wrapped items!!
     SetUInt32Value(ITEM_FIELD_MAXDURABILITY, proto->MaxDurability);
-    if (durability > proto->MaxDurability && !IsWrapped())
+    if (durability > proto->MaxDurability && !HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_WRAPPED))
     {
         SetUInt32Value(ITEM_FIELD_DURABILITY, proto->MaxDurability);
         need_save = true;
@@ -511,6 +555,29 @@ bool Item::LoadFromDB(ObjectGuid::LowType guid, ObjectGuid owner_guid, Field* fi
         stmt->SetData(3, guid);
         CharacterDatabase.Execute(stmt);
     }
+
+    SetUInt32Value(ITEM_FIELD_PROPERTY_SEED, MAX_GUID_INDEX + guid);
+
+    sItemRandomAtMgr->DoItemAtLoadForDB(this);
+    sItemRunesMgr->LoadForDBRunes(this);
+    sItemFuncMgr->LoadEnchRtsDB(this);
+    sItemDevelopMgr->LoadFromDBDevelop(this);
+
+    for (size_t i = KT01; i < KTMAX; i++)
+        TempKtStore[i] = 0;
+
+    auto Itr = ItemTempKtCacheStore.find(guid);
+    if (Itr != ItemTempKtCacheStore.end())
+        for (auto const& [Index, Value] : Itr->second)
+            TempKtStore[Index] = Value;
+
+    if (GetTempKt(KT03) > 0)
+    {
+        UnBinded = false;
+        SetBinding(true);
+    }
+
+    UnBinded = (GetTempKt(KT02) > 0);
 
     return true;
 }
@@ -658,7 +725,7 @@ int32 Item::GenerateItemRandomPropertyId(uint32 item_id)
         ItemRandomSuffixEntry const* random_id = sItemRandomSuffixStore.LookupEntry(randomPropId);
         if (!random_id)
         {
-            LOG_ERROR("sql.sql", "Enchantment id #{} used but it doesn't have records in sItemRandomSuffixStore.", randomPropId);
+            //LOG_ERROR("sql.sql", "Enchantment id #{} used but it doesn't have records in sItemRandomSuffixStore.", randomPropId);
             return 0;
         }
 
@@ -706,10 +773,10 @@ void Item::SetItemRandomProperties(int32 randomPropId)
 
 void Item::UpdateItemSuffixFactor()
 {
-    uint32 suffixFactor = GenerateEnchSuffixFactor(GetEntry());
+    /*uint32 suffixFactor = GenerateEnchSuffixFactor(GetEntry());
     if (GetItemSuffixFactor() == suffixFactor)
         return;
-    SetUInt32Value(ITEM_FIELD_PROPERTY_SEED, suffixFactor);
+    SetUInt32Value(ITEM_FIELD_PROPERTY_SEED, suffixFactor);*/
 }
 
 void Item::SetState(ItemUpdateState state, Player* forplayer)
@@ -794,7 +861,7 @@ bool Item::IsEquipped() const
 
 bool Item::CanBeTraded(bool mail, bool trade) const
 {
-    if ((!mail || !IsBoundAccountWide()) && (IsSoulBound() && (!IsBOPTradable() || !trade)))
+    if ((!mail || !IsBoundAccountWide()) && (IsSoulBound() && (!HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_BOP_TRADEABLE) || !trade)))
         return false;
 
     if (IsBag() && (Player::IsBagPos(GetPos()) || !((Bag const*)this)->IsEmpty()))
@@ -814,6 +881,9 @@ bool Item::CanBeTraded(bool mail, bool trade) const
         return false;
 
     if ((!mail || !IsBoundAccountWide()) && IsBoundByEnchant())
+        return false;
+
+    if (sItemFuncMgr->IsItemInStat(GetEntry()))
         return false;
 
     return true;
@@ -1015,11 +1085,8 @@ bool Item::HasSocket() const
 uint8 Item::GetGemCountWithID(uint32 GemID) const
 {
     uint8 count = 0;
-    for (uint32 enchant_slot = SOCK_ENCHANTMENT_SLOT; enchant_slot <= PRISMATIC_ENCHANTMENT_SLOT; ++enchant_slot)
+    for (uint32 enchant_slot = SOCK_ENCHANTMENT_SLOT; enchant_slot < SOCK_ENCHANTMENT_SLOT + MAX_GEM_SOCKETS; ++enchant_slot)
     {
-        if (enchant_slot == BONUS_ENCHANTMENT_SLOT)
-            continue;
-
         uint32 enchant_id = GetEnchantmentId(EnchantmentSlot(enchant_slot));
         if (!enchant_id)
             continue;
@@ -1037,11 +1104,8 @@ uint8 Item::GetGemCountWithID(uint32 GemID) const
 uint8 Item::GetGemCountWithLimitCategory(uint32 limitCategory) const
 {
     uint8 count = 0;
-    for (uint32 enchant_slot = SOCK_ENCHANTMENT_SLOT; enchant_slot <= PRISMATIC_ENCHANTMENT_SLOT; ++enchant_slot)
+    for (uint32 enchant_slot = SOCK_ENCHANTMENT_SLOT; enchant_slot < SOCK_ENCHANTMENT_SLOT + MAX_GEM_SOCKETS; ++enchant_slot)
     {
-        if (enchant_slot == BONUS_ENCHANTMENT_SLOT)
-            continue;
-
         uint32 enchant_id = GetEnchantmentId(EnchantmentSlot(enchant_slot));
         if (!enchant_id)
             continue;
@@ -1073,7 +1137,7 @@ void Item::SendUpdateSockets()
     for (uint32 i = SOCK_ENCHANTMENT_SLOT; i <= BONUS_ENCHANTMENT_SLOT; ++i)
         data << uint32(GetEnchantmentId(EnchantmentSlot(i)));
 
-    GetOwner()->SendDirectMessage(&data);
+    GetOwner()->GetSession()->SendPacket(&data);
 }
 
 // Though the client has the information in the item's data field,
@@ -1088,7 +1152,7 @@ void Item::SendTimeUpdate(Player* owner)
     WorldPacket data(SMSG_ITEM_TIME_UPDATE, (8 + 4));
     data << GetGUID();
     data << uint32(duration);
-    owner->SendDirectMessage(&data);
+    owner->GetSession()->SendPacket(&data);
 }
 
 Item* Item::CreateItem(uint32 item, uint32 count, Player const* player, bool clone, uint32 randomPropertyId)
@@ -1097,32 +1161,33 @@ Item* Item::CreateItem(uint32 item, uint32 count, Player const* player, bool clo
         return nullptr;                                        //don't create item at zero count
 
     ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(item);
-    if (!pProto)
-        ABORT();
-
-    if (count > pProto->GetMaxStackSize())
-        count = pProto->GetMaxStackSize();
-
-    ASSERT_NODEBUGINFO(count != 0 && "pProto->Stackable == 0 but checked at loading already");
-
-    uint16 realmId = DEFAULT_NON_CROSSREALM_REALM_ID;
-    if (sToCloud9Sidecar->IsCrossrealm() && player)
-        realmId = player->GetGUID().GetRealmID();
-
-    Item* pItem = NewItemOrBag(pProto);
-    if (!pItem->Create(sObjectMgr->GetGenerator<HighGuid::Item>().Generate(realmId), item, player))
+    if (pProto)
     {
-        delete pItem;
-        return nullptr;
+        if (count > pProto->GetMaxStackSize())
+            count = pProto->GetMaxStackSize();
+
+        ASSERT_NODEBUGINFO(count != 0 && "pProto->Stackable == 0 but checked at loading already");
+
+        Item* pItem = NewItemOrBag(pProto);
+        if (pItem->Create(sObjectMgr->GetGenerator<HighGuid::Item>().Generate(), item, player))
+        {
+            pItem->SetCount(count);
+            if (!clone)
+                pItem->SetItemRandomProperties(randomPropertyId ? randomPropertyId : Item::GenerateItemRandomPropertyId(item));
+            else if (randomPropertyId)
+                pItem->SetItemRandomProperties(randomPropertyId);
+
+            if (sHelper->GetBoolean(2201))
+                sItemFuncMgr->DoUseCustomEnch(pItem);
+
+            return pItem;
+        }
+        else
+            delete pItem;
     }
-
-    pItem->SetCount(count);
-    if (!clone)
-        pItem->SetItemRandomProperties(randomPropertyId ? randomPropertyId : Item::GenerateItemRandomPropertyId(item));
-    else if (randomPropertyId)
-        pItem->SetItemRandomProperties(randomPropertyId);
-
-    return pItem;
+    else
+        ABORT();
+    return nullptr;
 }
 
 Item* Item::CloneItem(uint32 count, Player const* player) const
@@ -1149,7 +1214,7 @@ bool Item::IsBindedNotWith(Player const* player) const
     if (GetOwnerGUID() == player->GetGUID())
         return false;
 
-    if (IsBOPTradable())
+    if (HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_BOP_TRADEABLE))
         if (allowedGUIDs.find(player->GetGUID()) != allowedGUIDs.end())
             return false;
 
@@ -1209,7 +1274,7 @@ void Item::DeleteRefundDataFromDB(CharacterDatabaseTransaction* trans)
 
 void Item::SetNotRefundable(Player* owner, bool changestate /*=true*/, CharacterDatabaseTransaction* trans /*=nullptr*/)
 {
-    if (!IsRefundable())
+    if (!HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_REFUNDABLE))
         return;
 
     RemoveFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_REFUNDABLE);
@@ -1286,25 +1351,12 @@ void Item::ClearSoulboundTradeable(Player* currentOwner)
 
 bool Item::CheckSoulboundTradeExpire()
 {
-    Player* owner = GetOwner();
-    if (!owner)
-        return false; // retry later
-
-    if (GetUInt32Value(ITEM_FIELD_CREATE_PLAYED_TIME) + 2 * HOUR < owner->GetTotalPlayedTime())
+    // called from owner's update - GetOwner() MUST be valid
+    if (GetUInt32Value(ITEM_FIELD_CREATE_PLAYED_TIME) + 2 * HOUR < GetOwner()->GetTotalPlayedTime())
     {
-        ClearSoulboundTradeable(owner);
+        ClearSoulboundTradeable(GetOwner());
         return true; // remove from tradeable list
     }
 
     return false;
-}
-
-std::string Item::GetDebugInfo() const
-{
-    std::stringstream sstr;
-    sstr << Object::GetDebugInfo() << "\n"
-        << std::boolalpha
-        << "Owner: " << GetOwnerGUID().ToString() << " Count: " << GetCount()
-        << " BagSlot: " << std::to_string(GetBagSlot()) << " Slot: " << std::to_string(GetSlot()) << " Equipped: " << IsEquipped();
-    return sstr.str();
 }

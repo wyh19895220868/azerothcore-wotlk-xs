@@ -137,3 +137,22 @@ e2e/go.work.sum
 
 .cache
 compile_commands.json
+
+# Custom systems are part of this fork; playerbots remains a pinned repository.
+!/modules/mod-auto-loot/
+!/modules/mod-creature-loot-chest/
+!/modules/mod-custom-loot/
+!/modules/mod-eluna/
+!/modules/mod-huanjinxitong/
+!/modules/mod-item-attributes/
+!/modules/mod-item-enhancement/
+!/modules/mod-item-growth/
+!/modules/mod-item-identification-system/
+!/modules/mod-item-refinement/
+!/modules/mod-item-sets/
+!/modules/mod-item-skills/
+!/modules/mod-map-control/
+!/modules/mod-playerbots/
+!/modules/mod-rune-system/
+!/src/server/scripts/Custom/
+!/src/server/scripts/Custom/**

@@ -158,6 +158,36 @@ bool World::IsClosed() const
     return _isClosed;
 }
 
+SessionMap const& World::GetAllSessions() const
+{
+    return sWorldSessionMgr->GetAllSessions();
+}
+
+void World::SendServerMessage(ServerMessageType messageID, std::string stringParam, Player* player)
+{
+    sWorldSessionMgr->SendServerMessage(messageID, std::move(stringParam), player);
+}
+
+void World::setWorldState(uint32 index, uint64 value)
+{
+    sWorldState->setWorldState(index, value);
+}
+
+uint64 World::getWorldState(uint32 index) const
+{
+    return sWorldState->getWorldState(index);
+}
+
+void World::SendGlobalMessage(WorldPacket const* packet, WorldSession* self, TeamId teamId)
+{
+    sWorldSessionMgr->SendGlobalMessage(packet, self, teamId);
+}
+
+void World::SendGlobalGMMessage(WorldPacket const* packet, WorldSession* self, TeamId teamId)
+{
+    sWorldSessionMgr->SendGlobalGMMessage(packet, self, teamId);
+}
+
 void World::SetClosed(bool val)
 {
     _isClosed = val;

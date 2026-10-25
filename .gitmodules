@@ -1,0 +1,4 @@
+[submodule "modules/mod-playerbots"]
+	path = modules/mod-playerbots
+	url = https://github.com/wyh19895220868/mod-playerbots-xs.git
+	branch = fix/xs-core-build-compat

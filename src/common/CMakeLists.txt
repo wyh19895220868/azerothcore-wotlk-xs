@@ -76,6 +76,18 @@ target_link_libraries(common
     stdfs
     fmt)
 
+if (WIN32)
+  target_link_libraries(common
+    PUBLIC
+      ws2_32
+      shlwapi
+      secur32
+      crypt32)
+  target_link_libraries(common
+    PUBLIC
+      mswsock)
+endif()
+
 if (BUILD_APPLICATION_WORLDSERVER OR BUILD_TOOLS_MAPS)
   target_link_libraries(common
     PUBLIC

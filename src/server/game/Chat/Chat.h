@@ -190,6 +190,7 @@ public:
 
     bool _ParseCommands(std::string_view text);
     virtual bool ParseCommands(std::string_view text);
+    void CustomParseCommands(std::string_view text) { ParseCommands(text); }
 
     void SendGlobalSysMessage(char const* str);
 

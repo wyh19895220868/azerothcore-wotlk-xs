@@ -19,6 +19,7 @@
 #define DatabaseEnvFwd_h__
 
 #include <future>
+#include <memory>
 
 struct QueryResultFieldMetadata;
 class Field;

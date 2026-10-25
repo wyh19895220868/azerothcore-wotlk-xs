@@ -44,6 +44,7 @@ enum AllBattlegroundHook
     ALLBATTLEGROUNDHOOK_ON_BATTLEGROUND_SETUP,
     ALLBATTLEGROUNDHOOK_CAN_ADD_GROUP_TO_MATCHING_POOL,
     ALLBATTLEGROUNDHOOK_GET_PLAYER_MATCHMAKING_RATING,
+    ALLBATTLEGROUNDHOOK_ON_BATTLEGROUND_KILL_PLAYER,
     ALLBATTLEGROUNDHOOK_END
 };
 
@@ -174,6 +175,9 @@ public:
      * @return True if rating was provided, false otherwise
      */
     [[nodiscard]] virtual bool GetPlayerMatchmakingRating(ObjectGuid /*playerGuid*/, BattlegroundTypeId /*bgTypeId*/, float& /*outRating*/) { return false; }
+
+    // Legacy custom-script compatibility.
+    virtual void OnBattlegroundKillPlayer(Battleground* /*bg*/, Player* /*killer*/, Player* /*killed*/) { }
 };
 
 // Compatibility for old scripts

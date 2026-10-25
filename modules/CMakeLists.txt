@@ -84,12 +84,8 @@ foreach(SOURCE_MODULE ${MODULES_MODULE_LIST})
 
   if (SOURCE_MODULE MATCHES "mod-playerbots")
     set(MOD_PLAYERBOTS_FOUND 1)
-    target_compile_options(database
-      PRIVATE
-        -DMOD_PLAYERBOTS)
-    target_compile_options(game-interface
-      INTERFACE
-        -DMOD_PLAYERBOTS)
+    target_compile_options(database PRIVATE -DMOD_PLAYERBOTS)
+    target_compile_options(game-interface INTERFACE -DMOD_PLAYERBOTS)
   endif()
 
   # Build the Graph values
@@ -137,6 +133,14 @@ if (USE_SCRIPTPCH)
 endif()
 
 GroupSources(${CMAKE_CURRENT_SOURCE_DIR})
+
+# These files are collected recursively, but must not be compiled into server modules.
+# The Lua tools define main(); the replacement handler duplicates the active implementation.
+set_source_files_properties(
+  "${CMAKE_CURRENT_SOURCE_DIR}/mod-eluna/src/lualib/lua.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/mod-eluna/src/lualib/luac.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/mod-item-enhancement/src/ItemEnhancementAddonHandler_Fixed.cpp"
+  PROPERTIES HEADER_FILE_ONLY TRUE)
 
 # Configures the scriptloader with the given name and stores the output in the LOADER_OUT variable.
 # It is possible to expose multiple subdirectories from the same scriptloader through passing
@@ -288,6 +292,8 @@ add_library(modules STATIC
     ${SCRIPT_MODULE_PRIVATE_SCRIPTLOADER}
     ${PRIVATE_SOURCES_MODULES})
 
+target_compile_definitions(modules PRIVATE AZEROTHCORE WOTLK)
+
 if (MOD_ALE_FOUND)
     target_link_libraries(modules PUBLIC lualib)
     # Also ensure include directories are propagated for modules that include sol.hpp
@@ -307,11 +313,16 @@ target_link_libraries(modules
 target_include_directories(modules
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/server/scripts
     ${PUBLIC_INCLUDES})
+
+if (MOD_PLAYERBOTS_FOUND)
+  target_compile_options(modules PRIVATE -DMOD_PLAYERBOTS)
+endif()
 
 # Enables Devs to Include a cmake file in their module that will get run inline with the config.
 foreach(SOURCE_MODULE ${MODULES_MODULE_LIST})
-	include("${CMAKE_SOURCE_DIR}/modules/${SOURCE_MODULE}/${SOURCE_MODULE}.cmake" OPTIONAL)
+  include("${CMAKE_SOURCE_DIR}/modules/${SOURCE_MODULE}/${SOURCE_MODULE}.cmake" OPTIONAL)
 endforeach()
 
 set_target_properties(modules
@@ -374,12 +385,6 @@ target_compile_options(modules
 target_compile_options(modules
   INTERFACE
     -DCONFIG_FILE_LIST=$<1:"${CONFIG_LIST}">)
-
-if (MOD_PLAYERBOTS_FOUND)
-    target_compile_options(modules
-            PRIVATE
-            -DMOD_PLAYERBOTS)
-endif()
 
 if (MOD_ALE_FOUND)
   if (APPLE)

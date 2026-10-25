@@ -41,13 +41,9 @@ void GridObjectLoader::LoadCreatures(CellGuidSet const& guid_set, Map* map)
 {
     for (ObjectGuid::LowType const& guid : guid_set)
     {
-        // Skip spawns whose spawn group is not active on this map
         CreatureData const* cData = sObjectMgr->GetCreatureData(guid);
-        if (cData && !map->IsSpawnGroupActive(cData->spawnGroupId))
-            continue;
-
         // Skip pool members this map's pool state has not rolled as spawned
-        if (cData && cData->poolId && !map->GetPoolData().IsSpawnedObject<Creature>(guid))
+        if (cData && sPoolMgr->IsPartOfAPool<Creature>(guid) && !map->GetPoolData().IsSpawnedObject<Creature>(guid))
             continue;
 
         Creature* obj = new Creature();
@@ -58,6 +54,15 @@ void GridObjectLoader::LoadCreatures(CellGuidSet const& guid_set, Map* map)
         }
 
         AddObjectHelper<Creature>(map, obj);
+
+        // This fork keeps only "active" objects in the map update list
+        // (WorldObject::IsUpdateNeeded() returns isActiveObject()), and the grid
+        // loader bypasses Map::AddToMap. Without marking the spawn active here a
+        // freshly loaded creature is dropped from the update list on the first
+        // recheck: it never ticks, so it never patrols, its AI never runs and its
+        // motion generator never starts (it only wakes up when something puts it
+        // in combat, which calls setActive(true)).
+        obj->setActive(true);
 
         // Grid load bypasses Map::AddToMap, so seat accessories here.
         if (Vehicle* vehicle = obj->GetVehicleKit())
@@ -115,9 +120,29 @@ void GridObjectLoader::LoadGameObjects(CellGuidSet const& guid_set, Map* map)
 
 void GridObjectLoader::LoadAllCellsInGrid()
 {
-    CellObjectGuids const& cell_guids = sObjectMgr->GetGridObjectGuids(_map->GetId(), _map->GetSpawnMode(), _grid.GetId());
-    LoadGameObjects(cell_guids.gameobjects, _map);
-    LoadCreatures(cell_guids.creatures, _map);
+    // 335XS fix: the spawn index (_mapObjectGuidsStore) is keyed by CELL id
+    // (Acore::ComputeCellCoord().GetId()), but this loader used the GRID id
+    // (y * MAX_NUMBER_OF_GRIDS + x). The two numbering schemes differ, so the
+    // lookup always missed and no creature was ever spawned into a grid.
+    uint32 loadedGos = 0;
+    uint32 loadedCreatures = 0;
+
+    for (uint16 cellX = 0; cellX < MAX_NUMBER_OF_CELLS; ++cellX)
+    {
+        for (uint16 cellY = 0; cellY < MAX_NUMBER_OF_CELLS; ++cellY)
+        {
+            CellCoord cellCoord(_grid.GetX() * MAX_NUMBER_OF_CELLS + cellX, _grid.GetY() * MAX_NUMBER_OF_CELLS + cellY);
+            CellObjectGuids const& cell_guids = sObjectMgr->GetGridObjectGuids(_map->GetId(), _map->GetSpawnMode(), cellCoord.GetId());
+
+            loadedGos += uint32(cell_guids.gameobjects.size());
+            loadedCreatures += uint32(cell_guids.creatures.size());
+
+            LoadGameObjects(cell_guids.gameobjects, _map);
+            LoadCreatures(cell_guids.creatures, _map);
+        }
+    }
+
+    LOG_INFO("visdiag", "grid {} map {} go={} creatures={}", _grid.GetId(), _map->GetId(), loadedGos, loadedCreatures);
 
     if (std::unordered_set<Corpse*> const* corpses = _map->GetCorpsesInGrid(_grid.GetId()))
     {

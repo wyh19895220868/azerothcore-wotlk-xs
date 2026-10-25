@@ -412,3 +412,12 @@ void GuildMgr::ResetTimes()
 
     CharacterDatabase.DirectExecute("TRUNCATE guild_member_withdraw");
 }
+
+uint32 GuildMgr::GetAttackGuildId(uint32 defendId)
+{
+    uint32 guildId = 0;
+    for (auto const& [id, guild] : GuildStore)
+        if (id != defendId)
+            guildId = id;
+    return guildId;
+}

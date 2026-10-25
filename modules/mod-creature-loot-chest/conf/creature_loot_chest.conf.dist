@@ -1,0 +1,13 @@
+[worldserver]
+
+# 同时存在的动态参与宝箱上限
+CreatureLootChest.MaxActiveChests = 2000
+
+# 单个宝箱最多缓存的玩家独立掉落对象数量
+CreatureLootChest.MaxPlayersPerChest = 500
+
+# 最多同时记录伤害贡献的生物数量
+CreatureLootChest.MaxPendingCreatures = 10000
+
+# 单只生物最多记录的伤害贡献玩家数量
+CreatureLootChest.MaxContributorsPerCreature = 500

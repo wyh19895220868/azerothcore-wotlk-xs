@@ -30,8 +30,8 @@
 #include "DatabaseEnv.h"
 #include "Duration.h"
 #include "GossipDef.h"
-#include "QueryHolder.h"
 #include "Packet.h"
+#include "QueryHolder.h"
 #include "SharedDefines.h"
 #include "World.h"
 #include <map>
@@ -432,7 +432,7 @@ public:
     WorldSession(uint32 id, std::string&& name, uint32 accountFlags, std::shared_ptr<WorldSocket> sock,
         AccountTypes sec, uint8 expansion, time_t mute_time, LocaleConstant locale, uint32 recruiter, bool isARecruiter,
         bool skipQueue, uint32 TotalTime);
-    ~WorldSession();
+    virtual ~WorldSession();
 
     uint32 GetAccountFlags() const { return _accountFlags; }
     bool HasAccountFlag(uint32 flag) const { return (_accountFlags & flag) != 0; }
@@ -448,6 +448,8 @@ public:
     uint8 GetBillingPlanFlags() const;
 
     bool PlayerLoading() const { return m_playerLoading; }
+    void SetPlayerLoading(bool loading) { m_playerLoading = loading; }
+    [[nodiscard]] ObjectGuid::LowType GetGUIDLow() const;
     bool PlayerLogout() const { return m_playerLogout; }
     bool PlayerRecentlyLoggedOut() const { return m_playerRecentlyLogout; }
     bool PlayerLogoutWithSave() const { return m_playerLogout && m_playerSave; }
@@ -481,6 +483,26 @@ public:
             SendAreaTriggerMessage(Acore::StringFormat(GetAcoreString(strId), std::forward<Args>(args)...));
     }
 
+    void SendNotification(std::string_view str);
+
+    template<typename... Args>
+    void SendNotification(char const* fmt, Args&&... args)
+    {
+        SendNotification(Acore::StringFormat(fmt, std::forward<Args>(args)...));
+    }
+
+    template<typename... Args>
+    void SendNotification(std::string_view fmt, Args&&... args)
+    {
+        SendNotification(Acore::StringFormat(fmt, std::forward<Args>(args)...));
+    }
+
+    template<typename... Args>
+    void SendNotification(uint32 strId, Args&&... args)
+    {
+        SendNotification(Acore::StringFormat(GetAcoreString(strId), std::forward<Args>(args)...));
+    }
+
     void SendSetPhaseShift(uint32 phaseShift);
     void SendTimeQueryResponse();
 
@@ -506,6 +528,13 @@ public:
 
     uint32 GetCurrentVendor() const { return m_currentVendorEntry; }
     void SetCurrentVendor(uint32 vendorEntry) { m_currentVendorEntry = vendorEntry; }
+    uint32 GetVEntry() const { return m_currentVendorEntry; }
+    void SetVEntry(uint32 vendorEntry) { m_currentVendorEntry = vendorEntry; }
+    uint32 GetTEntry() const { return m_currentTrainerEntry; }
+    void SetTEntry(uint32 trainerEntry) { m_currentTrainerEntry = trainerEntry; }
+    void SendNewTrainerList(Creature* npc, uint32 npcId);
+    void SendNewListInventory(ObjectGuid guid, uint32 vendorEntry);
+    void SendPlayerNewListInventory(ObjectGuid playerGuid, uint32 vendorEntry);
 
     ObjectGuid::LowType GetGuidLow() const;
     void SetSecurity(AccountTypes security) { _security = security; }
@@ -569,6 +598,7 @@ public:
 
     void SendTrainerList(Creature* npc);
     void SendListInventory(ObjectGuid guid, uint32 vendorEntry = 0);
+    void SendCustomListInventory(ObjectGuid guid, uint32 vendorEntry = 0);
     void SendShowBank(ObjectGuid guid);
     bool CanOpenMailBox(ObjectGuid guid);
     void SendShowMailBox(ObjectGuid guid);
@@ -616,7 +646,7 @@ public:
     //auction
     void SendAuctionHello(ObjectGuid guid, Creature* unit);
     void SendAuctionCommandResult(uint32 auctionId, uint32 Action, uint32 ErrorCode, uint32 bidError = 0);
-    void SendAuctionBidderNotification(uint32 location, uint32 auctionId, ObjectGuid bidder, uint32 bidSum, uint32 diff, uint32 item_template);
+    void SendAuctionBidderNotification(uint32 location, uint32 auctionId, ObjectGuid bidder, uint64 bidSum, uint64 diff, uint32 item_template);
     void SendAuctionOwnerNotification(AuctionEntry* auction);
 
     //Item Enchantment
@@ -985,6 +1015,11 @@ public:                                                 // opcodes handlers
     void HandleQuestPushResult(WorldPackets::Quest::QuestPushResultClient& packet);
 
     void HandleMessagechatOpcode(WorldPacket& recvPacket);
+    void HandleNativeUIHello(WorldPacket& packet);
+    void UpdateNativeUI(uint32 diff);
+    bool HasNativeUI() const { return _nativeUIEnabled; }
+    uint16 GetNativeUIVersion() const { return _nativeUIVersion; }
+    void SendNativeUISnapshot(uint8 kind, ObjectGuid guid, std::vector<std::string> const& fields);
     void SendPlayerNotFoundNotice(std::string const& name);
     void SendPlayerAmbiguousNotice(std::string const& name);
     void SendWrongFactionNotice();
@@ -1292,6 +1327,11 @@ private:
 
     ObjectGuid::LowType m_GUIDLow;                     // set logined or recently logout player (while m_playerRecentlyLogout set)
     Player* _player;
+    bool _nativeUIEnabled = false;
+    uint16 _nativeUIVersion = 0;
+    uint32 _nativeUITimer = 0;
+    std::string _nativeUISnapshots[3];
+    std::unordered_map<uint64, std::string> _nativeUIUnits;
     std::shared_ptr<WorldSocket> m_Socket;
     std::string m_Address;
 
@@ -1329,6 +1369,7 @@ private:
     bool isRecruiter;
     LockedQueue<WorldPacket*> _recvQueue;
     uint32 m_currentVendorEntry;
+    uint32 m_currentTrainerEntry;
     ObjectGuid m_currentBankerGUID;
     uint32 _offlineTime;
     bool _kicked;

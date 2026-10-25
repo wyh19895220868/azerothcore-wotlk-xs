@@ -335,6 +335,18 @@ enum SpellGroup
     SPELL_GROUP_CORE_RANGE_MAX   = 3
 };
 
+#define SPELL_GROUP_GUARDIAN_AND_BATTLE_ELIXIRS SPELL_GROUP_ELIXIR_BATTLE
+
+enum SpellGroupSpecialFlags
+{
+    SPELL_GROUP_SPECIAL_FLAG_NONE             = 0x000,
+    SPELL_GROUP_SPECIAL_FLAG_ELIXIR_BATTLE    = 0x001,
+    SPELL_GROUP_SPECIAL_FLAG_ELIXIR_GUARDIAN  = 0x002,
+    SPELL_GROUP_SPECIAL_FLAG_ELIXIR_UNSTABLE  = 0x004,
+    SPELL_GROUP_SPECIAL_FLAG_ELIXIR_SHATTRATH = 0x008,
+    SPELL_GROUP_SPECIAL_FLAG_FLASK            = SPELL_GROUP_SPECIAL_FLAG_ELIXIR_BATTLE | SPELL_GROUP_SPECIAL_FLAG_ELIXIR_GUARDIAN
+};
+
 namespace std
 {
     template<>
@@ -695,11 +707,24 @@ public:
 
     // Spell Groups table
     SpellSpellGroupMapBounds GetSpellSpellGroupMapBounds(uint32 spell_id) const;
+    [[nodiscard]] uint32 GetSpellGroup(uint32 spellId) const
+    {
+        SpellSpellGroupMapBounds bounds = GetSpellSpellGroupMapBounds(spellId);
+        return bounds.first == bounds.second ? SPELL_GROUP_NONE : uint32(bounds.first->second);
+    }
+    [[nodiscard]] SpellGroupSpecialFlags GetSpellGroupSpecialFlags(uint32 /*spellId*/) const
+    {
+        return SPELL_GROUP_SPECIAL_FLAG_NONE;
+    }
     bool IsSpellMemberOfSpellGroup(uint32 spell_id, SpellGroup group_id) const;
 
     SpellGroupSpellMapBounds GetSpellGroupSpellMapBounds(SpellGroup group_id) const;
     void GetSetOfSpellsInSpellGroup(SpellGroup group_id, std::set<uint32>& foundSpells) const;
     void GetSetOfSpellsInSpellGroup(SpellGroup group_id, std::set<uint32>& foundSpells, std::set<SpellGroup>& usedGroups) const;
+    void GetSetOfSpellsInSpellGroupWithFlag(uint32 group_id, SpellGroupSpecialFlags /*flag*/, std::set<uint32>& foundSpells) const
+    {
+        GetSetOfSpellsInSpellGroup(SpellGroup(group_id), foundSpells);
+    }
 
     // Spell Group Stack Rules table
     bool AddSameEffectStackRuleSpellGroups(SpellInfo const* spellInfo, uint32 auraType, int32 amount, std::map<SpellGroup, int32>& groups) const;

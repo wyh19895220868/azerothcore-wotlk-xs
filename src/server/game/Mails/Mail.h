@@ -128,14 +128,14 @@ public:                                                 // Constructors
 public:                                                 // Accessors
     [[nodiscard]] uint16 GetMailTemplateId() const { return m_mailTemplateId; }
     [[nodiscard]] std::string const& GetSubject() const { return m_subject; }
-    [[nodiscard]] uint32 GetMoney() const { return m_money; }
-    [[nodiscard]] uint32 GetCOD() const { return m_COD; }
+    [[nodiscard]] uint64 GetMoney() const { return m_money; }
+    [[nodiscard]] uint64 GetCOD() const { return m_COD; }
     [[nodiscard]] std::string const& GetBody() const { return m_body; }
 
 public:                                                 // modifiers
     MailDraft& AddItem(Item* item);
-    MailDraft& AddMoney(uint32 money) { m_money = money; return *this; }
-    MailDraft& AddCOD(uint32 COD) { m_COD = COD; return *this; }
+    MailDraft& AddMoney(uint64 money) { m_money = money; return *this; }
+    MailDraft& AddCOD(uint64 COD) { m_COD = COD; return *this; }
 
 public:                                                 // finishers
     void SendReturnToSender(uint32 sender_acc, ObjectGuid::LowType sender_guid, ObjectGuid::LowType receiver_guid, CharacterDatabaseTransaction trans);
@@ -152,8 +152,8 @@ private:
 
     MailItemMap m_items;                                // Keep the items in a map to avoid duplicate guids (which can happen), store only low part of guid
 
-    uint32 m_money;
-    uint32 m_COD;
+    uint64 m_money;
+    uint64 m_COD;
 };
 
 struct MailItemInfo
@@ -177,8 +177,8 @@ struct Mail
     std::vector<uint32> removedItems;
     time_t expire_time;
     time_t deliver_time;
-    uint32 money;
-    uint32 COD;
+    uint64 money;
+    uint64 COD;
     uint32 checked;
     MailState state;
 
@@ -208,6 +208,22 @@ struct Mail
     [[nodiscard]] bool IsSentByGM() const { return stationery == MAIL_STATIONERY_GM; }
     [[nodiscard]] bool IsCODPayment() const { return checked & MAIL_CHECK_MASK_COD_PAYMENT; }
     [[nodiscard]] bool IsReturnedMail() const { return checked & MAIL_CHECK_MASK_RETURNED; }
+};
+
+struct LegacyServerMail
+{
+    uint32 id{0};
+    uint8 reqLevel{0};
+    uint32 reqPlayTime{0};
+    uint64 moneyA{0};
+    uint64 moneyH{0};
+    uint32 itemA{0};
+    uint32 itemCountA{0};
+    uint32 itemH{0};
+    uint32 itemCountH{0};
+    std::string subject;
+    std::string body;
+    uint8 active{0};
 };
 
 #endif

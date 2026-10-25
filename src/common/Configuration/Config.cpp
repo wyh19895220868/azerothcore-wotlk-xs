@@ -673,6 +673,26 @@ bool ConfigMgr::GetOption<bool>(std::string const& name, bool const& def, bool s
     return *boolVal;
 }
 
+bool ConfigMgr::GetBoolDefault(std::string const& name, bool def) const
+{
+    return GetOption<bool>(name, def);
+}
+
+int32_t ConfigMgr::GetIntDefault(std::string const& name, int32_t def) const
+{
+    return GetOption<int32_t>(name, def);
+}
+
+float ConfigMgr::GetFloatDefault(std::string const& name, float def) const
+{
+    return GetOption<float>(name, def);
+}
+
+std::string ConfigMgr::GetStringDefault(std::string const& name, std::string const& def) const
+{
+    return GetOption<std::string>(name, def);
+}
+
 std::vector<std::string> ConfigMgr::GetKeysByString(std::string const& name)
 {
     std::lock_guard<std::mutex> lock(_configLock);

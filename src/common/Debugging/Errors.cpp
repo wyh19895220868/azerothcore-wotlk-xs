@@ -34,6 +34,9 @@
 
 #if AC_PLATFORM == AC_PLATFORM_WINDOWS
 #include <Windows.h>
+#if defined(__MINGW32__)
+#define _ReturnAddress() __builtin_return_address(0)
+#endif
 #define Crash(message) \
     ULONG_PTR execeptionArgs[] = { reinterpret_cast<ULONG_PTR>(strdup(message)), reinterpret_cast<ULONG_PTR>(_ReturnAddress()) }; \
     RaiseException(EXCEPTION_ASSERTION_FAILURE, 0, 2, execeptionArgs);

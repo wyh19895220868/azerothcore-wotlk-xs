@@ -1116,7 +1116,7 @@ struct npc_ulduar_leviathan_mkii : public ScriptedAI
         }
 
         Unit* cannon = GetS3();
-        if (!cannon || cannon->HasUnitState(UNIT_STATE_CASTING) || me->HasUnitState(UNIT_STATE_CASTING) || me->HasSilenceAura())
+        if (!cannon || cannon->HasUnitState(UNIT_STATE_CASTING) || me->HasUnitState(UNIT_STATE_CASTING) || me->HasAuraType(SPELL_AURA_MOD_SILENCE))
             return;
 
         switch (_events.ExecuteEvent())

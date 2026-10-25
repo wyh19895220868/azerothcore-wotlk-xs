@@ -575,8 +575,6 @@ TEST_F(ThreatManagerIntegrationTest,
     EXPECT_FALSE(_creatureA->CanHaveThreatList());
     // ThreatManager cached value doesn't track alive state
     EXPECT_TRUE(_creatureA->TestGetThreatMgr().CanHaveThreatList());
-    // But skipAliveCheck should bypass the alive check
-    EXPECT_TRUE(_creatureA->CanHaveThreatList(true));
 }
 
 // ============================================================================

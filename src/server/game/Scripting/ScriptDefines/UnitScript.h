@@ -66,6 +66,7 @@ public:
     // Called when DoT's Tick Damage is being Dealt
     // Attacker can be nullptr if he is despawned while the aura still exists on target
     virtual void ModifyPeriodicDamageAurasTick(Unit* /*target*/, Unit* /*attacker*/, uint32& /*damage*/, SpellInfo const* /*spellInfo*/) { }
+    virtual void ModifyPeriodicDamageAurasTick(Unit* /*target*/, Unit* /*attacker*/, uint32& /*damage*/) { }
 
     // Called when Melee Damage is being Dealt
     virtual void ModifyMeleeDamage(Unit* /*target*/, Unit* /*attacker*/, uint32& /*damage*/) { }
@@ -73,11 +74,32 @@ public:
     // Called when Spell Damage is being Dealt
     virtual void ModifySpellDamageTaken(Unit* /*target*/, Unit* /*attacker*/, int32& /*damage*/, SpellInfo const* /*spellInfo*/) { }
 
+    virtual void ModifyHealRecieved(Unit* /*attacker*/, Unit* /*target*/, uint32 /*castId*/, uint32& /*damage*/) { }
+
     // Called when Heal is Recieved
     virtual void ModifyHealReceived(Unit* /*target*/, Unit* /*healer*/, uint32& /*heal*/, SpellInfo const* /*spellInfo*/) { }
 
     //Called when Damage is Dealt
     virtual uint32 DealDamage(Unit* /*AttackerUnit*/, Unit* /*pVictim*/, uint32 damage, DamageEffectType /*damagetype*/) { return damage; }
+
+    [[nodiscard]] virtual bool IsNeedModSpellDamagePercent(Unit const* /*unit*/, AuraEffect* /*auraEff*/, float& /*doneTotalMod*/, SpellInfo const* /*spellProto*/) { return true; }
+    [[nodiscard]] virtual bool IsNeedModMeleeDamagePercent(Unit const* /*unit*/, AuraEffect* /*auraEff*/, float& /*doneTotalMod*/, SpellInfo const* /*spellProto*/) { return true; }
+    [[nodiscard]] virtual bool IsNeedModHealPercent(Unit const* /*unit*/, AuraEffect* /*auraEff*/, float& /*doneTotalMod*/, SpellInfo const* /*spellProto*/) { return true; }
+
+    [[nodiscard]] virtual bool OnBuildValuesUpdate(Unit const* /*unit*/, uint8 /*updateType*/, ByteBuffer& /*fieldBuffer*/, Player* /*target*/, uint16 /*index*/) { return false; }
+
+    virtual void OnDamageWpMinMax(Unit* /*attacker*/, float& /*minDamage*/, float& /*maxDamage*/) { }
+    virtual void OnDamageMeleeNow(Unit* /*attacker*/, Unit* /*victim*/, uint32& /*damage*/) { }
+    virtual void OnDamageMeleeCritNow(Unit* /*attacker*/, Unit* /*victim*/, uint32& /*damage*/) { }
+    virtual void OnDamageMeleeFinal(Unit* /*attacker*/, Unit* /*victim*/, AsInt64 const& /*damage*/, bool /*critical*/) { }
+    virtual void OnDamageSpellEnd(Unit* /*attacker*/, Unit* /*victim*/, uint32 /*castId*/, uint32& /*damage*/) { }
+    virtual void OnDamageSpellCritEnd(Unit const* /*attacker*/, Unit const* /*victim*/, uint32 /*castId*/, int32& /*damage*/) { }
+    virtual void OnDamageLuaMeleeNow(Unit* /*attacker*/, Unit* /*victim*/, uint32& /*damage*/) { }
+    virtual void OnDamageLuaSpellEnd(Unit* /*attacker*/, Unit* /*victim*/, uint32 /*castId*/, uint32& /*damage*/) { }
+    virtual void OnDamageSpellFinal(Unit* /*attacker*/, Unit* /*victim*/, uint32 /*castId*/, AsInt64 const& /*damage*/, bool /*critical*/) { }
+    virtual void OnDamageSpellBefore(Unit* /*attacker*/, Unit* /*victim*/, uint32 /*castId*/, int32& /*damage*/) { }
+    virtual void OnCreKillToCreOrDie(Unit* /*killer*/, Unit* /*killed*/) { }
+    virtual void OnScriptEffectAbsorbEnd(Unit* /*caster*/, Unit* /*owner*/, AuraEffect const* /*effect*/, int32& /*amount*/) { }
 
     virtual void OnBeforeRollMeleeOutcomeAgainst(Unit const* /*attacker*/, Unit const* /*victim*/, WeaponAttackType /*attType*/, int32& /*attackerMaxSkillValueForLevel*/, int32& /*victimMaxSkillValueForLevel*/, int32& /*attackerWeaponSkill*/, int32& /*victimDefenseSkill*/, int32& /*crit_chance*/, int32& /*miss_chance*/, int32& /*dodge_chance*/, int32& /*parry_chance*/, int32& /*block_chance*/ ) {   };
 

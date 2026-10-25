@@ -55,6 +55,7 @@ void ObjectVisibilityContainer::CleanVisibilityReferences()
             kvPair.second->GetObjectVisibilityContainer().DirectRemoveVisiblePlayerReference(_selfObject->GetGUID());
 
         (*_visibleWorldObjectsMap).clear();
+        _selfObject->ToPlayer()->m_clientGUIDs.clear();
     }
 
     _visiblePlayersMap.clear();
@@ -75,6 +76,8 @@ void ObjectVisibilityContainer::LinkWorldObjectVisibility(WorldObject* worldObje
         return;
 
     (*_visibleWorldObjectsMap).insert(std::make_pair(worldObject->GetGUID(), worldObject));
+    // Custom addon snapshots still enumerate this legacy GUID cache.
+    _selfObject->ToPlayer()->m_clientGUIDs.insert(worldObject->GetGUID());
     worldObject->GetObjectVisibilityContainer().DirectInsertVisiblePlayerReference(_selfObject->ToPlayer());
 }
 
@@ -85,13 +88,14 @@ void ObjectVisibilityContainer::UnlinkWorldObjectVisibility(WorldObject* worldOb
         return;
 
     worldObject->GetObjectVisibilityContainer().DirectRemoveVisiblePlayerReference(_selfObject->GetGUID());
-    (*_visibleWorldObjectsMap).erase(worldObject->GetGUID());
+    DirectRemoveVisibilityReference(worldObject->GetGUID());
 }
 
 VisibleWorldObjectsMap::iterator ObjectVisibilityContainer::UnlinkVisibilityFromPlayer(WorldObject* worldObject, VisibleWorldObjectsMap::iterator itr)
 {
     ASSERT(_visibleWorldObjectsMap); // Ensure we aren't for some reason calling this as a non-player object
     worldObject->GetObjectVisibilityContainer().DirectRemoveVisiblePlayerReference(_selfObject->GetGUID());
+    _selfObject->ToPlayer()->m_clientGUIDs.erase(worldObject->GetGUID());
     return (*_visibleWorldObjectsMap).erase(itr);
 }
 
@@ -105,6 +109,7 @@ void ObjectVisibilityContainer::DirectRemoveVisibilityReference(ObjectGuid guid)
 {
     ASSERT(_visibleWorldObjectsMap);
     (*_visibleWorldObjectsMap).erase(guid);
+    _selfObject->ToPlayer()->m_clientGUIDs.erase(guid);
 }
 
 void ObjectVisibilityContainer::DirectInsertVisiblePlayerReference(Player* player)

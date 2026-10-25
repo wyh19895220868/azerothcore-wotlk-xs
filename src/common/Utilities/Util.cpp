@@ -28,6 +28,9 @@
 #include <sstream>
 #include <string>
 #include <utf8.h>
+#if AC_PLATFORM == AC_PLATFORM_WINDOWS
+#include <io.h>
+#endif
 
 void stripLineInvisibleChars(std::string& str)
 {
@@ -509,24 +512,39 @@ void utf8printf(FILE* out, char const* str, ...)
 void vutf8printf(FILE* out, char const* str, va_list* ap)
 {
 #if AC_PLATFORM == AC_PLATFORM_WINDOWS
-    char temp_buf[32 * 1024];
-    wchar_t wtemp_buf[32 * 1024];
-
-    std::size_t temp_len = vsnprintf(temp_buf, 32 * 1024, str, *ap);
-    //vsnprintf returns -1 if the buffer is too small
-    if (temp_len == std::size_t(-1))
+    HANDLE handle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(out)));
+    DWORD consoleMode;
+    if (GetConsoleMode(handle, &consoleMode))
     {
-        temp_len = 32 * 1024 - 1;
+        va_list copy;
+        va_copy(copy, *ap);
+        int length = vsnprintf(nullptr, 0, str, copy);
+        va_end(copy);
+        if (length <= 0)
+            return;
+
+        std::string text(length, '\0');
+        vsnprintf(text.data(), text.size() + 1, str, *ap);
+        std::wstring wideText;
+        if (!Utf8toWStr(text, wideText))
+            return;
+
+        // Write Unicode directly; CLI and startup code may use different console code pages.
+        fflush(out);
+        std::size_t offset = 0;
+        while (offset < wideText.size())
+        {
+            DWORD written;
+            DWORD count = static_cast<DWORD>(std::min<std::size_t>(wideText.size() - offset, 16 * 1024));
+            if (!WriteConsoleW(handle, wideText.data() + offset, count, &written, nullptr) || !written)
+                break;
+            offset += written;
+        }
+        return;
     }
-
-    std::size_t wtemp_len = 32 * 1024 - 1;
-    Utf8toWStr(temp_buf, temp_len, wtemp_buf, wtemp_len);
-
-    CharToOemBuffW(&wtemp_buf[0], &temp_buf[0], uint32(wtemp_len + 1));
-    fprintf(out, "%s", temp_buf);
-#else
-    vfprintf(out, str, *ap);
 #endif
+    // Files and pipes retain the original UTF-8 bytes.
+    vfprintf(out, str, *ap);
 }
 
 bool Utf8ToUpperOnlyLatin(std::string& utf8String)

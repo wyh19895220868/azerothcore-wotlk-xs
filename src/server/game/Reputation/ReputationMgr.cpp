@@ -310,8 +310,19 @@ bool ReputationMgr::SetReputation(FactionEntry const* factionEntry, float standi
                     if (_player->GetReputationRank(repTemplate->faction[i]) <= ReputationRank(repTemplate->faction_rank[i]))
                     {
                         // bonuses are already given, so just modify standing by rate
-                        float spilloverRep = standing * repTemplate->faction_rate[i];
-                        SetOneFactionReputation(sFactionStore.LookupEntry(repTemplate->faction[i]), spilloverRep, incremental);
+                        // A spillover row can reference a faction that the client's
+                        // Faction.dbc does not contain; never feed a null entry to
+                        // SetOneFactionReputation (it dereferences the record).
+                        if (FactionEntry const* spilloverEntry = sFactionStore.LookupEntry(repTemplate->faction[i]))
+                        {
+                            float spilloverRep = standing * repTemplate->faction_rate[i];
+                            SetOneFactionReputation(spilloverEntry, spilloverRep, incremental);
+                        }
+                        else
+                        {
+                            LOG_ERROR("server.worldserver", "Reputation: rep_spillover_template for faction {} references unknown faction {}, skipped",
+                                factionEntry->ID, repTemplate->faction[i]);
+                        }
                     }
                 }
             }
@@ -377,6 +388,13 @@ bool ReputationMgr::SetReputation(FactionEntry const* factionEntry, float standi
 
 bool ReputationMgr::SetOneFactionReputation(FactionEntry const* factionEntry, float stand, bool incremental, Optional<ReputationRank> repMaxCap)
 {
+    // Defensive: callers may pass the result of sFactionStore.LookupEntry
+    // directly, and this function dereferences the record below.
+    if (!factionEntry)
+    {
+        return false;
+    }
+
     FactionStateList::iterator itr = _factions.find(factionEntry->reputationListID);
     if (itr != _factions.end())
     {

@@ -43,6 +43,7 @@ enum GlobalHook
     GLOBALHOOK_ON_IS_AFFECTED_BY_SPELL_MOD_CHECK,
     GLOBALHOOK_ON_SPELL_HEALING_BONUS_TAKEN_NEGATIVE_MODIFIERS,
     GLOBALHOOK_ON_LOAD_SPELL_CUSTOM_ATTR,
+    GLOBALHOOK_ON_AFTER_CREATURE_LOOT_GENERATED,
     GLOBALHOOK_ON_ALLOWED_FOR_PLAYER_LOOT_CHECK,
     GLOBALHOOK_ON_ALLOWED_TO_LOOT_CONTAINER_CHECK,
     GLOBALHOOK_ON_INSTANCEID_REMOVED,
@@ -95,6 +96,7 @@ public:
     virtual void OnLoadSpellCustomAttr(SpellInfo* /*spell*/) { }
 
     // Called when checking if a player can see the creature loot item
+    virtual void OnAfterCreatureLootGenerated(Player* /*player*/, Creature* /*creature*/, Loot* /*loot*/) { }
     virtual bool OnAllowedForPlayerLootCheck(Player const* /*player*/, ObjectGuid /*source*/) { return false; };
 
     // Called when checking if a player can see the creature loot (if it can click the corpse f.e)

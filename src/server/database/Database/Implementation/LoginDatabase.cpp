@@ -155,6 +155,28 @@ void LoginDatabaseConnection::DoPrepareStatements()
     PrepareStatement(LOGIN_SEL_ACCOUNT_TOTP_SECRET, "SELECT totp_secret FROM account WHERE id = ?", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_UPD_ACCOUNT_TOTP_SECRET, "UPDATE account SET totp_secret = ? WHERE id = ?", CONNECTION_ASYNC);
 
+    PrepareStatement(LOGIN_SEL_TOKEN_VIP, "SELECT `Rank`, NowJF, AsJF, 魔币, 累计魔币 FROM _account_vip WHERE AccountId = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_INS_TOKEN_VIP, "INSERT INTO _account_vip (AccountId, `Rank`, NowJF, AsJF, 魔币, 累计魔币) VALUES (?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_UPD_TOKEN, "UPDATE _account_vip SET NowJF = ? WHERE AccountId = ?", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_UPD_TOKEN_AS, "UPDATE _account_vip SET NowJF = ?, AsJF = ? WHERE AccountId = ?", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_UPD_TOKEN_MB, "UPDATE _account_vip SET 魔币 = ? WHERE AccountId = ?", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_UPD_TOKEN_ASMB, "UPDATE _account_vip SET 魔币 = ?, 累计魔币 = ? WHERE AccountId = ?", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_UPD_VIP_RANK, "UPDATE _account_vip SET `Rank` = ? WHERE AccountId = ?", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_SEL_TOKEN_ITEM_NUM, "SELECT Count FROM _account_zz WHERE AccountId = ? AND Num = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_SEL_TOKEN_ITEM, "SELECT Num, Count, UNIX_TIMESTAMP(OnTime) FROM _account_zz WHERE AccountId = ? AND OnTask = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_UPD_TOKEN_ITEM, "UPDATE _account_zz SET OnTask = ? WHERE AccountId = ? AND Num = ?", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_SEL_PAODIAN, "SELECT 泡点 FROM _account_vip WHERE AccountId = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_UPD_PAODIAN, "UPDATE _account_vip SET 泡点 = GREATEST(泡点 + ?, 0) WHERE AccountId = ?", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_SEL_ITEM_LIMIT, "SELECT 物品编号, 日当前数量 FROM _每日上限 WHERE 账号编号 = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_UPD_ITEM_LIMIT, "REPLACE INTO _每日上限 (账号编号, 物品编号, 日当前数量) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_DEL_ITEM_LIMIT, "TRUNCATE _每日上限", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_SEL_ITEM_FR_LIMIT, "SELECT 物品编号, 永当前数量 FROM _永久上限 WHERE 账号编号 = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_UPD_ITEM_FR_LIMIT, "REPLACE INTO _永久上限 (账号编号, 物品编号, 永当前数量) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_SEL_SIGN, "SELECT 日期 FROM _账号签到 WHERE 账号编号 = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_REP_SIGN, "REPLACE INTO _账号签到 (账号编号, 日期) VALUES (?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_SEL_LX_SIGN, "SELECT 连签, 累签 FROM _账号签到存档 WHERE 账号编号 = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_REP_LX_SIGN, "REPLACE INTO _账号签到存档 (账号编号, 连签, 累签) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+
     PrepareStatement(LOGIN_INS_UPTIME, "INSERT INTO uptime (realmid, starttime, uptime, revision) VALUES (?, ?, 0, ?)", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_UPD_UPTIME_SHUTDOWN, "UPDATE uptime SET uptime = ?, maxplayers = ?, EndTime = ?, ShutdownType = ?, ExitCode = ?, ShutdownReason = ? WHERE realmid = ? AND starttime = ?", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_SEL_UPTIME_PREVIOUS, "SELECT starttime, uptime, EndTime, ShutdownType, ShutdownReason FROM uptime WHERE realmid = ? ORDER BY starttime DESC LIMIT 1", CONNECTION_SYNCH);

@@ -1,0 +1,58 @@
+#######################################
+# 物品强化系统配置
+#######################################
+
+[ItemEnhancement]
+
+# 启用物品强化系统
+ItemEnhancement.Enable = 1
+
+# 强化失败保护（0=禁用，1=启用）
+ItemEnhancement.FailureProtection = 1
+
+# 强化成功率显示（0=禁用，1=启用）
+ItemEnhancement.ShowSuccessRate = 1
+
+# 强化成功公告（0=禁用，1=启用）
+# 当玩家强化达到特定等级时，全服公告
+ItemEnhancement.Announce = 1
+
+# 强化成功公告等级阈值
+# 当强化等级达到或超过此值时进行公告
+ItemEnhancement.AnnounceLevel = 10
+
+# 强化消耗金币系数
+# 实际消耗 = 基础消耗 * 此系数
+ItemEnhancement.GoldCostRate = 1.0
+
+# 强化消耗材料系数
+# 实际消耗 = 基础消耗 * 此系数
+ItemEnhancement.MaterialCostRate = 1.0
+
+# 强化成功率系数
+# 实际成功率 = 基础成功率 * 此系数
+ItemEnhancement.SuccessRateRate = 1.0
+
+# 强化属性加成系数
+# 实际属性加成 = 基础属性加成 * 此系数
+ItemEnhancement.AttributeRate = 1.0
+
+# 强化冷却时间（秒）
+# 两次强化之间的最小间隔时间
+ItemEnhancement.Cooldown = 0
+
+# 强化最大等级
+# 物品强化的最大等级上限
+ItemEnhancement.MaxLevel = 20
+
+# 调试模式（0=禁用，1=启用）
+# 启用后会输出更多日志信息
+ItemEnhancement.DebugMode = 0
+
+# 记录缓存过期时间（秒）
+# 用于控制物品强化记录在内存中的缓存时间，0 表示禁用缓存或立即过期
+ItemEnhancement.RecordCacheTTL = 0
+
+# 登录消息提示（0=禁用，1=启用）
+# 启用后玩家登录时会显示物品强化系统的提示消息
+ItemEnhancement.LoginMessage = 0

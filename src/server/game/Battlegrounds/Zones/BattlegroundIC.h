@@ -894,6 +894,7 @@ class AC_GAME_API BattlegroundIC : public Battleground
 {
 public:
     BattlegroundIC();
+    uint32 KillStore[TEAM_NEUTRAL] {};
 
     /* inherited from BattlegroundClass */
     void AddPlayer(Player* player) override;

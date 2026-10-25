@@ -40,7 +40,11 @@ namespace Acore::Crypto
         template <typename Container>
         void UpdateData(Container& c) { UpdateData(std::data(c), std::size(c)); }
     private:
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
         EVP_CIPHER* _cipher;
+#else
+        EVP_CIPHER const* _cipher;
+#endif
         EVP_CIPHER_CTX* _ctx;
     };
 }

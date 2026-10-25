@@ -99,16 +99,16 @@ public:
             if (result)
             {
                 Field* fields = result->Fetch();
-                uint32 MaxHealth = fields[0].Get<uint32>();
-                uint32 Strength = fields[1].Get<uint32>();
-                uint32 Agility = fields[2].Get<uint32>();
-                uint32 Stamina = fields[3].Get<uint32>();
-                uint32 Intellect = fields[4].Get<uint32>();
-                uint32 Spirit = fields[5].Get<uint32>();
-                uint32 Armor = fields[6].Get<uint32>();
-                uint32 AttackPower = fields[7].Get<uint32>();
-                uint32 SpellPower = fields[8].Get<uint32>();
-                uint32 Resilience = fields[9].Get<uint32>();
+                std::string MaxHealth = fields[0].Get<std::string>();
+                std::string Strength = fields[1].Get<std::string>();
+                std::string Agility = fields[2].Get<std::string>();
+                std::string Stamina = fields[3].Get<std::string>();
+                std::string Intellect = fields[4].Get<std::string>();
+                std::string Spirit = fields[5].Get<std::string>();
+                std::string Armor = fields[6].Get<std::string>();
+                std::string AttackPower = fields[7].Get<std::string>();
+                std::string SpellPower = fields[8].Get<std::string>();
+                std::string Resilience = fields[9].Get<std::string>();
 
                 handler->PSendSysMessage("Health: |cff00ffff{}|r - Stamina: |cff00ffff{}|r", MaxHealth, Stamina);
                 handler->PSendSysMessage("Strength: |cff00ffff{}|r - Agility: |cff00ffff{}|r", Strength, Agility);

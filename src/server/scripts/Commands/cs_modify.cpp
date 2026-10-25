@@ -15,6 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "AsInt256.h"
 #include "Chat.h"
 #include "CommandScript.h"
 #include "ObjectMgr.h"
@@ -24,6 +25,7 @@
 #include "RBAC.h"
 #include "ReputationMgr.h"
 #include "StringConvert.h"
+#include "Tokenize.h"
 
 using namespace Acore::ChatCommands;
 
@@ -120,49 +122,60 @@ public:
         return true;
     }
 
-    //Edit Player HP
-    static bool HandleModifyHPCommand(ChatHandler* handler, int32 healthPoints)
+    static bool CheckModifyResource(ChatHandler* handler, Player* target, std::string const& text,
+        AsInt64& value)
     {
-        Player* target = handler->getSelectedPlayer();
-
-        if (!CheckModifyInt32(handler, target, healthPoints))
+        if (!TryParseAsInt256(text, value) || value <= 0)
         {
+            handler->SendErrorMessage(LANG_BAD_VALUE);
             return false;
         }
 
-        handler->PSendSysMessage(LANG_YOU_CHANGE_HP, handler->GetNameLink(target), healthPoints, healthPoints);
-
-        if (handler->needReportToTarget(target))
+        if (!target)
         {
-            ChatHandler(target->GetSession()).PSendSysMessage(LANG_YOURS_HP_CHANGED, handler->GetNameLink(), healthPoints, healthPoints);
+            handler->SendErrorMessage(LANG_NO_CHAR_SELECTED);
+            return false;
         }
 
-        target->SetMaxHealth(healthPoints);
-        target->SetHealth(healthPoints);
+        return !handler->HasLowerSecurity(target);
+    }
 
+    // Use the existing 256-bit resource channel, including the displayed maximum.
+    static bool HandleModifyHPCommand(ChatHandler* handler, std::string healthText)
+    {
+        Player* target = handler->getSelectedPlayer();
+        AsInt64 healthPoints;
+        if (!CheckModifyResource(handler, target, healthText, healthPoints))
+            return false;
+
+        std::string const value = AsInt64ToString(healthPoints);
+        handler->PSendSysMessage(LANG_YOU_CHANGE_HP, handler->GetNameLink(target), value, value);
+        if (handler->needReportToTarget(target))
+            ChatHandler(target->GetSession()).PSendSysMessage(
+                LANG_YOURS_HP_CHANGED, handler->GetNameLink(), value, value);
+
+        target->SetAsRealMaxHealth(healthPoints);
+        target->SetAsMaxHealth(healthPoints);
+        target->SetAsHealth(healthPoints);
         return true;
     }
 
-    //Edit Player Mana
-    static bool HandleModifyManaCommand(ChatHandler* handler, int32 manaPoints)
+    static bool HandleModifyManaCommand(ChatHandler* handler, std::string manaText)
     {
         Player* target = handler->getSelectedPlayer();
-
-        if (!CheckModifyInt32(handler, target, manaPoints))
-        {
+        AsInt64 manaPoints;
+        if (!CheckModifyResource(handler, target, manaText, manaPoints))
             return false;
-        }
 
-        handler->PSendSysMessage(LANG_YOU_CHANGE_MANA, handler->GetNameLink(target), manaPoints, manaPoints);
-
+        std::string const value = AsInt64ToString(manaPoints);
+        handler->PSendSysMessage(LANG_YOU_CHANGE_MANA, handler->GetNameLink(target), value, value);
         if (handler->needReportToTarget(target))
-        {
-            ChatHandler(target->GetSession()).PSendSysMessage(LANG_YOURS_MANA_CHANGED, handler->GetNameLink(), manaPoints, manaPoints);
-        }
+            ChatHandler(target->GetSession()).PSendSysMessage(
+                LANG_YOURS_MANA_CHANGED, handler->GetNameLink(), value, value);
 
-        target->SetMaxPower(POWER_MANA, manaPoints);
-        target->SetPower(POWER_MANA, manaPoints);
-
+        target->SetAsRealMaxPower(POWER_MANA, manaPoints);
+        target->SetAsMaxPower(POWER_MANA, manaPoints);
+        target->SetAsPower(POWER_MANA, manaPoints);
         return true;
     }
 
@@ -553,6 +566,44 @@ public:
         return true;
     }
 
+    // The sign is handled by the caller; retain the full uint64 balance range.
+    static Optional<uint64> ParseMoneyUnits(std::string_view text)
+    {
+        uint64 total = 0;
+        uint8 seen = 0;
+        for (std::string_view token : Acore::Tokenize(text, ' ', false))
+        {
+            if (token.size() < 2)
+                return std::nullopt;
+
+            uint64 unit;
+            uint8 flag;
+            switch (token.back())
+            {
+                case 'g': unit = 10000; flag = 1; break;
+                case 's': unit = 100; flag = 2; break;
+                case 'c': unit = 1; flag = 4; break;
+                default: return std::nullopt;
+            }
+
+            if (seen & flag)
+                return std::nullopt;
+            seen |= flag;
+
+            std::string_view digits = token.substr(0, token.size() - 1);
+            if (digits.find_first_not_of("0123456789") != std::string_view::npos)
+                return std::nullopt;
+            Optional<uint64> amount = Acore::StringTo<uint64>(digits);
+            if (!amount || *amount > (std::numeric_limits<uint64>::max() - total) / unit)
+                return std::nullopt;
+            total += *amount * unit;
+        }
+
+        if (!seen)
+            return std::nullopt;
+        return total;
+    }
+
     //Edit Player money
     static bool HandleModifyMoneyCommand(ChatHandler* handler, Tail money)
     {
@@ -587,64 +638,26 @@ public:
             return false;
         };
 
-        Optional<int32> moneyToAddO = 0;
-        if (IsExistWord(money, { "g", "s", "c" }))
-        {
-            moneyToAddO = MoneyStringToMoney(money);
-        }
+        bool debit = !money.empty() && money.front() == '-';
+        std::string_view digits = money;
+        if (!digits.empty() && (digits.front() == '-' || digits.front() == '+'))
+            digits.remove_prefix(1);
+        Optional<uint64> amount;
+        if (IsExistWord(digits, { "g", "s", "c" }))
+            amount = ParseMoneyUnits(digits);
         else
-        {
-            moneyToAddO = Acore::StringTo<int32>(money);
-        }
-
-        if (!moneyToAddO)
-        {
+            amount = Acore::StringTo<uint64>(std::string(digits));
+        if (!amount)
             return false;
-        }
 
-        int32 moneyToAdd = *moneyToAddO;
-        uint32 targetMoney = target->GetMoney();
-
-        if (moneyToAdd < 0)
-        {
-            int32 newmoney = int32(targetMoney) + moneyToAdd;
-
-            LOG_DEBUG("chat.system", handler->GetAcoreString(LANG_CURRENT_MONEY), targetMoney, moneyToAdd, newmoney);
-            if (newmoney <= 0)
-            {
-                handler->PSendSysMessage(LANG_YOU_TAKE_ALL_MONEY, handler->GetNameLink(target));
-                if (handler->needReportToTarget(target))
-                    ChatHandler(target->GetSession()).PSendSysMessage(LANG_YOURS_ALL_MONEY_GONE, handler->GetNameLink());
-
-                target->SetMoney(0);
-            }
-            else
-            {
-                if (newmoney > MAX_MONEY_AMOUNT)
-                    newmoney = MAX_MONEY_AMOUNT;
-
-                handler->PSendSysMessage(LANG_YOU_TAKE_MONEY, std::abs(moneyToAdd), handler->GetNameLink(target));
-                if (handler->needReportToTarget(target))
-                    ChatHandler(target->GetSession()).PSendSysMessage(LANG_YOURS_MONEY_TAKEN, handler->GetNameLink(), std::abs(moneyToAdd));
-                target->SetMoney(newmoney);
-            }
-        }
-        else
-        {
-            handler->PSendSysMessage(LANG_YOU_GIVE_MONEY, moneyToAdd, handler->GetNameLink(target));
-            if (handler->needReportToTarget(target))
-                ChatHandler(target->GetSession()).PSendSysMessage(LANG_YOURS_MONEY_GIVEN, handler->GetNameLink(), moneyToAdd);
-
-            if (moneyToAdd >= MAX_MONEY_AMOUNT)
-                moneyToAdd = MAX_MONEY_AMOUNT;
-
-            if (targetMoney >= uint32(MAX_MONEY_AMOUNT) - moneyToAdd)
-                moneyToAdd -= targetMoney;
-
-            target->ModifyMoney(moneyToAdd);
-        }
-
-        LOG_DEBUG("chat.system", handler->GetAcoreString(LANG_NEW_MONEY), targetMoney, moneyToAdd, target->GetMoney());
+        uint64 before = target->GetMoney();
+        if (debit)
+            target->SetMoney(*amount >= before ? 0 : before - *amount);
+        else if (!target->CreditMoney(*amount))
+            return false;
+        handler->PSendSysMessage("金币（铜币）：{} -> {}", before, target->GetMoney());
+        if (handler->needReportToTarget(target))
+            ChatHandler(target->GetSession()).PSendSysMessage("金币（铜币）：{} -> {}", before, target->GetMoney());
 
         return true;
     }

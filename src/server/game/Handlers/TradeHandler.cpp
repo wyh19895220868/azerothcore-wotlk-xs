@@ -80,7 +80,7 @@ void WorldSession::SendUpdateTrade(bool trader_data /*= true*/)
     data << uint32(0);                                      // CGTradeInfo::m_tradeID
     data << uint32(TRADE_SLOT_COUNT);                       // trade slots count/number?, = next field in most cases
     data << uint32(TRADE_SLOT_COUNT);                       // trade slots count/number?, = prev field in most cases
-    data << uint32(view_trade->GetMoney());                 // trader gold
+    data << uint64(view_trade->GetMoney());                 // trader gold
     data << uint32(view_trade->GetSpell());                 // spell casted on lowest slot item
 
     for (uint8 i = 0; i < TRADE_SLOT_COUNT; ++i)
@@ -281,7 +281,7 @@ void WorldSession::HandleAcceptTradeOpcode(WorldPacket& /*recvPacket*/)
         return;
     }
 
-    if (_player->GetMoney() >= MAX_MONEY_AMOUNT - his_trade->GetMoney())
+    if (his_trade->GetMoney() > MAX_MONEY_AMOUNT - (_player->GetMoney() - my_trade->GetMoney()))
     {
         info.Status = TRADE_STATUS_CLOSE_WINDOW;
         info.Result = EQUIP_ERR_TOO_MUCH_GOLD;
@@ -290,7 +290,7 @@ void WorldSession::HandleAcceptTradeOpcode(WorldPacket& /*recvPacket*/)
         return;
     }
 
-    if (trader->GetMoney() >= MAX_MONEY_AMOUNT - my_trade->GetMoney())
+    if (my_trade->GetMoney() > MAX_MONEY_AMOUNT - (trader->GetMoney() - his_trade->GetMoney()))
     {
         info.Status = TRADE_STATUS_CLOSE_WINDOW;
         info.Result = EQUIP_ERR_TOO_MUCH_GOLD;
@@ -595,10 +595,12 @@ void WorldSession::HandleAcceptTradeOpcode(WorldPacket& /*recvPacket*/)
         }
 
         // update money
-        _player->ModifyMoney(-int32(my_trade->GetMoney()));
-        _player->ModifyMoney(his_trade->GetMoney());
-        trader->ModifyMoney(-int32(his_trade->GetMoney()));
-        trader->ModifyMoney(my_trade->GetMoney());
+        // Both post-trade balances were checked before moving any items.
+        // Commit the net amounts without signed conversion or an intermediate overflow.
+        uint64 playerMoney = _player->GetMoney() - my_trade->GetMoney() + his_trade->GetMoney();
+        uint64 traderMoney = trader->GetMoney() - his_trade->GetMoney() + my_trade->GetMoney();
+        _player->SetMoney(playerMoney);
+        trader->SetMoney(traderMoney);
 
         if (HasPermission(rbac::RBAC_PERM_LOG_GM_TRADE))
         {
@@ -857,7 +859,9 @@ void WorldSession::HandleInitiateTradeOpcode(WorldPacket& recvPacket)
 
 void WorldSession::HandleSetTradeGoldOpcode(WorldPacket& recvPacket)
 {
-    uint32 gold;
+    if (recvPacket.size() != sizeof(uint64))
+        return;
+    uint64 gold;
     recvPacket >> gold;
 
     TradeData* my_trade = _player->GetTradeData();

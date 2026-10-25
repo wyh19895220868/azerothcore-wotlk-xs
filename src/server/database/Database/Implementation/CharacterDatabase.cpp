@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by the
+ * Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -17,6 +17,7 @@
 
 #include "CharacterDatabase.h"
 #include "MySQLPreparedStatement.h"
+#pragma execution_character_set("utf-8")
 
 void CharacterDatabaseConnection::DoPrepareStatements()
 {
@@ -36,7 +37,7 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_INS_CHARACTER_BAN, "INSERT INTO character_banned VALUES (?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()+?, ?, ?, 1)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_CHARACTER_BAN, "UPDATE character_banned SET active = 0 WHERE guid = ? AND active != 0", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_CHARACTER_BAN, "DELETE cb FROM character_banned cb INNER JOIN characters c ON c.guid = cb.guid WHERE c.account = ?", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_SEL_BANINFO, "SELECT FROM_UNIXTIME(bandate, '%Y-%m-%d %H:%i:%s'), unbandate-bandate, active, unbandate, banreason, bannedby FROM character_banned WHERE guid = ? ORDER BY bandate ASC", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_SEL_BANINFO, "SELECT FROM_UNIXTIME(bandate), unbandate-bandate, active, unbandate, banreason, bannedby FROM character_banned WHERE guid = ? ORDER BY bandate ASC", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_GUID_BY_NAME_FILTER, "SELECT guid, name FROM characters WHERE name LIKE CONCAT('%%', ?, '%%')", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_BANINFO_LIST, "SELECT bandate, unbandate, bannedby, banreason FROM character_banned WHERE guid = ? ORDER BY unbandate", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_BANNED_NAME, "SELECT characters.name FROM characters, character_banned WHERE character_banned.guid = ? AND character_banned.guid = characters.guid", CONNECTION_SYNCH);
@@ -71,7 +72,7 @@ void CharacterDatabaseConnection::DoPrepareStatements()
                      "resettalents_time, trans_x, trans_y, trans_z, trans_o, transguid, extra_flags, stable_slots, at_login, zone, online, death_expire_time, taxi_path, instance_mode_mask, "
                      "arenaPoints, totalHonorPoints, todayHonorPoints, yesterdayHonorPoints, totalKills, todayKills, yesterdayKills, chosenTitle, knownCurrencies, watchedFaction, drunk, "
                      "health, power1, power2, power3, power4, power5, power6, power7, instance_id, talentGroupsCount, activeTalentGroup, exploredZones, equipmentCache, ammoId, "
-                     "knownTitles, actionBars, grantableLevels, innTriggerId, extraBonusTalentCount, UNIX_TIMESTAMP(creation_date) FROM characters WHERE guid = ?", CONNECTION_ASYNC);
+                     "knownTitles, actionBars, grantableLevels, innTriggerId, reincarnationLv FROM characters WHERE guid = ?", CONNECTION_ASYNC);
 
     PrepareStatement(CHAR_SEL_CHARACTER_AURAS, "SELECT casterGuid, itemGuid, spell, effectMask, recalculateMask, stackCount, amount0, amount1, amount2, "
                      "base_amount0, base_amount1, base_amount2, maxDuration, remainTime, remainCharges FROM character_aura WHERE guid = ?", CONNECTION_ASYNC);
@@ -95,14 +96,14 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_SEL_MAIL_SERVER_CHARACTER, "SELECT mailId from mail_server_character WHERE guid = ? and mailId = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_REP_MAIL_SERVER_CHARACTER, "REPLACE INTO mail_server_character (guid, mailId) values (?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_CHARACTER_SOCIALLIST, "SELECT friend, flags, note FROM character_social JOIN characters ON characters.guid = character_social.friend WHERE character_social.guid = ? AND deleteinfos_name IS NULL LIMIT 255", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_SEL_CHARACTER_HOMEBIND, "SELECT mapId, zoneId, posX, posY, posZ FROM character_homebind WHERE guid = ?", CONNECTION_BOTH);
+    PrepareStatement(CHAR_SEL_CHARACTER_HOMEBIND, "SELECT mapId, zoneId, posX, posY, posZ FROM character_homebind WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_CHARACTER_SPELLCOOLDOWNS, "SELECT spell, category, item, time, needSend FROM character_spell_cooldown WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_CHARACTER_DECLINEDNAMES, "SELECT genitive, dative, accusative, instrumental, prepositional FROM character_declinedname WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_CHARACTER_ACHIEVEMENTS, "SELECT achievement, date FROM character_achievement WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_CHARACTER_CRITERIAPROGRESS, "SELECT criteria, counter, date FROM character_achievement_progress WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_CHARACTER_EQUIPMENTSETS, "SELECT setguid, setindex, name, iconname, ignore_mask, item0, item1, item2, item3, item4, item5, item6, item7, item8, "
                      "item9, item10, item11, item12, item13, item14, item15, item16, item17, item18 FROM character_equipmentsets WHERE guid = ? ORDER BY setindex", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_SEL_CHARACTER_ENTRY_POINT, "SELECT joinX, joinY, joinZ, joinO, joinMapId, taxiPath0, taxiPath1, mountSpell FROM character_entry_point WHERE guid = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SEL_CHARACTER_ENTRY_POINT, "SELECT joinX, joinY, joinZ, joinO, joinMapId, taxiPath, mountSpell FROM character_entry_point WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_CHARACTER_GLYPHS, "SELECT talentGroup, glyph1, glyph2, glyph3, glyph4, glyph5, glyph6 FROM character_glyphs WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_CHARACTER_TALENTS, "SELECT spell, specMask FROM character_talent WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_CHARACTER_SKILLS, "SELECT skill, value, max FROM character_skills WHERE guid = ?", CONNECTION_ASYNC);
@@ -115,7 +116,7 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     // End LoginQueryHolder content
 
     PrepareStatement(CHAR_SEL_CHARACTER_ACTIONS_SPEC, "SELECT button, action, type FROM character_action WHERE guid = ? AND spec = ? ORDER BY button", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_SEL_MAILITEMS, "SELECT creatorGuid, giftCreatorGuid, count, duration, charges, flags, enchantments, randomPropertyId, durability, playedTime, text, item_guid, itemEntry, ii.owner_guid, m.id FROM mail_items mi INNER JOIN mail m ON mi.mail_id = m.id LEFT JOIN item_instance ii ON mi.item_guid = ii.guid WHERE m.receiver = ?", CONNECTION_BOTH);
+    PrepareStatement(CHAR_SEL_MAILITEMS, "SELECT creatorGuid, giftCreatorGuid, count, duration, charges, flags, enchantments, randomPropertyId, durability, playedTime, text, item_guid, itemEntry, ii.owner_guid, m.id FROM mail_items mi INNER JOIN mail m ON mi.mail_id = m.id LEFT JOIN item_instance ii ON mi.item_guid = ii.guid WHERE m.receiver = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_AUCTION_ITEMS, "SELECT creatorGuid, giftCreatorGuid, count, duration, charges, flags, enchantments, randomPropertyId, durability, playedTime, text, itemguid, itemEntry FROM auctionhouse ah JOIN item_instance ii ON ah.itemguid = ii.guid", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_AUCTIONS, "SELECT id, houseid, itemguid, itemEntry, count, itemowner, buyoutprice, time, buyguid, lastbid, startbid, deposit FROM auctionhouse ah INNER JOIN item_instance ii ON ii.guid = ah.itemguid", CONNECTION_SYNCH);
     PrepareStatement(CHAR_INS_AUCTION, "INSERT INTO auctionhouse (id, houseid, itemguid, itemowner, buyoutprice, time, buyguid, lastbid, startbid, deposit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
@@ -241,7 +242,9 @@ void CharacterDatabaseConnection::DoPrepareStatements()
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
 
     // Account data
-    PrepareStatement(CHAR_SEL_ACCOUNT_DATA, "SELECT type, time, data FROM account_data WHERE accountId = ?", CONNECTION_ASYNC);
+    // AccountInfoQueryHolderPerRealm executes these login queries on asynchronous connections.
+    PrepareStatement(CHAR_SEL_ACCOUNT_DATA,
+        "SELECT type, time, data FROM account_data WHERE accountId = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_REP_ACCOUNT_DATA, "REPLACE INTO account_data (accountId, type, time, data) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_ACCOUNT_DATA, "DELETE FROM account_data WHERE accountId = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_PLAYER_ACCOUNT_DATA, "SELECT type, time, data FROM character_account_data WHERE guid = ?", CONNECTION_ASYNC);
@@ -249,7 +252,9 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_DEL_PLAYER_ACCOUNT_DATA, "DELETE FROM character_account_data WHERE guid = ?", CONNECTION_ASYNC);
 
     // Tutorials
-    PrepareStatement(CHAR_SEL_TUTORIALS, "SELECT tut0, tut1, tut2, tut3, tut4, tut5, tut6, tut7 FROM account_tutorial WHERE accountId = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SEL_TUTORIALS,
+        "SELECT tut0, tut1, tut2, tut3, tut4, tut5, tut6, tut7 FROM account_tutorial WHERE accountId = ?",
+        CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_HAS_TUTORIALS, "SELECT 1 FROM account_tutorial WHERE accountId = ?", CONNECTION_SYNCH);
     PrepareStatement(CHAR_INS_TUTORIALS, "INSERT INTO account_tutorial(tut0, tut1, tut2, tut3, tut4, tut5, tut6, tut7, accountId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_TUTORIALS, "UPDATE account_tutorial SET tut0 = ?, tut1 = ?, tut2 = ?, tut3 = ?, tut4 = ?, tut5 = ?, tut6 = ?, tut7 = ? WHERE accountId = ?", CONNECTION_ASYNC);
@@ -259,22 +264,27 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_INS_INSTANCE_SAVE, "INSERT INTO instance (id, map, resettime, difficulty, completedEncounters, data) VALUES (?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_INSTANCE_SAVE_DATA, "UPDATE instance SET data=? WHERE id=?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_INSTANCE_SAVE_ENCOUNTERMASK, "UPDATE instance SET completedEncounters=? WHERE id=?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SELECT_INSTANCE_SAVED_DATA, "SELECT guid, state FROM instance_saved_go_state_data WHERE id = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_INSERT_INSTANCE_SAVED_DATA, "INSERT INTO instance_saved_go_state_data (id, guid, state) VALUES (?, ?, ?)"
+        "ON DUPLICATE KEY UPDATE state = VALUES(state)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DELETE_INSTANCE_SAVED_DATA, "DELETE FROM instance_saved_go_state_data WHERE id = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SANITIZE_INSTANCE_SAVED_DATA, "DELETE FROM instance_saved_go_state_data WHERE id NOT IN (SELECT instance.id FROM instance)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_NO_OP_PROVIDE_REALM_CONTEXT, "SELECT ? AS no_op", CONNECTION_ASYNC);
 
     // Game event saves
     PrepareStatement(CHAR_DEL_GAME_EVENT_SAVE, "DELETE FROM game_event_save WHERE eventEntry = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_GAME_EVENT_SAVE, "INSERT INTO game_event_save (eventEntry, state, next_start) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SEL_GAME_EVENT_SAVE_DATA, "SELECT eventEntry, state, next_start FROM game_event_save", CONNECTION_SYNCH);
 
     // Game event condition saves
     PrepareStatement(CHAR_DEL_ALL_GAME_EVENT_CONDITION_SAVE, "DELETE FROM game_event_condition_save WHERE eventEntry = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_GAME_EVENT_CONDITION_SAVE, "DELETE FROM game_event_condition_save WHERE eventEntry = ? AND condition_id = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_GAME_EVENT_CONDITION_SAVE, "INSERT INTO game_event_condition_save (eventEntry, condition_id, done) VALUES (?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_GAME_EVENT_CONDITION_SAVE_DATA, "SELECT eventEntry, condition_id, done FROM game_event_condition_save", CONNECTION_SYNCH);
-    PrepareStatement(CHAR_SEL_GAME_EVENT_SAVE_DATA, "SELECT eventEntry, state, next_start FROM game_event_save", CONNECTION_SYNCH);
 
     // Petitions
     PrepareStatement(CHAR_DEL_ALL_PETITION_SIGNATURES, "DELETE FROM petition_sign WHERE playerguid = ?", CONNECTION_ASYNC);
-    // petition_sign.type is not written by the sign insert (petition_id schema), join petition for the type filter
-    PrepareStatement(CHAR_DEL_PETITION_SIGNATURE, "DELETE ps FROM petition_sign ps INNER JOIN petition p ON p.petition_id = ps.petition_id WHERE ps.playerguid = ? AND p.type = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_PETITION_SIGNATURE, "DELETE FROM petition_sign WHERE playerguid = ? AND type = ?", CONNECTION_ASYNC);
 
     // Arena teams
     PrepareStatement(CHAR_INS_ARENA_TEAM, "INSERT INTO arena_team (arenaTeamId, name, captainGuid, type, rating, backgroundColor, emblemStyle, emblemColor, borderStyle, borderColor) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
@@ -286,12 +296,12 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_UPD_ARENA_TEAM_STATS, "UPDATE arena_team SET rating = ?, weekGames = ?, weekWins = ?, seasonGames = ?, seasonWins = ?, `rank` = ? WHERE arenaTeamId = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_ARENA_TEAM_MEMBER, "UPDATE arena_team_member SET personalRating = ?, weekGames = ?, weekWins = ?, seasonGames = ?, seasonWins = ? WHERE arenaTeamId = ? AND guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_REP_CHARACTER_ARENA_STATS, "REPLACE INTO character_arena_stats (guid, slot, matchMakerRating, maxMMR) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_CHARACTER_ARENA_STATS, "DELETE FROM character_arena_stats WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_PLAYER_ARENA_TEAMS, "SELECT arena_team_member.arenaTeamId FROM arena_team_member JOIN arena_team ON arena_team_member.arenaTeamId = arena_team.arenaTeamId WHERE guid = ?", CONNECTION_SYNCH);
     PrepareStatement(CHAR_UPD_ARENA_TEAM_NAME, "UPDATE arena_team SET name = ? WHERE arenaTeamId = ?", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_UPD_ARENA_TEAM_EMBLEM, "UPDATE arena_team SET backgroundColor = ?, emblemStyle = ?, emblemColor = ?, borderStyle = ?, borderColor = ? WHERE arenaTeamId = ?", CONNECTION_ASYNC);
 
     // Character battleground data
-    PrepareStatement(CHAR_INS_PLAYER_ENTRY_POINT, "INSERT INTO character_entry_point (guid, joinX, joinY, joinZ, joinO, joinMapId, taxiPath0, taxiPath1, mountSpell) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_INS_PLAYER_ENTRY_POINT, "INSERT INTO character_entry_point (guid, joinX, joinY, joinZ, joinO, joinMapId, taxiPath, mountSpell) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_PLAYER_ENTRY_POINT, "DELETE FROM character_entry_point WHERE guid = ?", CONNECTION_ASYNC);
 
     // Character homebind
@@ -329,6 +339,7 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_INS_GM_SURVEY, "INSERT INTO gm_survey (guid, surveyId, mainSurvey, comment, createTime) VALUES (?, ?, ?, ?, UNIX_TIMESTAMP(NOW()))", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_GM_SUBSURVEY, "INSERT INTO gm_subsurvey (surveyId, questionId, answer, answerComment) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_LAG_REPORT, "INSERT INTO lag_reports (guid, lagType, mapId, posX, posY, posZ, latency, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_INS_SPAM_REPORT, "INSERT INTO spam_reports (SpamType, SpammerGuid, Unk1, MailIdOrMessageType, ChannelId, SecondsSinceMessage, Description, Time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
 
     // LFG Data
     PrepareStatement(CHAR_REP_LFG_DATA, "REPLACE INTO lfg_data (guid, dungeon, state) VALUES (?, ?, ?)", CONNECTION_ASYNC);
@@ -343,22 +354,21 @@ void CharacterDatabaseConnection::DoPrepareStatements()
                      "death_expire_time, taxi_path, arenaPoints, totalHonorPoints, todayHonorPoints, yesterdayHonorPoints, totalKills, "
                      "todayKills, yesterdayKills, chosenTitle, knownCurrencies, watchedFaction, drunk, health, power1, power2, power3, "
                      "power4, power5, power6, power7, latency, talentGroupsCount, activeTalentGroup, exploredZones, equipmentCache, "
-                     "ammoId, knownTitles, actionBars, grantableLevels, innTriggerId, extraBonusTalentCount) VALUES "
-                     "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?)", CONNECTION_ASYNC);
+                     "ammoId, knownTitles, actionBars, grantableLevels, innTriggerId, reincarnationLv) VALUES "
+                     "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_CHARACTER, "UPDATE characters SET name=?,race=?,class=?,gender=?,level=?,xp=?,money=?,skin=?,face=?,hairStyle=?,hairColor=?,facialStyle=?,bankSlots=?,restState=?,playerFlags=?,"
                      "map=?,instance_id=?,instance_mode_mask=?,position_x=?,position_y=?,position_z=?,orientation=?,trans_x=?,trans_y=?,trans_z=?,trans_o=?,transguid=?,taximask=?,cinematic=?,totaltime=?,leveltime=?,rest_bonus=?,"
                      "logout_time=?,is_logout_resting=?,resettalents_cost=?,resettalents_time=?,extra_flags=?,stable_slots=?,at_login=?,zone=?,death_expire_time=?,taxi_path=?,"
                      "arenaPoints=?,totalHonorPoints=?,todayHonorPoints=?,yesterdayHonorPoints=?,totalKills=?,todayKills=?,yesterdayKills=?,chosenTitle=?,knownCurrencies=?,"
                      "watchedFaction=?,drunk=?,health=?,power1=?,power2=?,power3=?,power4=?,power5=?,power6=?,power7=?,latency=?,talentGroupsCount=?,activeTalentGroup=?,exploredZones=?,"
-                     "equipmentCache=?,ammoId=?,knownTitles=?,actionBars=?,grantableLevels=?,innTriggerId=?,extraBonusTalentCount=?,online=? WHERE guid=?", CONNECTION_ASYNC);
+                     "equipmentCache=?,ammoId=?,knownTitles=?,actionBars=?,grantableLevels=?,innTriggerId=?,reincarnationLv=?,online=? WHERE guid=?", CONNECTION_ASYNC);
 
     PrepareStatement(CHAR_UPD_ADD_AT_LOGIN_FLAG, "UPDATE characters SET at_login = at_login | ? WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_REM_AT_LOGIN_FLAG, "UPDATE characters set at_login = at_login & ~ ? WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_ALL_AT_LOGIN_FLAGS, "UPDATE characters SET at_login = at_login | ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_BUG_REPORT, "INSERT INTO bugreport (type, content) VALUES(?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_INS_SPAM_REPORT, "INSERT INTO spam_reports (SpamType, SpammerGuid, Unk1, MailIdOrMessageType, ChannelId, SecondsSinceMessage, Description, Time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_UPD_PETITION_NAME, "UPDATE petition SET name = ? WHERE petition_id = ?", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_INS_PETITION_SIGNATURE, "INSERT INTO petition_sign (ownerguid, petition_id, playerguid, player_account) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_PETITION_NAME, "UPDATE petition SET name = ? WHERE petitionguid = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_INS_PETITION_SIGNATURE, "INSERT INTO petition_sign (ownerguid, petitionguid, playerguid, player_account) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_ACCOUNT_ONLINE, "UPDATE characters SET online = 0 WHERE account = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_GROUP, "INSERT INTO `groups` (guid, leaderGuid, lootMethod, looterGuid, lootThreshold, icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, groupType, difficulty, raidDifficulty, masterLooterGuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_REP_GROUP_MEMBER, "REPLACE INTO group_member (guid, memberGuid, memberFlags, subgroup, roles) VALUES(?, ?, ?, ?, ?)", CONNECTION_ASYNC);
@@ -405,12 +415,10 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_UPD_CHARACTER_POSITION, "UPDATE characters SET position_x = ?, position_y = ?, position_z = ?, orientation = ?, map = ?, zone = ?, trans_x = 0, trans_y = 0, trans_z = 0, transguid = 0, taxi_path = '', cinematic = 1 WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_CHARACTER_AURA_FROZEN, "SELECT characters.name FROM characters LEFT JOIN character_aura ON (characters.guid = character_aura.guid) WHERE character_aura.spell = 9454", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_CHARACTER_ONLINE, "SELECT name, account, map, zone FROM characters WHERE online > 0", CONNECTION_SYNCH);
-    PrepareStatement(CHAR_SEL_CHAR_DEL_INFO_BY_GUID, "SELECT guid, deleteInfos_Name, deleteInfos_Account, deleteDate, level FROM characters WHERE deleteDate IS NOT NULL AND guid = ?", CONNECTION_SYNCH);
-    PrepareStatement(CHAR_SEL_CHAR_DEL_INFO_BY_NAME, "SELECT guid, deleteInfos_Name, deleteInfos_Account, deleteDate, level FROM characters WHERE deleteDate IS NOT NULL AND deleteInfos_Name LIKE CONCAT('%%', ?, '%%') ORDER BY deleteDate DESC", CONNECTION_SYNCH);
-    PrepareStatement(CHAR_SEL_CHAR_DEL_INFO_BY_NAME_LIMIT, "SELECT guid, deleteInfos_Name, deleteInfos_Account, deleteDate, level FROM characters WHERE deleteDate IS NOT NULL AND deleteInfos_Name LIKE CONCAT('%%', ?, '%%') ORDER BY deleteDate DESC LIMIT 51", CONNECTION_SYNCH);
-    PrepareStatement(CHAR_SEL_CHAR_DEL_INFO, "SELECT guid, deleteInfos_Name, deleteInfos_Account, deleteDate, level FROM characters WHERE deleteDate IS NOT NULL ORDER BY deleteDate DESC LIMIT 51", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_SEL_CHAR_DEL_INFO_BY_GUID, "SELECT guid, deleteInfos_Name, deleteInfos_Account, deleteDate FROM characters WHERE deleteDate IS NOT NULL AND guid = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_SEL_CHAR_DEL_INFO_BY_NAME, "SELECT guid, deleteInfos_Name, deleteInfos_Account, deleteDate FROM characters WHERE deleteDate IS NOT NULL AND deleteInfos_Name LIKE CONCAT('%%', ?, '%%')", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_SEL_CHAR_DEL_INFO, "SELECT guid, deleteInfos_Name, deleteInfos_Account, deleteDate FROM characters WHERE deleteDate IS NOT NULL", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_CHARS_BY_ACCOUNT_ID, "SELECT guid FROM characters WHERE account = ?", CONNECTION_SYNCH);
-    PrepareStatement(CHAR_SEL_ACCOUNT_INFO_CHARS, "SELECT guid, name, level, race, class, online FROM characters WHERE account = ? AND deleteDate IS NULL ORDER BY level DESC, name ASC", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_CHAR_PINFO, "SELECT totaltime, level, money, account, race, class, map, zone, gender, health, playerFlags FROM characters WHERE guid = ?", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_PINFO_BANS, "SELECT unbandate, bandate = unbandate, bannedby, banreason FROM character_banned WHERE guid = ? AND active ORDER BY bandate ASC LIMIT 1", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_PINFO_MAILS, "SELECT SUM(CASE WHEN (checked & 1) THEN 1 ELSE 0 END) AS 'readmail', COUNT(*) AS 'totalmail' FROM mail WHERE `receiver` = ?", CONNECTION_SYNCH);
@@ -427,7 +435,7 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_SEL_CHAR_SOCIAL, "SELECT DISTINCT guid FROM character_social WHERE friend = ?", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_CHAR_OLD_CHARS, "SELECT guid, deleteInfos_Account FROM characters WHERE deleteDate IS NOT NULL AND deleteDate < ?", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_ARENA_TEAM_ID_BY_PLAYER_GUID, "SELECT arena_team_member.arenateamid FROM arena_team_member JOIN arena_team ON arena_team_member.arenateamid = arena_team.arenateamid WHERE guid = ? AND type = ? LIMIT 1", CONNECTION_SYNCH);
-    PrepareStatement(CHAR_SEL_MAIL, "SELECT id, messageType, sender, receiver, subject, body, expire_time, deliver_time, money, cod, checked, stationery, mailTemplateId, has_items FROM mail WHERE receiver = ? ORDER BY id DESC", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SEL_MAIL, "SELECT id, messageType, sender, receiver, subject, body, expire_time, deliver_time, money, cod, checked, stationery, mailTemplateId FROM mail WHERE receiver = ? AND deliver_time <= ? ORDER BY id DESC", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_NEXT_MAIL_DELIVERYTIME, "SELECT MIN(deliver_time) FROM mail WHERE receiver = ? AND deliver_time > ? AND (checked & 1) = 0 LIMIT 1", CONNECTION_SYNCH);
     PrepareStatement(CHAR_DEL_CHAR_AURA_FROZEN, "DELETE FROM character_aura WHERE spell = 9454 AND guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_CHAR_INVENTORY_COUNT_ITEM, "SELECT COUNT(itemEntry) FROM character_inventory ci INNER JOIN item_instance ii ON ii.guid = ci.item WHERE itemEntry = ?", CONNECTION_SYNCH);
@@ -451,9 +459,6 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_INS_CHAR_ACHIEVEMENT, "INSERT INTO character_achievement (guid, achievement, date) VALUES (?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_CHAR_ACHIEVEMENT_PROGRESS_BY_CRITERIA, "DELETE FROM character_achievement_progress WHERE guid = ? AND criteria = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_CHAR_ACHIEVEMENT_PROGRESS, "INSERT INTO character_achievement_progress (guid, criteria, counter, date) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_INS_CHAR_ACHIEVEMENT_OFFLINE_UPDATES, "INSERT INTO character_achievement_offline_updates (guid, update_type, arg1, arg2, arg3) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_SEL_CHAR_ACHIEVEMENT_OFFLINE_UPDATES, "SELECT update_type, arg1, arg2, arg3 FROM character_achievement_offline_updates WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_DEL_CHAR_ACHIEVEMENT_OFFLINE_UPDATES, "DELETE FROM character_achievement_offline_updates WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_CHAR_REPUTATION_BY_FACTION, "DELETE FROM character_reputation WHERE guid = ? AND faction = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_CHAR_REPUTATION_BY_FACTION, "INSERT INTO character_reputation (guid, faction, standing, flags) VALUES (?, ?, ? , ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_CHAR_ARENA_POINTS, "UPDATE characters SET arenaPoints = (arenaPoints + ?) WHERE guid = ?", CONNECTION_ASYNC);
@@ -464,7 +469,9 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_INS_CHAR_GIFT, "INSERT INTO character_gifts (guid, item_guid, entry, flags) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_INSTANCE_BY_INSTANCE, "DELETE FROM instance WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_MAIL_ITEM_BY_ID, "DELETE FROM mail_items WHERE mail_id = ?", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_INS_PETITION, "INSERT INTO petition (petition_id, ownerguid, petitionguid, name, type) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_INS_PETITION, "INSERT INTO petition (ownerguid, petitionguid, name, type) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_PETITION_BY_GUID, "DELETE FROM petition WHERE petitionguid = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_PETITION_SIGNATURE_BY_GUID, "DELETE FROM petition_sign WHERE petitionguid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_PETITION_BY_ID, "DELETE FROM petition WHERE petition_id = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_PETITION_SIGNATURE_BY_ID, "DELETE FROM petition_sign WHERE petition_id = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_CHAR_DECLINED_NAME, "DELETE FROM character_declinedname WHERE guid = ?", CONNECTION_ASYNC);
@@ -515,8 +522,7 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_UDP_CHAR_MONEY, "UPDATE characters SET money = ? WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UDP_CHAR_MONEY_ACCUMULATIVE, "UPDATE characters SET money = money + ? WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_CHAR_REMOVE_GHOST, "UPDATE characters SET playerFlags = (playerFlags & (~16)) WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_INS_CHAR_ACTION, "INSERT INTO character_action (guid, spec, button, action, type) VALUES (?, ?, ?, ?, ?)"
-                     "ON DUPLICATE KEY UPDATE action = VALUES(action), type = VALUES(type)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_INS_CHAR_ACTION, "INSERT INTO character_action (guid, spec, button, action, type) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_CHAR_ACTION, "UPDATE character_action SET action = ?, type = ? WHERE guid = ? AND button = ? AND spec = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_CHAR_ACTION_BY_BUTTON_SPEC, "DELETE FROM character_action WHERE guid = ? AND button = ? AND spec = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_CHAR_INVENTORY_BY_ITEM, "DELETE FROM character_inventory WHERE item = ?", CONNECTION_ASYNC);
@@ -533,11 +539,9 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_SEL_CHAR_QUESTSTATUS_SEASONAL_BY_QUEST, "SELECT 1 FROM character_queststatus_seasonal WHERE guid = ? AND quest = ? AND event = ?", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_CHAR_QUESTSTATUS_REWARDED_BY_QUEST, "SELECT 1 FROM character_queststatus_rewarded WHERE guid = ? AND quest = ? AND active = 1", CONNECTION_SYNCH);
     PrepareStatement(CHAR_DEL_CHAR_SKILL_BY_SKILL, "DELETE FROM character_skills WHERE guid = ? AND skill = ?", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_INS_CHAR_SKILLS, "INSERT INTO character_skills (guid, skill, value, max) VALUES (?, ?, ?, ?)"
-                     "ON DUPLICATE KEY UPDATE value = VALUES(value), max = VALUES(max)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_INS_CHAR_SKILLS, "REPLACE INTO character_skills (guid, skill, value, max) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UDP_CHAR_SKILLS, "UPDATE character_skills SET value = ?, max = ? WHERE guid = ? AND skill = ?", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_INS_CHAR_SPELL, "INSERT INTO character_spell (guid, spell, specMask) VALUES (?, ?, ?)"
-                     "ON DUPLICATE KEY UPDATE specMask = VALUES(specMask)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_INS_CHAR_SPELL, "INSERT INTO character_spell (guid, spell, specMask) VALUES (?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_CHAR_STATS, "DELETE FROM character_stats WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_CHAR_STATS, "INSERT INTO character_stats (guid, maxhealth, maxpower1, maxpower2, maxpower3, maxpower4, maxpower5, maxpower6, maxpower7, strength, agility, stamina, intellect, spirit, "
                      "armor, resHoly, resFire, resNature, resFrost, resShadow, resArcane, blockPct, dodgePct, parryPct, critPct, rangedCritPct, spellCritPct, attackPower, rangedAttackPower, "
@@ -546,11 +550,10 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_DEL_PETITION_BY_OWNER, "DELETE FROM petition WHERE ownerguid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_PETITION_SIGNATURE_BY_OWNER, "DELETE FROM petition_sign WHERE ownerguid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_PETITION_BY_OWNER_AND_TYPE, "DELETE FROM petition WHERE ownerguid = ? AND type = ?", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_DEL_PETITION_SIGNATURE_BY_OWNER_AND_TYPE, "DELETE ps FROM petition_sign ps INNER JOIN petition p ON p.petition_id = ps.petition_id WHERE ps.ownerguid = ? AND p.type = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_PETITION_SIGNATURE_BY_OWNER_AND_TYPE, "DELETE FROM petition_sign WHERE ownerguid = ? AND type = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_CHAR_GLYPHS, "INSERT INTO character_glyphs VALUES(?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_CHAR_TALENT_BY_SPELL, "DELETE FROM character_talent WHERE guid = ? AND spell = ?", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_INS_CHAR_TALENT, "INSERT INTO character_talent (guid, spell, specMask) VALUES (?, ?, ?)"
-                     "ON DUPLICATE KEY UPDATE specMask = VALUES(specMask)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_INS_CHAR_TALENT, "INSERT INTO character_talent (guid, spell, specMask) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE specMask = VALUES(specMask)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_CHAR_ACTION_EXCEPT_SPEC, "DELETE FROM character_action WHERE spec<>? AND guid = ?", CONNECTION_ASYNC);
 
     // Items that hold loot or money
@@ -578,6 +581,7 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_DEL_PET_SPELLS, "DELETE FROM pet_spell WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_PET_SPELL_COOLDOWNS, "DELETE FROM pet_spell_cooldown WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_PET_SPELL_COOLDOWN, "INSERT INTO pet_spell_cooldown (guid, spell, category, time) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_PET_SPELL_BY_SPELL, "DELETE FROM pet_spell WHERE guid = ? AND spell = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_PET_SPELL, "INSERT INTO pet_spell (guid, spell, active) VALUES (?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_INS_PET_AURA, "INSERT INTO pet_aura (guid, casterGuid, spell, effectMask, recalculateMask, stackCount, amount0, amount1, amount2, "
                      "base_amount0, base_amount1, base_amount2, maxDuration, remainTime, remainCharges) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
@@ -592,7 +596,7 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     // PvPstats
     PrepareStatement(CHAR_SEL_PVPSTATS_MAXID, "SELECT MAX(id) FROM pvpstats_battlegrounds", CONNECTION_SYNCH);
     PrepareStatement(CHAR_INS_PVPSTATS_BATTLEGROUND, "INSERT INTO pvpstats_battlegrounds (id, winner_faction, bracket_id, type, date) VALUES (?, ?, ?, ?, NOW())", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_INS_PVPSTATS_PLAYER, "INSERT INTO pvpstats_players (battleground_id, character_guid, winner, score_killing_blows, score_deaths, score_honorable_kills, score_bonus_honor, score_damage_done, score_healing_done, attr_1, attr_2, attr_3, attr_4, attr_5) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_INS_PVPSTATS_PLAYER, "REPLACE INTO pvpstats_players (battleground_id, character_guid, winner, score_killing_blows, score_deaths, score_honorable_kills, score_bonus_honor, score_damage_done, score_healing_done, attr_1, attr_2, attr_3, attr_4, attr_5) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_PVPSTATS_FACTIONS_OVERALL, "SELECT winner_faction, COUNT(*) AS count FROM pvpstats_battlegrounds WHERE DATEDIFF(NOW(), date) < 7 GROUP BY winner_faction ORDER BY winner_faction ASC", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_PVPSTATS_BRACKET_MONTH, "SELECT character_guid, COUNT(character_guid) AS count, characters.name as character_name FROM pvpstats_players INNER JOIN pvpstats_battlegrounds ON pvpstats_players.battleground_id = pvpstats_battlegrounds.id AND bracket_id = ? AND MONTH(date) = MONTH(NOW()) AND YEAR(date) = YEAR(NOW()) INNER JOIN characters ON pvpstats_players.character_guid = characters.guid AND characters.deleteDate IS NULL WHERE pvpstats_players.winner = 1 GROUP BY character_guid ORDER BY count(character_guid) DESC LIMIT 0, ?", CONNECTION_SYNCH);
 
@@ -606,49 +610,306 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_UPD_QUEST_TRACK_ABANDON_TIME, "UPDATE quest_tracker SET quest_abandon_time = NOW() WHERE id = ? AND character_guid = ? ORDER BY quest_accept_time DESC LIMIT 1", CONNECTION_ASYNC);
 
     // Recovery Item
-    PrepareStatement(CHAR_INS_RECOVERY_ITEM, "INSERT INTO recovery_item (Guid, ItemEntry, Count, DeleteDate) VALUES (?, ?, ?, UNIX_TIMESTAMP())", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_INS_RECOVERY_ITEM, "INSERT INTO recovery_item (Guid, ItemEntry, Count) VALUES (?, ?, ?)", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_RECOVERY_ITEM, "SELECT id, itemEntry, Count, Guid FROM recovery_item WHERE id = ?", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_RECOVERY_ITEM_LIST, "SELECT id, itemEntry, Count FROM recovery_item WHERE Guid = ? ORDER BY id DESC", CONNECTION_SYNCH);
     PrepareStatement(CHAR_DEL_RECOVERY_ITEM, "DELETE FROM recovery_item WHERE Guid = ? AND ItemEntry = ? AND Count = ? ORDER BY Id DESC LIMIT 1", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_RECOVERY_ITEM_BY_RECOVERY_ID, "DELETE FROM recovery_item WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_SEL_RECOVERY_ITEM_OLD_ITEMS, "SELECT Guid, ItemEntry FROM recovery_item WHERE DeleteDate IS NOT NULL AND DeleteDate < ?", CONNECTION_SYNCH);
     PrepareStatement(CHAR_DEL_RECOVERY_ITEM_BY_GUID, "DELETE FROM recovery_item WHERE Guid = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SEL_WORLD_STATE, "SELECT Id, Data FROM world_state", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REP_WORLD_STATE, "REPLACE INTO world_state (Id, Data) VALUES(?, ?)", CONNECTION_ASYNC);
 
     PrepareStatement(CHAR_SEL_HONORPOINTS, "SELECT totalHonorPoints FROM characters WHERE guid = ?", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_ARENAPOINTS, "SELECT arenaPoints FROM characters WHERE guid = ?", CONNECTION_SYNCH);
 
     // Character names
     PrepareStatement(CHAR_INS_RESERVED_PLAYER_NAME, "INSERT IGNORE INTO reserved_name (name) VALUES (?)", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_INS_PROFANITY_PLAYER_NAME, "INSERT IGNORE INTO profanity_name (name) VALUES (?)", CONNECTION_ASYNC);
 
-    // Chat filter
+    // Character settings
+    PrepareStatement(CHAR_SEL_CHAR_SETTINGS, "SELECT source, data FROM character_settings WHERE guid = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_REP_CHAR_SETTINGS, "REPLACE INTO character_settings (guid, source, data) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_CHAR_SETTINGS, "DELETE FROM character_settings WHERE guid = ?", CONNECTION_ASYNC);
+
+    //Custom
+    PrepareStatement(CHAR_SEL_TEMP_AT, "SELECT 序号, 变量 FROM ______玩家 WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REP_TEMP_AT, "REPLACE INTO ______玩家 (玩家标识, 序号, 变量) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_TEMP_AT, "UPDATE  ______玩家 SET 变量 = ? WHERE 序号 = ?", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_TEMP_KT, "SELECT 序号, 变量 FROM ______物品 WHERE 物品标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REP_TEMP_KT, "REPLACE INTO ______物品 (物品标识, 序号, 变量) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_TEMP_KT, "UPDATE  ______物品 SET 变量 = ? WHERE 序号 = ?", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_ITEM_ENCH_LOCK, "SELECT 物品标识, 序号, 锁定 FROM _附魔锁定存档 WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REP_ITEM_ENCH_LOCK, "REPLACE INTO _附魔锁定存档 (玩家标识, 物品标识, 序号, 锁定) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_ITEM_LIMIT, "SELECT 物品编号, 日当前数量 FROM _每日上限  WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_UPD_ITEM_LIMIT, "REPLACE INTO _每日上限 (玩家标识, 物品编号, 日当前数量) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_ITEM_LIMIT, "TRUNCATE _每日上限", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_USE_ITEM_LIMIT, "SELECT 物品编号, 每日次数 FROM _每日使用次数  WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_UPD_USE_ITEM_LIMIT, "REPLACE INTO _每日使用次数 (玩家标识, 物品编号, 每日次数) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_USE_ITEM_LIMIT, "TRUNCATE _每日使用次数", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SEL_FR_USE_ITEM_LIMIT, "SELECT 物品编号, 永久次数 FROM _永久使用次数  WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_UPD_FR_USE_ITEM_LIMIT, "REPLACE INTO _永久使用次数 (玩家标识, 物品编号, 永久次数) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_ITEM_FR_LIMIT, "SELECT 物品编号, 永当前数量 FROM _永久上限  WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_UPD_ITEM_FR_LIMIT, "REPLACE INTO _永久上限 (玩家标识, 物品编号, 永当前数量) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+
+    //------------   随机属性倍率   ------------
+    PrepareStatement(CHAR_SEL_ITEM_RM_AT, "SELECT 装备标识, 装备编号, 强化等级, 前缀名称, 后缀名称, 强化名称, 武器最小伤害, 武器最大伤害, 属性类型1, 属性值1, "
+    "属性类型2, 属性值2, 属性类型3, 属性值3, 属性类型4, 属性值4, 属性类型5, 属性值5, 属性类型6, 属性值6, 属性类型7, 属性值7, 属性类型8, 属性值8, 属性类型9, 属性值9, "
+    "属性类型10, 属性值10, 属性类型11, 属性值11, 属性类型12, 属性值12, 属性类型13, 属性值13, 属性类型14, 属性值14, 属性类型15, 属性值15, 属性类型16, 属性值16, "
+    "技能1, 技能2, 技能3, 技能4, 技能5, 技能6, 技能7, 技能8, 随机属性1, 随机属性2, 随机属性3, 随机属性4, 随机属性5, 随机属性6, 随机属性7 FROM _装备超级随机存档  WHERE 装备标识 = ?", CONNECTION_SYNCH);
+
+    PrepareStatement(CHAR_UPD_ITEM_RM_AT, "REPLACE INTO _装备超级随机存档 (装备标识, 装备编号, 强化等级, 前缀名称, 后缀名称, 强化名称, 武器最小伤害, 武器最大伤害, 属性类型1, 属性值1, "
+    "属性类型2, 属性值2, 属性类型3, 属性值3, 属性类型4, 属性值4, 属性类型5, 属性值5, 属性类型6, 属性值6, 属性类型7, 属性值7, 属性类型8, 属性值8, 属性类型9, 属性值9, "
+    "属性类型10, 属性值10, 属性类型11, 属性值11, 属性类型12, 属性值12, 属性类型13, 属性值13, 属性类型14, 属性值14, 属性类型15, 属性值15, 属性类型16, 属性值16, "
+    "技能1, 技能2, 技能3, 技能4, 技能5, 技能6, 技能7, 技能8, 随机属性1, 随机属性2, 随机属性3, 随机属性4, 随机属性5, 随机属性6, 随机属性7) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    //------------   随机属性倍率   ------------
+
+    PrepareStatement(CHAR_SEL_ITEM_RUNES_AT, "SELECT 装备标识, 装备编号, 当前插入数量, 符文插槽数量, 符文宝石1, 符文宝石2, 符文宝石3, 符文宝石4, 符文宝石5, 符文宝石6, 符文宝石7, 符文宝石8, 自带技能1, 自带技能2, 自带技能3, 自带技能4, 自带技能5, 自带技能6, 自带技能7, 自带技能8, 组合技名称, 组合技能列表 FROM _装备符文存档  WHERE 装备标识 = ?", CONNECTION_SYNCH);
+
+    PrepareStatement(CHAR_UPD_ITEM_RUNES_AT, "REPLACE INTO _装备符文存档 (装备标识, 装备编号, 当前插入数量, 符文插槽数量, 符文宝石1, 符文宝石2, 符文宝石3, 符文宝石4, 符文宝石5, 符文宝石6, 符文宝石7, 符文宝石8, 自带技能1, 自带技能2, 自带技能3, 自带技能4, 自带技能5, 自带技能6, 自带技能7, 自带技能8, 组合技名称, 组合技能列表) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_ITEM_RUNES_SLOT, "UPDATE  _装备符文存档 SET 符文插槽数量 = ? WHERE 装备标识 = ?", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_ITEM_ENCH_RTS, "SELECT 物品标识, 物品编号, 洗练次数 FROM _附魔洗练存档 WHERE 物品标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REP_ITEM_ENCH_RTS,
+        "REPLACE INTO _附魔洗练存档 (物品标识, 物品编号, 洗练次数) VALUES (?, ?, ?)", CONNECTION_BOTH);
+
+    PrepareStatement(CHAR_SEL_ITEM_SECRET, "SELECT 钥匙标识, 编号, A组, 固定技能, B组, 随机技能, 关联地图 FROM _秘境钥匙存档 WHERE 钥匙标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REP_ITEM_SECRET, "REPLACE INTO _秘境钥匙存档 (钥匙标识, 编号, A组, 固定技能, B组, 随机技能, 关联地图) VALUES (?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_ACTIVITY_DATA, "SELECT 序号, 类型, 变量1, 变量2 FROM _活跃度存档1 WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_UPD_ACTIVITY_PARAM, "REPLACE INTO _活跃度存档1 (玩家标识, 序号, 类型, 变量1, 变量2) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_ACTIVITY, "TRUNCATE _活跃度存档1", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_ACTIVITY_POP, "SELECT 活跃段, 是否奖励 FROM _活跃度存档2 WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REP_ACTIVITY_POP, "REPLACE INTO _活跃度存档2 (玩家标识, 活跃段, 是否奖励) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_ACTIVITY_POP, "TRUNCATE _活跃度存档2", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_REP_PLAYER_TOKEN_INFO, "REPLACE INTO ___日志_积分记录 (玩家Guid, 玩家名字, 玩家账号ID, 积分状况, 类型说明, 操作时间) VALUES (?, ?, ?, ?, ?, NOW())", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_REP_PLAYER_ITEM_INFO, "REPLACE INTO ___日志_物品记录 (玩家Guid, 玩家名字, 玩家账号ID, 物品编号, 物品数量, 类型说明, 操作时间) VALUES (?, ?, ?, ?, ?, ?, NOW())", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_INS_ANTICHEAT_REPORT, "INSERT INTO _反作弊触发记录 (玩家GUID, 玩家名字, 账号ID, 触发时间, 作弊类型, 地图ID, 区域ID, 坐标X, 坐标Y, 坐标Z, 服务器速度, 客户端速度, 移动距离, 时间差, 处理结果) VALUES (?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_RESET_MAP, "SELECT 副本地图, 副本难度, 次数 FROM _副本重置存档 WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REP_RESET_MAP, "REPLACE INTO _副本重置存档 (玩家标识, 副本地图, 副本难度, 次数) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_RESET_MAP, "TRUNCATE _副本重置存档", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_ITEMMAGIC, "SELECT 物品编号或技能, 类型, 序号 FROM _法宝存档 WHERE 玩家标识 = ? AND 页面 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REP_ITEMMAGIC, "REPLACE INTO _法宝存档 (玩家标识, 物品编号或技能, 类型, 序号, 页面) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_ITEMMAGIC, "DELETE FROM _法宝存档 WHERE (玩家标识=?) AND (物品编号或技能=?) AND (类型=?) AND (序号=?) AND (页面=?)", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_ZS_STAT_PLAYER, "SELECT 法力值, 生命值, 敏捷, 力量, 智力, 精神, 耐力, 防御等级, 躲闪等级, 招架等级, 格挡等级,"
+        "近战命中等级, 远程命中等级, 法术命中等级, 近战暴击等级, 远程暴击等级, 法术暴击等级, 近战命中躲闪等级, 远程命中躲闪等级, 法术命中躲闪等级, 近战暴击躲闪等级, 远程暴击躲闪等级, 法术暴击躲闪等级, 近战急速等级, 远程急速等级, 法术急速等级, 命中等级,"
+        "暴击等级, 命中躲闪等级, 暴击躲闪等级, 韧性等级, 急速等级, 精准等级, 攻击强度, 远程攻击强度, 形态攻击强度, 法术治疗效果, 法术伤害效果, 每5秒回复法力, 护甲穿透等级, 法术强度提高, 每5秒回复生命, 法术穿透, 格挡值提高 FROM _属性奖励存档 WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_INS_ZS_STAT_PLAYER, "INSERT INTO _属性奖励存档 (玩家标识) VALUES (?)", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_UPD_ZS_STAT_PLAYER, "UPDATE _属性奖励存档 SET 法力值 = ?, 生命值 = ?, 敏捷 = ?, 力量 = ?, 智力 = ?, 精神 = ?, 耐力 = ?, 防御等级 = ?, 躲闪等级 = ?, 招架等级 = ?, "
+        "格挡等级 = ?, 近战命中等级 = ?, 远程命中等级 = ?, 法术命中等级 = ?, 近战暴击等级 = ?, 远程暴击等级 = ?, 法术暴击等级 = ?, 近战命中躲闪等级 = ?, 远程命中躲闪等级 = ?, "
+        "法术命中躲闪等级 = ?, 近战暴击躲闪等级 = ?, 远程暴击躲闪等级 = ?, 法术暴击躲闪等级 = ?, 近战急速等级 = ?, 远程急速等级 = ?, 法术急速等级 = ?, 命中等级 = ?, 暴击等级 = ?, "
+        "命中躲闪等级 = ?, 暴击躲闪等级 = ?, 韧性等级 = ?, 急速等级 = ?, 精准等级 = ?, 攻击强度 = ?, 远程攻击强度 = ?, 形态攻击强度 = ?, 法术治疗效果 = ?, 法术伤害效果 = ?, 每5秒回复法力 = ?, "
+        "护甲穿透等级 = ?, 法术强度提高 = ?, 每5秒回复生命 = ?, 法术穿透 = ?, 格挡值提高 = ? WHERE 玩家标识 = ?", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_ITEM_DEVELOP_AT, "SELECT 装备标识, 装备编号, 成长等级, 当前经验 FROM _装备特殊成长经验存档 WHERE 装备标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_UPD_ITEM_DEVELOP_AT, "REPLACE INTO _装备特殊成长经验存档 (装备标识, 装备编号, 成长等级, 当前经验) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_UPD_GUILD_BAT, "REPLACE INTO _公会战存档 (公会编号, 当前胜利次数) VALUES (?, ?)", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_COMBAT_PET_DATA, "SELECT 战宠位置, 战宠编号, 战宠阶级, 战宠经验 FROM _玩家战宠存档 WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_UPD_COMBAT_PET_DATA, "REPLACE INTO _玩家战宠存档 (玩家标识, 战宠位置, 战宠编号, 战宠阶级, 战宠经验) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_SOLO_PVP_DATA, "SELECT 当前排名, 上次排名 FROM _比武存档 WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_UPD_SOLO_PVP_DATA, "UPDATE _比武存档 SET 当前排名 = ?, 上次排名 = ? WHERE 玩家标识 = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_SOLO_PVP_DATA1, "UPDATE _比武存档 SET 当前排名 = ? WHERE 玩家标识 = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_SOLO_PVP_DATA2, "UPDATE _比武存档 SET 上次排名 = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_INS_SOLO_PVP_DATA, "INSERT INTO _比武存档 (玩家标识) VALUES (?)", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_PIC_ITEM_GUIDE_DATA, "SELECT 物品编号, 页面 FROM _图鉴_物品_存档 WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_INS_PIC_ITEM_GUIDE_DATA, "REPLACE INTO _图鉴_物品_存档 (玩家标识, 物品编号, 页面) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_PIC_CRE_GUIDE_DATA, "SELECT 生物编号, 击杀数量, 页面 FROM _图鉴_生物_存档 WHERE 玩家标识 = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_INS_PIC_CRE_GUIDE_DATA, "REPLACE INTO _图鉴_生物_存档 (玩家标识, 生物编号, 击杀数量, 页面) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
+
+    PrepareStatement(CHAR_SEL_ACCOUNT_INFO_CHARS, "SELECT guid, name, level, race, class, online FROM characters WHERE account = ? AND deleteDate IS NULL ORDER BY level DESC, name ASC", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_INS_CHAR_ACHIEVEMENT_OFFLINE_UPDATES, "INSERT INTO character_achievement_offline_updates (guid, update_type, arg1, arg2, arg3) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_CHAR_ACHIEVEMENT_OFFLINE_UPDATES, "DELETE FROM character_achievement_offline_updates WHERE guid = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SEL_CHAR_DEL_INFO_BY_NAME_LIMIT, "SELECT guid, deleteInfos_Name, deleteInfos_Account, deleteDate, level FROM characters WHERE deleteDate IS NOT NULL AND deleteInfos_Name LIKE CONCAT('%%', ?, '%%') ORDER BY deleteDate DESC LIMIT 51", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_CHAT_FILTER, "SELECT ID, Word FROM chat_filter ORDER BY ID", CONNECTION_SYNCH);
     PrepareStatement(CHAR_SEL_CHAT_FILTER_WORD, "SELECT ID FROM chat_filter WHERE Word = ?", CONNECTION_SYNCH);
     PrepareStatement(CHAR_INS_CHAT_FILTER_WORD, "INSERT INTO chat_filter (Word) VALUES (?)", CONNECTION_SYNCH);
     PrepareStatement(CHAR_DEL_CHAT_FILTER_WORD, "DELETE FROM chat_filter WHERE Word = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_UPD_ARENA_TEAM_EMBLEM, "UPDATE arena_team SET backgroundColor = ?, emblemStyle = ?, emblemColor = ?, borderStyle = ?, borderColor = ? WHERE arenaTeamId = ?", CONNECTION_ASYNC);
 
-    // Character settings
-    PrepareStatement(CHAR_SEL_CHAR_SETTINGS, "SELECT source, data FROM character_settings WHERE guid = ?", CONNECTION_BOTH);
-    PrepareStatement(CHAR_REP_CHAR_SETTINGS, "REPLACE INTO character_settings (guid, source, data) VALUES (?, ?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_DEL_CHAR_SETTINGS, "DELETE FROM character_settings WHERE guid = ?", CONNECTION_ASYNC);
+    // Item identification: synchronous writes and failure compensation.
+    PrepareStatement(CHAR_IDENT_RECORD_COUNT,
+        "SELECT COUNT(*) FROM `物品_鉴定记录` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_RECORD_SELECT,
+        "SELECT CAST(`记录ID` AS CHAR), CAST(`玩家GUID` AS CHAR), CAST(`物品GUID` AS CHAR), CAST(`物品ID` AS "
+        "CHAR), CAST(`鉴定模板ID` AS CHAR), CAST(`是否获得成长` AS CHAR), CAST(`成长组ID` AS CHAR), CAST(`是否获得强化` AS "
+        "CHAR), CAST(`强化组ID` AS CHAR), CAST(`是否获得基础属性` AS CHAR), CAST(`基础属性数量` AS CHAR), CAST(`基础属性组ID` "
+        "AS CHAR), CAST(`基础属性详情` AS CHAR), CAST(`是否获得追加属性` AS CHAR), CAST(`追加属性数量` AS CHAR), "
+        "CAST(`追加属性组ID列表` AS CHAR), CAST(`是否获得符文凹槽` AS CHAR), CAST(`符文凹槽数量` AS CHAR), CAST(`是否获得技能` AS "
+        "CHAR), CAST(`技能组ID列表` AS CHAR), CAST(`是否获得套装` AS CHAR), CAST(`套装组ID` AS CHAR), CAST(`套装ID` AS "
+        "CHAR), CAST(`消耗金币` AS CHAR), CAST(`成功率` AS CHAR) FROM `物品_鉴定记录` WHERE `物品GUID` = ? ORDER BY "
+        "`物品GUID`",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_RECORD_DELETE,
+        "DELETE FROM `物品_鉴定记录` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_RECORD_INSERT,
+        "INSERT INTO `物品_鉴定记录` "
+        "(`记录ID`,`玩家GUID`,`物品GUID`,`物品ID`,`鉴定模板ID`,`是否获得成长`,`成长组ID`,`是否获得强化`,`强化组ID`,`是否获得基础属性`,`基础属性数量`,"
+        "`基础属性组ID`,`基础属性详情`,`是否获得追加属性`,`追加属性数量`,`追加属性组ID列表`,`是否获得符文凹槽`,`符文凹槽数量`,`是否获得技能`,`技能组ID列表`,`是否获得套装`,"
+        "`套装组ID`,`套装ID`,`消耗金币`,`成功率`) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_ATTRIBUTES_COUNT,
+        "SELECT COUNT(*) FROM `物品属性_数据` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_ATTRIBUTES_SELECT,
+        "SELECT CAST(`物品ID` AS CHAR), CAST(`物品GUID` AS CHAR), CAST(`基础属性` AS CHAR), CAST(`追加属性` AS CHAR) "
+        "FROM `物品属性_数据` WHERE `物品GUID` = ? ORDER BY `物品GUID`",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_ATTRIBUTES_DELETE,
+        "DELETE FROM `物品属性_数据` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_ATTRIBUTES_INSERT,
+        "INSERT INTO `物品属性_数据` (`物品ID`,`物品GUID`,`基础属性`,`追加属性`) VALUES (?, ?, ?, ?)",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_SKILLS_COUNT,
+        "SELECT COUNT(*) FROM `_物品技能_数据` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_SKILLS_SELECT,
+        "SELECT CAST(`物品ID` AS CHAR), CAST(`物品GUID` AS CHAR), CAST(`技能模板ID` AS CHAR), CAST(`技能ID` AS "
+        "CHAR), CAST(`技能触发类型` AS CHAR), CAST(`触发几率` AS CHAR) FROM `_物品技能_数据` WHERE `物品GUID` = ? ORDER BY "
+        "`物品GUID`",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_SKILLS_DELETE,
+        "DELETE FROM `_物品技能_数据` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_SKILLS_INSERT,
+        "INSERT INTO `_物品技能_数据` (`物品ID`,`物品GUID`,`技能模板ID`,`技能ID`,`技能触发类型`,`触发几率`) VALUES (?, ?, ?, ?, ?, "
+        "?)",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_GROWTH_COUNT,
+        "SELECT COUNT(*) FROM `物品成长_玩家记录` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_GROWTH_SELECT,
+        "SELECT CAST(`id` AS CHAR), CAST(`玩家GUID` AS CHAR), CAST(`物品GUID` AS CHAR), CAST(`物品模板ID` AS "
+        "CHAR), CAST(`当前等级` AS CHAR), CAST(`当前经验` AS CHAR), CAST(`升级经验` AS CHAR), CAST(`物品属性_模板_组` AS "
+        "CHAR), CAST(`成长次数` AS CHAR), CAST(`失败次数` AS CHAR), CAST(`成长属性` AS CHAR), CAST(`百分比属性` AS CHAR) "
+        "FROM `物品成长_玩家记录` WHERE `物品GUID` = ? ORDER BY `物品GUID`",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_GROWTH_DELETE,
+        "DELETE FROM `物品成长_玩家记录` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_GROWTH_INSERT,
+        "INSERT INTO `物品成长_玩家记录` "
+        "(`id`,`玩家GUID`,`物品GUID`,`物品模板ID`,`当前等级`,`当前经验`,`升级经验`,`物品属性_模板_组`,`成长次数`,`失败次数`,`成长属性`,`百分比属性`) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_ENHANCEMENT_COUNT,
+        "SELECT COUNT(*) FROM `物品强化_记录` WHERE `guid` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_ENHANCEMENT_SELECT,
+        "SELECT CAST(`guid` AS CHAR), CAST(`owner_guid` AS CHAR), CAST(`物品模板ID` AS CHAR), CAST(`强化组` AS "
+        "CHAR), CAST(`强化等级` AS CHAR), CAST(`强化经验` AS CHAR), CAST(`属性值` AS CHAR), CAST(`品质等级` AS CHAR), "
+        "CAST(`品质进阶次数` AS CHAR), CAST(`强化次数` AS CHAR), CAST(`失败次数` AS CHAR), CAST(`最后强化时间` AS CHAR) FROM "
+        "`物品强化_记录` WHERE `guid` = ? ORDER BY `guid`",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_ENHANCEMENT_DELETE,
+        "DELETE FROM `物品强化_记录` WHERE `guid` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_ENHANCEMENT_INSERT,
+        "INSERT INTO `物品强化_记录` "
+        "(`guid`,`owner_guid`,`物品模板ID`,`强化组`,`强化等级`,`强化经验`,`属性值`,`品质等级`,`品质进阶次数`,`强化次数`,`失败次数`,`最后强化时间`) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_RUNES_COUNT,
+        "SELECT COUNT(*) FROM `符文系统_数据` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_RUNES_SELECT,
+        "SELECT CAST(`ID` AS CHAR), CAST(`角色GUID` AS CHAR), CAST(`物品ID` AS CHAR), CAST(`物品GUID` AS "
+        "CHAR), CAST(`插槽数量` AS CHAR), CAST(`插槽ID` AS CHAR), CAST(`符文物品ID` AS CHAR) FROM `符文系统_数据` WHERE "
+        "`物品GUID` = ? ORDER BY `物品GUID`",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_RUNES_DELETE,
+        "DELETE FROM `符文系统_数据` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_RUNES_INSERT,
+        "INSERT INTO `符文系统_数据` (`ID`,`角色GUID`,`物品ID`,`物品GUID`,`插槽数量`,`插槽ID`,`符文物品ID`) VALUES (?, ?, ?, "
+        "?, ?, ?, ?)",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_SETS_COUNT,
+        "SELECT COUNT(*) FROM `_物品套装_数据` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_SETS_SELECT,
+        "SELECT CAST(`物品ID` AS CHAR), CAST(`物品GUID` AS CHAR), CAST(`套装ID` AS CHAR) FROM `_物品套装_数据` WHERE "
+        "`物品GUID` = ? ORDER BY `物品GUID`",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_SETS_DELETE,
+        "DELETE FROM `_物品套装_数据` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_SETS_INSERT,
+        "INSERT INTO `_物品套装_数据` (`物品ID`,`物品GUID`,`套装ID`) VALUES (?, ?, ?)",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_SET_ASSIGN,
+        "INSERT INTO `_物品套装_数据` (`物品ID`, `物品GUID`, `套装ID`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE "
+        "`物品ID` = VALUES(`物品ID`), `套装ID` = VALUES(`套装ID`)",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_GROWTH_VERIFY,
+        "SELECT `物品属性_模板_组`, `成长属性` FROM `物品成长_玩家记录` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_ENHANCEMENT_VERIFY,
+        "SELECT `强化组`, `属性值` FROM `物品强化_记录` WHERE `guid` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_IDENT_SET_VERIFY,
+        "SELECT `套装ID` FROM `_物品套装_数据` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REFINE_ITEM_ENCHANT_SELECT,
+        "SELECT enchantments FROM item_instance WHERE guid = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REFINE_ITEM_ENCHANT_UPDATE,
+        "UPDATE item_instance SET enchantments = ? WHERE guid = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REFINE_RTS_COUNT,
+        "SELECT COUNT(*) FROM `_附魔洗练存档` WHERE `物品标识` = ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_REFINE_RTS_DELETE,
+        "DELETE FROM `_附魔洗练存档` WHERE `物品标识` = ?", CONNECTION_SYNCH);
 
-    // Instance saved data. Stores the states of gameobjects in instances to be loaded on server start
-    PrepareStatement(CHAR_SELECT_INSTANCE_SAVED_DATA, "SELECT guid, state FROM instance_saved_go_state_data WHERE id = ?", CONNECTION_SYNCH);
-    PrepareStatement(CHAR_INSERT_INSTANCE_SAVED_DATA, "INSERT INTO instance_saved_go_state_data (id, guid, state) VALUES (?, ?, ?)"
-        "ON DUPLICATE KEY UPDATE state = VALUES(state)", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_DELETE_INSTANCE_SAVED_DATA, "DELETE FROM instance_saved_go_state_data WHERE id = ?", CONNECTION_ASYNC);
-    PrepareStatement(CHAR_SANITIZE_INSTANCE_SAVED_DATA, "DELETE FROM instance_saved_go_state_data WHERE id NOT IN (SELECT instance.id FROM instance)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_IDENT_ITEM_COUNT,
+        "SELECT COUNT(*) FROM item_instance WHERE guid = ?",
+        CONNECTION_SYNCH);
 
-    // world_state
-    PrepareStatement(CHAR_SEL_WORLD_STATE, "SELECT Id, Data FROM world_state", CONNECTION_SYNCH);
-    PrepareStatement(CHAR_REP_WORLD_STATE, "REPLACE INTO world_state (Id, Data) VALUES(?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_IDENT_ITEM_SELECT,
+        "SELECT CAST(`guid` AS CHAR), CAST(`itemEntry` AS CHAR), CAST(`owner_guid` AS CHAR), "
+        "CAST(`creatorGuid` AS CHAR), CAST(`giftCreatorGuid` AS CHAR), CAST(`count` AS CHAR), "
+        "CAST(`duration` AS CHAR), CAST(`charges` AS CHAR), CAST(`flags` AS CHAR), CAST(`enchantments` AS"
+        " CHAR), CAST(`randomPropertyId` AS CHAR), CAST(`durability` AS CHAR), CAST(`playedTime` AS "
+        "CHAR), CAST(`text` AS CHAR) FROM item_instance WHERE guid = ?",
+        CONNECTION_SYNCH);
 
-    // CHAR_NO_OP_PROVIDE_REALM_CONTEXT is a no-op query that accepts a single parameter: the realm ID.
-    // This query is used specifically in cross-realm scenarios when the database transaction
-    // lacks sufficient context to determine which realm's database the query should target.
-    // By providing the realm ID explicitly, this ensures that mysql reverse proxy will use
-    // correct realm database for the transaction.
-    PrepareStatement(CHAR_NO_OP_PROVIDE_REALM_CONTEXT, "SELECT ? AS no_op", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_IDENT_ITEM_DELETE,
+        "DELETE FROM item_instance WHERE guid = ?",
+        CONNECTION_SYNCH);
+
+    PrepareStatement(CHAR_IDENT_ITEM_INSERT,
+        "INSERT INTO item_instance (`guid`, `itemEntry`, `owner_guid`, `creatorGuid`, `giftCreatorGuid`, "
+        "`count`, `duration`, `charges`, `flags`, `enchantments`, `randomPropertyId`, `durability`, "
+        "`playedTime`, `text`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        CONNECTION_SYNCH);
+
+    PrepareStatement(CHAR_IDENT_ITEM_SAVE,
+        "INSERT INTO item_instance (`guid`, `itemEntry`, `owner_guid`, `creatorGuid`, `giftCreatorGuid`, "
+        "`count`, `duration`, `charges`, `flags`, `enchantments`, `randomPropertyId`, `durability`, "
+        "`playedTime`, `text`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE "
+        "flags = VALUES(flags), enchantments = VALUES(enchantments)",
+        CONNECTION_SYNCH);
+
+    PrepareStatement(CHAR_IDENT_ITEM_VERIFY,
+        "SELECT flags, enchantments FROM item_instance WHERE guid = ?",
+        CONNECTION_SYNCH);
+
 }
 
 CharacterDatabaseConnection::CharacterDatabaseConnection(MySQLConnectionInfo& connInfo) : MySQLConnection(connInfo)

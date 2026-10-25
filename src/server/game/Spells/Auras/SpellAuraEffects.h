@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by the
+ * Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -55,15 +55,16 @@ public:
     uint32 GetId() const;
     uint32 GetEffIndex() const { return m_effIndex; }
     int32 GetBaseAmount() const { return m_baseAmount; }
-    int32 GetDieSides() const { return m_dieSides; }
     int32 GetAmplitude() const { return m_amplitude; }
 
     int32 GetMiscValueB() const;
     int32 GetMiscValue() const;
     AuraType GetAuraType() const;
     int32 GetAmount() const { return m_isAuraEnabled ? m_amount : 0; }
+    AsInt64 GetAsAmount() const { return m_isAuraEnabled ? (m_asAmount > m_amount ? m_asAmount : AsInt64(m_amount)) : AsInt64Zero(); }
     int32 GetForcedAmount() const { return m_amount; }
-    void SetAmount(int32 amount) { m_amount = amount; m_canBeRecalculated = false;}
+    void SetAmount(int32 amount) { m_amount = amount; m_asAmount = amount > 0 ? AsInt64(amount) : AsInt64Zero(); m_canBeRecalculated = false;}
+    void SetAsAmount(AsInt64 const& amount) { m_asAmount = amount > 0 ? amount : AsInt64Zero(); m_amount = AsInt64ToInt32Clamp(m_asAmount); m_canBeRecalculated = false;}
 
     int32 GetPeriodicTimer() const { return m_periodicTimer; }
     void SetPeriodicTimer(int32 periodicTimer) { m_periodicTimer = periodicTimer; }
@@ -111,27 +112,33 @@ public:
     uint8 GetCasterLevel() const { return m_casterLevel; }
     bool CanApplyResilience() const { return m_applyResilience; }
     float GetPctMods() const { return m_pctMods; }
-    void SetPctMods(float pctMods) { m_pctMods = pctMods; }
 
+    // xinef: stacking
+    uint32 GetAuraGroup() const { return m_auraGroup; }
     int32 GetOldAmount() const { return m_oldAmount; }
-    void SetOldAmount(int32 amount) { m_oldAmount = amount; }
-    [[nodiscard]] bool IsEnabled() const { return m_isAuraEnabled; }
+    AsInt64 GetAsOldAmount() const { return m_asOldAmount > m_oldAmount ? m_asOldAmount : AsInt64(m_oldAmount); }
+    void SetOldAmount(int32 amount) { m_oldAmount = amount; m_asOldAmount = amount > 0 ? AsInt64(amount) : AsInt64Zero(); }
+    void SetAsOldAmount(AsInt64 const& amount) { m_asOldAmount = amount > 0 ? amount : AsInt64Zero(); m_oldAmount = AsInt64ToInt32Clamp(m_asOldAmount); }
     void SetEnabled(bool enabled) { m_isAuraEnabled = enabled; }
+    bool UsesAsPeriodicAmount() const;
 
 private:
     Aura* const m_base;
 
     SpellInfo const* const m_spellInfo;
     int32 const m_baseAmount;
-    int32 const m_dieSides;
 
     bool m_applyResilience;
     uint8 m_casterLevel;
     int32 m_amount;
+    AsInt64 m_asAmount;
     float m_critChance;
     float m_pctMods;
 
+    // xinef: stacking
+    uint32 m_auraGroup;
     int32 m_oldAmount;
+    AsInt64 m_asOldAmount;
     bool m_isAuraEnabled;
     // xinef: channel information for channel triggering
     ChannelTargetData* m_channelData;
@@ -145,7 +152,6 @@ private:
     uint8 const m_effIndex;
     bool m_canBeRecalculated;
     bool m_isPeriodic;
-    bool m_isRecalculatingPassiveAuras = false;
 private:
     float CalcPeriodicCritChance(Unit const* caster, Unit const* target) const;
 
@@ -207,7 +213,6 @@ public:
     void HandleModThreat(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     void HandleAuraModTotalThreat(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     void HandleModTaunt(AuraApplication const* aurApp, uint8 mode, bool apply) const;
-    void HandleModDetaunt(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     //  control
     void HandleModConfuse(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     void HandleModFear(AuraApplication const* aurApp, uint8 mode, bool apply) const;
@@ -299,7 +304,6 @@ public:
     void HandleModDamagePercentDone(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     void HandleModOffhandDamagePercent(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     void HandleShieldBlockValue(AuraApplication const* aurApp, uint8 mode, bool apply) const;
-    void HandleShieldBlockValuePercent(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     //  power cost
     void HandleModPowerCostPCT(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     void HandleModPowerCost(AuraApplication const* aurApp, uint8 mode, bool apply) const;
@@ -323,6 +327,8 @@ public:
     void HandleAuraSetVehicle(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     void HandlePreventResurrection(AuraApplication const* aurApp, uint8 mode, bool apply) const;
 
+    void AY_HandleNoImmediateEffect(AuraApplication const* aurApp, uint8 mode, bool apply) const;
+
     // aura effect periodic tick handlers
     void HandlePeriodicDummyAuraTick(Unit* target, Unit* caster) const;
     void HandlePeriodicTriggerSpellAuraTick(Unit* target, Unit* caster) const;
@@ -337,7 +343,6 @@ public:
     void HandlePeriodicPowerBurnAuraTick(Unit* target, Unit* caster) const;
 
     // aura effect proc handlers
-    void HandleBreakableCCAuraProc(AuraApplication* aurApp, ProcEventInfo& eventInfo);
     void HandleProcTriggerSpellAuraProc(AuraApplication* aurApp, ProcEventInfo& eventInfo);
     void HandleProcTriggerSpellWithValueAuraProc(AuraApplication* aurApp, ProcEventInfo& eventInfo);
     void HandleProcTriggerDamageAuraProc(AuraApplication* aurApp, ProcEventInfo& eventInfo);

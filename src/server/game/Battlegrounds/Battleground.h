@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by the
+ * Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -23,7 +23,6 @@
 #include "DBCEnums.h"
 #include "GameObject.h"
 #include "SharedDefines.h"
-#include "World.h"
 #include "WorldStatePackets.h"
 
 class Creature;
@@ -49,26 +48,36 @@ struct GraveyardStruct;
 
 enum BattlegroundDesertionType : uint8
 {
-    BG_DESERTION_TYPE_LEAVE_BG           = 0, // player leaves the BG
-    BG_DESERTION_TYPE_OFFLINE            = 1, // player is kicked from BG because offline
-    BG_DESERTION_TYPE_LEAVE_QUEUE        = 2, // player is invited to join and refuses to do it
-    BG_DESERTION_TYPE_NO_ENTER_BUTTON    = 3, // player is invited to join and do nothing (time expires)
-    BG_DESERTION_TYPE_INVITE_LOGOUT      = 4, // player is invited to join and logs out
-    ARENA_DESERTION_TYPE_LEAVE_BG        = 5, // player leaves the Arena
-    ARENA_DESERTION_TYPE_LEAVE_QUEUE     = 6, // player is invited to join arena and refuses to do it
-    ARENA_DESERTION_TYPE_NO_ENTER_BUTTON = 7, // player is invited to join arena and do nothing (time expires)
-    ARENA_DESERTION_TYPE_INVITE_LOGOUT   = 8, // player is invited to join arena and logs out
+    BG_DESERTION_TYPE_LEAVE_BG          = 0, // player leaves the BG
+    BG_DESERTION_TYPE_OFFLINE           = 1, // player is kicked from BG because offline
+    BG_DESERTION_TYPE_LEAVE_QUEUE       = 2, // player is invited to join and refuses to do it
+    BG_DESERTION_TYPE_NO_ENTER_BUTTON   = 3, // player is invited to join and do nothing (time expires)
+    BG_DESERTION_TYPE_INVITE_LOGOUT     = 4, // player is invited to join and logs out
+    ARENA_DESERTION_TYPE_LEAVE_BG       = 5,
+    ARENA_DESERTION_TYPE_LEAVE_QUEUE    = 6,
+    ARENA_DESERTION_TYPE_NO_ENTER_BUTTON = 7,
+    ARENA_DESERTION_TYPE_INVITE_LOGOUT  = 8,
+};
+
+enum BattlegroundMaps
+{
+    MAP_BG_ALTERAC_VALLEY         = 30,
+    MAP_BG_WARSONG_GULCH          = 489,
+    MAP_BG_ARATHI_BASIN           = 529,
+    MAP_BG_EYE_OF_THE_STORM       = 566,
+    MAP_BG_STRAND_OF_THE_ANCIENTS = 607,
+    MAP_BG_ISLE_OF_CONQUEST       = 628
 };
 
 enum BattlegroundBroadcastTexts
 {
-    BG_TEXT_ALLIANCE_WINS           = 10633,
-    BG_TEXT_HORDE_WINS              = 10634,
+    BG_TEXT_ALLIANCE_WINS       = 10633,
+    BG_TEXT_HORDE_WINS          = 10634,
 
-    BG_TEXT_START_TWO_MINUTES       = 18193,
-    BG_TEXT_START_ONE_MINUTE        = 18194,
-    BG_TEXT_START_HALF_MINUTE       = 18195,
-    BG_TEXT_BATTLE_HAS_BEGUN        = 18196,
+    BG_TEXT_START_TWO_MINUTES   = 18193,
+    BG_TEXT_START_ONE_MINUTE    = 18194,
+    BG_TEXT_START_HALF_MINUTE   = 18195,
+    BG_TEXT_BATTLE_HAS_BEGUN    = 18196,
 };
 
 enum BattlegroundSounds
@@ -95,7 +104,6 @@ enum BattlegroundMarks
 {
     SPELL_WS_MARK_LOSER             = 24950,
     SPELL_WS_MARK_WINNER            = 24951,
-    SPELL_WS_MARK_TIE               = 66126,
     SPELL_AB_MARK_LOSER             = 24952,
     SPELL_AB_MARK_WINNER            = 24953,
     SPELL_AV_MARK_LOSER             = 24954,
@@ -119,8 +127,8 @@ enum BattlegroundMarksCount
 
 enum BattlegroundCreatures
 {
-    BG_CREATURE_ENTRY_A_SPIRITGUIDE = 13116,                // alliance
-    BG_CREATURE_ENTRY_H_SPIRITGUIDE = 13117,                // horde
+    BG_CREATURE_ENTRY_A_SPIRITGUIDE      = 13116,           // alliance
+    BG_CREATURE_ENTRY_H_SPIRITGUIDE      = 13117,           // horde
 };
 
 enum BattlegroundSpells
@@ -140,18 +148,18 @@ enum BattlegroundSpells
 
 enum BattlegroundReputations
 {
-    BG_REP_AV_HORDE                 = 729,
-    BG_REP_AV_ALLIANCE              = 730,
-    BG_REP_AB_HORDE                 = 510,
-    BG_REP_AB_ALLIANCE              = 509,
-    BG_REP_WS_HORDE                 = 889,
-    BG_REP_WS_ALLIANCE              = 890,
+    BG_REP_AV_HORDE         = 729,
+    BG_REP_AV_ALLIANCE      = 730,
+    BG_REP_AB_HORDE         = 510,
+    BG_REP_AB_ALLIANCE      = 509,
+    BG_REP_WS_HORDE         = 889,
+    BG_REP_WS_ALLIANCE      = 890,
 };
 
 enum BattlegroundTimeIntervals
 {
     CHECK_PLAYER_POSITION_INVERVAL  = 9000,                 // ms
-    //REMIND_INTERVAL               = 10000,                // ms
+    //REMIND_INTERVAL                 = 10000,                // ms
     INVITATION_REMIND_TIME          = 20000,                // ms
     INVITE_ACCEPT_WAIT_TIME         = 60000,                // ms
     TIME_TO_AUTOREMOVE              = 120000,               // ms
@@ -187,11 +195,11 @@ const uint32 Buff_Entries[3] = { BG_OBJECTID_SPEEDBUFF_ENTRY, BG_OBJECTID_REGENB
 
 enum BattlegroundStatus
 {
-    STATUS_NONE                     = 0,                     // first status, should mean bg is not instance
-    STATUS_WAIT_QUEUE               = 1,                     // means bg is empty and waiting for queue
-    STATUS_WAIT_JOIN                = 2,                     // this means, that BG has already started and it is waiting for more players
-    STATUS_IN_PROGRESS              = 3,                     // means bg is running
-    STATUS_WAIT_LEAVE               = 4                      // means some faction has won BG and it is ending
+    STATUS_NONE         = 0,                                // first status, should mean bg is not instance
+    STATUS_WAIT_QUEUE   = 1,                                // means bg is empty and waiting for queue
+    STATUS_WAIT_JOIN    = 2,                                // this means, that BG has already started and it is waiting for more players
+    STATUS_IN_PROGRESS  = 3,                                // means bg is running
+    STATUS_WAIT_LEAVE   = 4                                 // means some faction has won BG and it is ending
 };
 
 struct BattlegroundObjectInfo
@@ -205,42 +213,33 @@ struct BattlegroundObjectInfo
 
 enum ArenaType : uint8
 {
-    ARENA_TYPE_NONE                 = 0,
-    ARENA_TYPE_2v2                  = 2,
-    ARENA_TYPE_3v3                  = 3,
-    ARENA_TYPE_5v5                  = 5
+    ARENA_TYPE_NONE         = 0,
+    ARENA_TYPE_2v2          = 2,
+    ARENA_TYPE_3v3          = 3,
+    ARENA_TYPE_5v5          = 5
 };
 
 enum BattlegroundType
 {
-    TYPE_BATTLEGROUND               = 3,
-    TYPE_ARENA                      = 4
+    TYPE_BATTLEGROUND     = 3,
+    TYPE_ARENA            = 4
 };
 
 enum BattlegroundStartingEvents
 {
-    BG_STARTING_EVENT_NONE          = 0x00,
-    BG_STARTING_EVENT_1             = 0x01,
-    BG_STARTING_EVENT_2             = 0x02,
-    BG_STARTING_EVENT_3             = 0x04,
-    BG_STARTING_EVENT_4             = 0x08
+    BG_STARTING_EVENT_NONE  = 0x00,
+    BG_STARTING_EVENT_1     = 0x01,
+    BG_STARTING_EVENT_2     = 0x02,
+    BG_STARTING_EVENT_3     = 0x04,
+    BG_STARTING_EVENT_4     = 0x08
 };
 
 enum BattlegroundStartingEventsIds
 {
-    BG_STARTING_EVENT_FIRST         = 0,
-    BG_STARTING_EVENT_SECOND        = 1,
-    BG_STARTING_EVENT_THIRD         = 2,
-    BG_STARTING_EVENT_FOURTH        = 3
-};
-
-enum SpiritOfCompetitionEvent
-{
-    EVENT_SPIRIT_OF_COMPETITION             = 46,
-    QUEST_FLAG_PARTICIPANT                  = 12187,
-    QUEST_FLAG_WINNER                       = 12186,
-    SPELL_SPIRIT_OF_COMPETITION_PARTICIPANT = 48163,
-    SPELL_SPIRIT_OF_COMPETITION_WINNER      = 48164,
+    BG_STARTING_EVENT_FIRST     = 0,
+    BG_STARTING_EVENT_SECOND    = 1,
+    BG_STARTING_EVENT_THIRD     = 2,
+    BG_STARTING_EVENT_FOURTH    = 3
 };
 
 constexpr auto BG_STARTING_EVENT_COUNT = 4;
@@ -259,20 +258,13 @@ public:
         IP = ip;
     }
 
-    void SaveStats(uint32 damageDone, uint32 healingDone, uint32 killingBlows)
-    {
-        DamageDone = damageDone;
-        HealingDone = healingDone;
-        KillingBlows = killingBlows;
-    }
-
     std::string Name{};
     ObjectGuid::LowType Guid{0};
     uint32 Acc{0};
     uint32 ArenaTeamId{0};
     std::string IP{};
-    uint32 DamageDone{0};
-    uint32 HealingDone{0};
+    AsInt64 DamageDone{0};
+    AsInt64 HealingDone{0};
     uint32 KillingBlows{0};
 };
 
@@ -283,7 +275,9 @@ enum BGHonorMode
     BG_HONOR_MODE_NUM
 };
 
+#define BG_AWARD_ARENA_POINTS_MIN_LEVEL 71
 #define ARENA_TIMELIMIT_POINTS_LOSS    -16
+#define ARENA_READY_MARKER_ENTRY 301337
 
 /*
     This class is used to:
@@ -313,6 +307,8 @@ public:
         return true;
     }
 
+    std::set<Player*> WatchArenaList;
+
     virtual void Init();
     virtual void StartingEventCloseDoors() { }
     virtual void StartingEventOpenDoors() { }
@@ -339,25 +335,14 @@ public:
     [[nodiscard]] uint32 GetMinLevel() const          { return m_LevelMin; }
     [[nodiscard]] uint32 GetMaxLevel() const          { return m_LevelMax; }
 
-    [[nodiscard]] bool isTemplate() const             { return m_IsTemplate; }
-    [[nodiscard]] bool isMaxLevel() const
-    {
-        // NOTE: this only works when the BG is not a template but the real BG
-        auto maxPlayerLevel = sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL);
-        return GetMinLevel() <= maxPlayerLevel && maxPlayerLevel <= GetMaxLevel();
-    }
-
     [[nodiscard]] uint32 GetMaxPlayersPerTeam() const { return m_MaxPlayersPerTeam; }
-    [[nodiscard]] uint32 GetMinPlayersPerTeam() const;
+    [[nodiscard]] uint32 GetMinPlayersPerTeam() const { return m_MinPlayersPerTeam; }
 
     [[nodiscard]] int32 GetStartDelayTime() const     { return m_StartDelayTime; }
     [[nodiscard]] uint8 GetArenaType() const          { return m_ArenaType; }
     [[nodiscard]] PvPTeamId GetWinner() const         { return m_WinnerId; }
     [[nodiscard]] uint32 GetScriptId() const          { return ScriptId; }
     [[nodiscard]] uint32 GetBonusHonorFromKill(uint32 kills) const;
-
-    // Spirit of Competition event
-    void SpiritOfCompetitionEvent(PvPTeamId winnerTeamId) const;
 
     bool IsRandom() { return m_IsRandom; }
 
@@ -367,7 +352,7 @@ public:
     void SetRandomTypeID(BattlegroundTypeId TypeID) { m_RandomTypeID = TypeID; }
     void SetBracket(PvPDifficultyEntry const* bracketEntry);
     void SetInstanceID(uint32 InstanceID) { m_InstanceID = InstanceID; }
-    void SetStatus(BattlegroundStatus Status);
+    void SetStatus(BattlegroundStatus Status) { m_Status = Status; }
     void SetClientInstanceID(uint32 InstanceID) { m_ClientInstanceID = InstanceID; }
     void SetStartTime(uint32 Time) { m_StartTime = Time; }
     void SetEndTime(uint32 Time) { m_EndTime = Time; }
@@ -382,9 +367,6 @@ public:
 
     void ModifyStartDelayTime(int32 diff) { m_StartDelayTime -= diff; }
     void SetStartDelayTime(int32 Time)    { m_StartDelayTime = Time; }
-
-    [[nodiscard]] uint8 GetStartingEventFlags() const { return m_Events; }
-    void AddStartingEventFlag(uint8 flag) { m_Events |= flag; }
 
     void SetMaxPlayersPerTeam(uint32 MaxPlayers) { m_MaxPlayersPerTeam = MaxPlayers; }
     void SetMinPlayersPerTeam(uint32 MinPlayers) { m_MinPlayersPerTeam = MinPlayers; }
@@ -405,7 +387,7 @@ public:
     void AddSpectator(Player* p) { m_Spectators.insert(p); }
     void RemoveSpectator(Player* p) { m_Spectators.erase(p); }
     bool HaveSpectators() { return !m_Spectators.empty(); }
-    [[nodiscard]] SpectatorList const& GetSpectators() const { return m_Spectators; }
+    [[nodiscard]] const SpectatorList& GetSpectators() const { return m_Spectators; }
     void AddToBeTeleported(ObjectGuid spectator, ObjectGuid participant) { m_ToBeTeleported[spectator] = participant; }
     void RemoveToBeTeleported(ObjectGuid spectator) { ToBeTeleportedMap::iterator itr = m_ToBeTeleported.find(spectator); if (itr != m_ToBeTeleported.end()) m_ToBeTeleported.erase(itr); }
     void SpectatorsSendPacket(WorldPacket& data);
@@ -417,6 +399,9 @@ public:
     typedef std::map<ObjectGuid, Player*> BattlegroundPlayerMap;
     [[nodiscard]] BattlegroundPlayerMap const& GetPlayers() const { return m_Players; }
     [[nodiscard]] uint32 GetPlayersSize() const { return m_Players.size(); }
+
+    void ReadyMarkerClicked(Player* p); // pussywizard
+    GuidSet readyMarkerClickedSet; // pussywizard
 
     typedef std::unordered_map<ObjectGuid::LowType, BattlegroundScore*> BattlegroundScoreMap;
     typedef std::unordered_map<ObjectGuid, ArenaLogEntryData> ArenaLogEntryDataMap; // pussywizard
@@ -454,13 +439,16 @@ public:
 
     // Packet Transfer
     // method that should fill worldpacket with actual world states (not yet implemented for all battlegrounds!)
+    virtual void FillInitialWorldStates(WorldPacket& /*data*/) { }
     virtual void FillInitialWorldStates(WorldPackets::WorldState::InitWorldStates& /*packet*/) { }
     void SendPacketToTeam(TeamId teamId, WorldPacket const* packet, Player* sender = nullptr, bool self = true);
     void SendPacketToAll(WorldPacket const* packet);
-    void YellToAll(Creature* creature, char const* text, uint32 language);
+    void YellToAll(Creature* creature, const char* text, uint32 language);
 
     void SendChatMessage(Creature* source, uint8 textId, WorldObject* target = nullptr);
     void SendBroadcastText(uint32 id, ChatMsg msgType, WorldObject const* target = nullptr);
+
+    void CustomSendPacketToBg(const char* Format, ...);
 
     template<class Do>
     void BroadcastWorker(Do& _do);
@@ -476,7 +464,7 @@ public:
 
     void EndBattleground(PvPTeamId winnerTeamId);
 
-    /// @deprecated need delete
+    // deprecated, need delete
     virtual void EndBattleground(TeamId winnerTeamId)
     {
         EndBattleground(GetPvPTeamId(winnerTeamId));
@@ -484,12 +472,20 @@ public:
 
     void BlockMovement(Player* player);
 
+    void SendWarningToAll(uint32 entry, ...);
+    void SendMessageToAll(uint32 entry, ChatMsg type, Player const* source = nullptr);
+    void PSendMessageToAll(uint32 entry, ChatMsg type, Player const* source, ...);
+
+    // specialized version with 2 string id args
+    void SendMessage2ToAll(uint32 entry, ChatMsg type, Player const* source, uint32 strId1 = 0, uint32 strId2 = 0);
+
     // Raid Group
     [[nodiscard]] Group* GetBgRaid(TeamId teamId) const { return m_BgRaids[teamId]; }
     void SetBgRaid(TeamId teamId, Group* bg_raid);
 
     void BuildPvPLogDataPacket(WorldPacket& data);
     virtual bool UpdatePlayerScore(Player* player, uint32 type, uint32 value, bool doAddHonor = true);
+    bool UpdatePlayerScore(Player* player, uint32 type, AsInt64 const& value, bool doAddHonor = true);
 
     [[nodiscard]] uint32 GetPlayersCountByTeam(TeamId teamId) const { return m_PlayersCount[teamId]; }
     [[nodiscard]] uint32 GetAlivePlayersCountByTeam(TeamId teamId) const;   // used in arenas to correctly handle death in spirit of redemption / last stand etc. (killer = killed) cases
@@ -540,7 +536,7 @@ public:
     void HandleTriggerBuff(GameObject* gameObject);
     void SetHoliday(bool is_holiday);
 
-    /// @todo: make this protected:
+    // TODO: make this protected:
     typedef GuidVector BGObjects;
     typedef GuidVector BGCreatures;
     BGObjects BgObjects;
@@ -555,6 +551,9 @@ public:
 
     void DoorOpen(uint32 type);
     void DoorClose(uint32 type);
+    //to be removed
+    std::string GetAcoreString(int32 entry);
+    [[nodiscard]] bool isTemplate() const { return m_IsTemplate; }
 
     virtual bool HandlePlayerUnderMap(Player* /*player*/) { return false; }
 
@@ -577,37 +576,37 @@ public:
     [[nodiscard]] uint8 GetUniqueBracketId() const;
 
     BattlegroundAV* ToBattlegroundAV() { if (GetBgTypeID(true) == BATTLEGROUND_AV) return reinterpret_cast<BattlegroundAV*>(this); else return nullptr; }
-    [[nodiscard]] BattlegroundAV const* ToBattlegroundAV() const { if (GetBgTypeID(true) == BATTLEGROUND_AV) return reinterpret_cast<BattlegroundAV const*>(this); else return nullptr; }
+    [[nodiscard]] BattlegroundAV const* ToBattlegroundAV() const { if (GetBgTypeID(true) == BATTLEGROUND_AV) return reinterpret_cast<const BattlegroundAV*>(this); else return nullptr; }
 
     BattlegroundWS* ToBattlegroundWS() { if (GetBgTypeID(true) == BATTLEGROUND_WS) return reinterpret_cast<BattlegroundWS*>(this); else return nullptr; }
-    [[nodiscard]] BattlegroundWS const* ToBattlegroundWS() const { if (GetBgTypeID(true) == BATTLEGROUND_WS) return reinterpret_cast<BattlegroundWS const*>(this); else return nullptr; }
+    [[nodiscard]] BattlegroundWS const* ToBattlegroundWS() const { if (GetBgTypeID(true) == BATTLEGROUND_WS) return reinterpret_cast<const BattlegroundWS*>(this); else return nullptr; }
 
     BattlegroundAB* ToBattlegroundAB() { if (GetBgTypeID(true) == BATTLEGROUND_AB) return reinterpret_cast<BattlegroundAB*>(this); else return nullptr; }
-    [[nodiscard]] BattlegroundAB const* ToBattlegroundAB() const { if (GetBgTypeID(true) == BATTLEGROUND_AB) return reinterpret_cast<BattlegroundAB const*>(this); else return nullptr; }
+    [[nodiscard]] BattlegroundAB const* ToBattlegroundAB() const { if (GetBgTypeID(true) == BATTLEGROUND_AB) return reinterpret_cast<const BattlegroundAB*>(this); else return nullptr; }
 
     BattlegroundNA* ToBattlegroundNA() { if (GetBgTypeID(true) == BATTLEGROUND_NA) return reinterpret_cast<BattlegroundNA*>(this); else return nullptr; }
-    [[nodiscard]] BattlegroundNA const* ToBattlegroundNA() const { if (GetBgTypeID(true) == BATTLEGROUND_NA) return reinterpret_cast<BattlegroundNA const*>(this); else return nullptr; }
+    [[nodiscard]] BattlegroundNA const* ToBattlegroundNA() const { if (GetBgTypeID(true) == BATTLEGROUND_NA) return reinterpret_cast<const BattlegroundNA*>(this); else return nullptr; }
 
     BattlegroundBE* ToBattlegroundBE() { if (GetBgTypeID(true) == BATTLEGROUND_BE) return reinterpret_cast<BattlegroundBE*>(this); else return nullptr; }
-    [[nodiscard]] BattlegroundBE const* ToBattlegroundBE() const { if (GetBgTypeID(true) == BATTLEGROUND_BE) return reinterpret_cast<BattlegroundBE const*>(this); else return nullptr; }
+    [[nodiscard]] BattlegroundBE const* ToBattlegroundBE() const { if (GetBgTypeID(true) == BATTLEGROUND_BE) return reinterpret_cast<const BattlegroundBE*>(this); else return nullptr; }
 
     BattlegroundEY* ToBattlegroundEY() { if (GetBgTypeID(true) == BATTLEGROUND_EY) return reinterpret_cast<BattlegroundEY*>(this); else return nullptr; }
-    [[nodiscard]] BattlegroundEY const* ToBattlegroundEY() const { if (GetBgTypeID(true) == BATTLEGROUND_EY) return reinterpret_cast<BattlegroundEY const*>(this); else return nullptr; }
+    [[nodiscard]] BattlegroundEY const* ToBattlegroundEY() const { if (GetBgTypeID(true) == BATTLEGROUND_EY) return reinterpret_cast<const BattlegroundEY*>(this); else return nullptr; }
 
     BattlegroundRL* ToBattlegroundRL() { if (GetBgTypeID(true) == BATTLEGROUND_RL) return reinterpret_cast<BattlegroundRL*>(this); else return nullptr; }
-    [[nodiscard]] BattlegroundRL const* ToBattlegroundRL() const { if (GetBgTypeID(true) == BATTLEGROUND_RL) return reinterpret_cast<BattlegroundRL const*>(this); else return nullptr; }
+    [[nodiscard]] BattlegroundRL const* ToBattlegroundRL() const { if (GetBgTypeID(true) == BATTLEGROUND_RL) return reinterpret_cast<const BattlegroundRL*>(this); else return nullptr; }
 
     BattlegroundSA* ToBattlegroundSA() { if (GetBgTypeID(true) == BATTLEGROUND_SA) return reinterpret_cast<BattlegroundSA*>(this); else return nullptr; }
-    [[nodiscard]] BattlegroundSA const* ToBattlegroundSA() const { if (GetBgTypeID(true) == BATTLEGROUND_SA) return reinterpret_cast<BattlegroundSA const*>(this); else return nullptr; }
+    [[nodiscard]] BattlegroundSA const* ToBattlegroundSA() const { if (GetBgTypeID(true) == BATTLEGROUND_SA) return reinterpret_cast<const BattlegroundSA*>(this); else return nullptr; }
 
     BattlegroundDS* ToBattlegroundDS() { if (GetBgTypeID(true) == BATTLEGROUND_DS) return reinterpret_cast<BattlegroundDS*>(this); else return nullptr; }
-    [[nodiscard]] BattlegroundDS const* ToBattlegroundDS() const { if (GetBgTypeID(true) == BATTLEGROUND_DS) return reinterpret_cast<BattlegroundDS const*>(this); else return nullptr; }
+    [[nodiscard]] BattlegroundDS const* ToBattlegroundDS() const { if (GetBgTypeID(true) == BATTLEGROUND_DS) return reinterpret_cast<const BattlegroundDS*>(this); else return nullptr; }
 
     BattlegroundRV* ToBattlegroundRV() { if (GetBgTypeID(true) == BATTLEGROUND_RV) return reinterpret_cast<BattlegroundRV*>(this); else return nullptr; }
-    [[nodiscard]] BattlegroundRV const* ToBattlegroundRV() const { if (GetBgTypeID(true) == BATTLEGROUND_RV) return reinterpret_cast<BattlegroundRV const*>(this); else return nullptr; }
+    [[nodiscard]] BattlegroundRV const* ToBattlegroundRV() const { if (GetBgTypeID(true) == BATTLEGROUND_RV) return reinterpret_cast<const BattlegroundRV*>(this); else return nullptr; }
 
     BattlegroundIC* ToBattlegroundIC() { if (GetBgTypeID(true) == BATTLEGROUND_IC) return reinterpret_cast<BattlegroundIC*>(this); else return nullptr; }
-    [[nodiscard]] BattlegroundIC const* ToBattlegroundIC() const { if (GetBgTypeID(true) == BATTLEGROUND_IC) return reinterpret_cast<BattlegroundIC const*>(this); else return nullptr; }
+    [[nodiscard]] BattlegroundIC const* ToBattlegroundIC() const { if (GetBgTypeID(true) == BATTLEGROUND_IC) return reinterpret_cast<const BattlegroundIC*>(this); else return nullptr; }
 
 protected:
     // this method is called, when BG cannot spawn its own spirit guide, or something is wrong, It correctly ends Battleground
@@ -619,9 +618,6 @@ protected:
     void _ProcessLeave(uint32 diff);
     void _ProcessJoin(uint32 diff);
     void _CheckSafePositions(uint32 diff);
-
-    // Setup completion marker
-    bool m_SetupCompleted;
 
     // Scorekeeping
     BattlegroundScoreMap PlayerScores;                // Player scores
@@ -635,7 +631,7 @@ protected:
 
     // these are important variables used for starting messages
     uint8 m_Events;
-    BattlegroundStartTimeIntervals  StartDelayTimes[BG_STARTING_EVENT_COUNT];
+    int32 StartDelayTimes[BG_STARTING_EVENT_COUNT];
     // this must be filled in constructors!
     uint32 StartMessageIds[BG_STARTING_EVENT_COUNT];
 
@@ -669,7 +665,7 @@ private:
     bool   _InBGFreeSlotQueue{ false };                // used to make sure that BG is only once inserted into the BattlegroundMgr.BGFreeSlotQueue[bgTypeId] deque
     bool   m_SetDeleteThis;                             // used for safe deletion of the bg after end / all players leave
     bool   m_IsArena;
-    bool   m_IsTemplate;
+    bool   m_IsTemplate{false};
     PvPTeamId m_WinnerId;
     int32  m_StartDelayTime;
     bool   m_IsRated;                                   // is this battle rated?

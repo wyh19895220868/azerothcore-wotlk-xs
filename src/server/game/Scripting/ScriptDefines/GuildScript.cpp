@@ -49,12 +49,12 @@ void ScriptMgr::OnGuildDisband(Guild* guild)
     CALL_ENABLED_HOOKS(GuildScript, GUILDHOOK_ON_DISBAND, script->OnDisband(guild));
 }
 
-void ScriptMgr::OnGuildMemberWitdrawMoney(Guild* guild, Player* player, uint32& amount, bool isRepair)
+void ScriptMgr::OnGuildMemberWitdrawMoney(Guild* guild, Player* player, uint64& amount, bool isRepair)
 {
     CALL_ENABLED_HOOKS(GuildScript, GUILDHOOK_ON_MEMBER_WITDRAW_MONEY, script->OnMemberWitdrawMoney(guild, player, amount, isRepair));
 }
 
-void ScriptMgr::OnGuildMemberDepositMoney(Guild* guild, Player* player, uint32& amount)
+void ScriptMgr::OnGuildMemberDepositMoney(Guild* guild, Player* player, uint64& amount)
 {
     CALL_ENABLED_HOOKS(GuildScript, GUILDHOOK_ON_MEMBER_DEPOSIT_MONEY, script->OnMemberDepositMoney(guild, player, amount));
 }
@@ -69,7 +69,7 @@ void ScriptMgr::OnGuildEvent(Guild* guild, uint8 eventType, ObjectGuid::LowType 
     CALL_ENABLED_HOOKS(GuildScript, GUILDHOOK_ON_EVENT, script->OnEvent(guild, eventType, playerGuid1, playerGuid2, newRank));
 }
 
-void ScriptMgr::OnGuildBankEvent(Guild* guild, uint8 eventType, uint8 tabId, ObjectGuid::LowType playerGuid, uint32 itemOrMoney, uint16 itemStackCount, uint8 destTabId)
+void ScriptMgr::OnGuildBankEvent(Guild* guild, uint8 eventType, uint8 tabId, ObjectGuid::LowType playerGuid, uint64 itemOrMoney, uint16 itemStackCount, uint8 destTabId)
 {
     CALL_ENABLED_HOOKS(GuildScript, GUILDHOOK_ON_BANK_EVENT, script->OnBankEvent(guild, eventType, tabId, playerGuid, itemOrMoney, itemStackCount, destTabId));
 }

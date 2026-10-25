@@ -288,7 +288,8 @@ struct ScriptedAI : public CreatureAI
     void Reset() override {}
 
     //Called at creature aggro either by MoveInLOS or Attack Start
-    void JustEngagedWith(Unit* /*who*/) override {}
+    void JustEngagedWith(Unit* who) override { EnterCombat(who); }
+    virtual void EnterCombat(Unit* /*who*/) {}
 
     // Called before JustEngagedWith even before the creature is in combat.
     void AttackStart(Unit* /*target*/) override;

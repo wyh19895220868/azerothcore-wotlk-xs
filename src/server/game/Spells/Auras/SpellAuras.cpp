@@ -372,6 +372,8 @@ Aura::Aura(SpellInfo const* spellproto, WorldObject* owner, Unit* caster, Item* 
     m_procCharges = CalcMaxCharges(caster);
     m_isUsingCharges = m_procCharges != 0;
     memset(m_effects, 0, sizeof(m_effects));
+    if (Player* player = owner ? owner->ToPlayer() : nullptr)
+        sScriptMgr->OnPlayerAddAura(player, m_spellInfo->Id);
     // m_casterLevel = cast item level/caster level, caster level should be saved to db, confirmed with sniffs
 }
 
@@ -674,7 +676,7 @@ void Aura::UpdateTargetMap(Unit* caster, bool apply)
             if ((itr->second & (1 << effIndex)) && itr->first->IsImmunedToSpellEffect(GetSpellInfo(), effIndex, GetCaster()))
                 itr->second &= ~(1 << effIndex);
         }
-        if (!itr->second || itr->first->IsImmunedToSpell(GetSpellInfo(), GetCaster()) || !CanBeAppliedOn(itr->first))
+        if (!itr->second || itr->first->IsImmunedToSpell(GetSpellInfo()) || !CanBeAppliedOn(itr->first))
             addUnit = false;
 
         if (addUnit && !itr->first->IsHighestExclusiveAura(this, true))

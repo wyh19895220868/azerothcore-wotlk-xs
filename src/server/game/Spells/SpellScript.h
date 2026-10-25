@@ -536,6 +536,10 @@ public:
         typedef bool(CLASSNAME::*AuraAfterCheckProcFnType)(ProcEventInfo&, bool); \
         typedef void(CLASSNAME::*AuraProcFnType)(ProcEventInfo&); \
         typedef void(CLASSNAME::*AuraEffectProcFnType)(AuraEffect const*, ProcEventInfo&); \
+        typedef void(CLASSNAME::*AuraOnHitFnType)(Unit*, SpellInfo const*); \
+        typedef void(CLASSNAME::*AuraOnUpdateFnType)(); \
+        typedef void(CLASSNAME::*AuraOnDamageCritEndFnType)(bool); \
+        typedef void(CLASSNAME::*AuraOnDamageInfoTypeFnType)(CalcDamageInfo*, bool); \
 
     AURASCRIPT_FUNCTION_TYPE_DEFINES(AuraScript)
 
@@ -675,6 +679,38 @@ public:
     private:
         AuraEffectProcFnType _EffectHandlerScript;
     };
+    class AuraOnHitHandler
+    {
+    public:
+        AuraOnHitHandler(AuraOnHitFnType auraHitHandlerScript);
+        void Call(AuraScript* auraScript, Unit* hitUnit, SpellInfo const* spellInfo);
+    private:
+        AuraOnHitFnType _AuraHitHandlerScript;
+    };
+    class AuraOnUpdateHandler
+    {
+    public:
+        AuraOnUpdateHandler(AuraOnUpdateFnType auraUpdateHandlerScript);
+        void Call(AuraScript* auraScript);
+    private:
+        AuraOnUpdateFnType _AuraUpdateHandlerScript;
+    };
+    class AuraOnDamageCritEndHandler
+    {
+    public:
+        AuraOnDamageCritEndHandler(AuraOnDamageCritEndFnType auraDamageCritEndHandlerScript);
+        void Call(AuraScript* auraScript, bool meCrit);
+    private:
+        AuraOnDamageCritEndFnType _AuraDamageCritEndHandlerScript;
+    };
+    class AuraOnDamageInfoTypeHandler
+    {
+    public:
+        AuraOnDamageInfoTypeHandler(AuraOnDamageInfoTypeFnType auraDamageInfoTypeHandlerScript);
+        void Call(AuraScript* auraScript, CalcDamageInfo* damageInfo, bool meDamage);
+    private:
+        AuraOnDamageInfoTypeFnType _AuraDamageInfoTypeHandlerScript;
+    };
 
 #define AURASCRIPT_FUNCTION_CAST_DEFINES(CLASSNAME) \
         class CheckAreaTargetFunction : public AuraScript::CheckAreaTargetHandler { public: CheckAreaTargetFunction(AuraCheckAreaTargetFnType _pHandlerScript) : AuraScript::CheckAreaTargetHandler((AuraScript::AuraCheckAreaTargetFnType)_pHandlerScript) {} }; \
@@ -693,6 +729,10 @@ public:
         class AfterCheckProcHandlerFunction : public AuraScript::AfterCheckProcHandler { public: AfterCheckProcHandlerFunction(AuraAfterCheckProcFnType handlerScript) : AuraScript::AfterCheckProcHandler((AuraScript::AuraAfterCheckProcFnType)handlerScript) {} }; \
         class AuraProcHandlerFunction : public AuraScript::AuraProcHandler { public: AuraProcHandlerFunction(AuraProcFnType handlerScript) : AuraScript::AuraProcHandler((AuraScript::AuraProcFnType)handlerScript) {} }; \
         class EffectProcHandlerFunction : public AuraScript::EffectProcHandler { public: EffectProcHandlerFunction(AuraEffectProcFnType effectHandlerScript, uint8 effIndex, uint16 effName) : AuraScript::EffectProcHandler((AuraScript::AuraEffectProcFnType)effectHandlerScript, effIndex, effName) {} }; \
+        class AuraOnHitHandlerFunction : public AuraScript::AuraOnHitHandler { public: AuraOnHitHandlerFunction(AuraOnHitFnType handlerScript) : AuraScript::AuraOnHitHandler((AuraScript::AuraOnHitFnType)handlerScript) {} }; \
+        class AuraOnUpdateHandlerFunction : public AuraScript::AuraOnUpdateHandler { public: AuraOnUpdateHandlerFunction(AuraOnUpdateFnType handlerScript) : AuraScript::AuraOnUpdateHandler((AuraScript::AuraOnUpdateFnType)handlerScript) {} }; \
+        class AuraOnDamageCritEndHandlerFunction : public AuraScript::AuraOnDamageCritEndHandler { public: AuraOnDamageCritEndHandlerFunction(AuraOnDamageCritEndFnType handlerScript) : AuraScript::AuraOnDamageCritEndHandler((AuraScript::AuraOnDamageCritEndFnType)handlerScript) {} }; \
+        class AuraOnDamageInfoTypeHandlerFunction : public AuraScript::AuraOnDamageInfoTypeHandler { public: AuraOnDamageInfoTypeHandlerFunction(AuraOnDamageInfoTypeFnType handlerScript) : AuraScript::AuraOnDamageInfoTypeHandler((AuraScript::AuraOnDamageInfoTypeFnType)handlerScript) {} }; \
 
 #define PrepareAuraScript(CLASSNAME) AURASCRIPT_FUNCTION_TYPE_DEFINES(CLASSNAME) AURASCRIPT_FUNCTION_CAST_DEFINES(CLASSNAME)
 
@@ -867,6 +907,18 @@ public:
     HookList<EffectProcHandler> AfterEffectProc;
 #define AuraEffectProcFn(F, I, N) EffectProcHandlerFunction(&F, I, N)
 
+    HookList<AuraOnHitHandler> AfterAuraOnHit;
+#define AuraOnHitFn(F) AuraOnHitHandlerFunction(&F)
+
+    HookList<AuraOnUpdateHandler> AuraOnUpdate;
+#define AuraOnUpdateFn(F) AuraOnUpdateHandlerFunction(&F)
+
+    HookList<AuraOnDamageCritEndHandler> AfterAuraOnDamageCritEnd;
+#define AuraOnDamageCritEndFn(F) AuraOnDamageCritEndHandlerFunction(&F)
+
+    HookList<AuraOnDamageInfoTypeHandler> AuraOnDamageInfoType;
+#define AuraOnDamageInfoTypeFn(F) AuraOnDamageInfoTypeHandlerFunction(&F)
+
     // AuraScript interface - hook/effect execution manipulators
 
     // prevents default action of a hook from being executed (works only while called in a hook which default action can be prevented)
@@ -889,6 +941,7 @@ public:
     WorldObject* GetOwner() const;
     // returns owner if it's unit or unit derived object, nullptr otherwise (only for persistent area auras nullptr is returned)
     Unit* GetUnitOwner() const;
+    Unit* GetUseUnitOwner() const;
     // returns owner if it's dynobj, nullptr otherwise
     DynamicObject* GetDynobjOwner() const;
 

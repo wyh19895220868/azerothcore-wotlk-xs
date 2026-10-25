@@ -720,7 +720,7 @@ TEST_F(CombatManagerIntegrationTest, SetCannotReachTarget_StartsEvadeTimer)
     EXPECT_FALSE(cm.IsInEvadeMode());
 
     // Setting a target as unreachable starts the evade timer
-    _creatureA->SetCannotReachTarget(_creatureB->GetGUID());
+    _creatureA->SetCannotReachTarget(true);
     EXPECT_TRUE(cm.IsInEvadeMode());
     EXPECT_TRUE(_creatureA->CanNotReachTarget());
 }
@@ -729,11 +729,13 @@ TEST_F(CombatManagerIntegrationTest, SetCannotReachTarget_Clear_StopsEvade)
 {
     auto& cm = _creatureA->TestGetCombatMgr();
 
-    _creatureA->SetCannotReachTarget(_creatureB->GetGUID());
+    _creatureA->SetCannotReachTarget(true);
     EXPECT_TRUE(cm.IsInEvadeMode());
 
-    // Clear unreachable target — should stop evade
+    // Clear both the tracked GUID and the evade state.
+    _creatureA->AtCannotReachTarget = _creatureB->GetGUID();
     _creatureA->SetCannotReachTarget();
+    EXPECT_FALSE(_creatureA->GetCannotReachTarget());
     EXPECT_FALSE(cm.IsInEvadeMode());
     EXPECT_FALSE(_creatureA->CanNotReachTarget());
 }
@@ -742,14 +744,14 @@ TEST_F(CombatManagerIntegrationTest, SetCannotReachTarget_SameTarget_NoDuplicate
 {
     auto& cm = _creatureA->TestGetCombatMgr();
 
-    _creatureA->SetCannotReachTarget(_creatureB->GetGUID());
+    _creatureA->SetCannotReachTarget(true);
     EXPECT_TRUE(cm.IsInEvadeMode());
 
     // Count down 5 seconds
     cm.Update(5000);
 
     // Setting the same target again should be a no-op (early return)
-    _creatureA->SetCannotReachTarget(_creatureB->GetGUID());
+    _creatureA->SetCannotReachTarget(true);
 
     // Timer should NOT have been restarted — still mid-countdown
     // Advance 5 more seconds, timer should expire (was at 5s remaining)
@@ -764,7 +766,7 @@ TEST_F(CombatManagerIntegrationTest, IsNotReachableAndNeedRegen_Integration)
     EXPECT_FALSE(_creatureA->IsNotReachableAndNeedRegen());
 
     // Set unreachable — starts timer at 10s, not in regen yet
-    _creatureA->SetCannotReachTarget(_creatureB->GetGUID());
+    _creatureA->SetCannotReachTarget(true);
     EXPECT_FALSE(_creatureA->IsNotReachableAndNeedRegen());
 
     // Advance past the regen threshold

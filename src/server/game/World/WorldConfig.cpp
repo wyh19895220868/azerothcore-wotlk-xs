@@ -471,8 +471,10 @@ void WorldConfig::BuildConfigCache()
     SetConfigValue<uint32>(CONFIG_ARENA_RATING_DISCARD_TIMER, "Arena.RatingDiscardTimer", 600000);
     SetConfigValue<uint32>(CONFIG_ARENA_PREV_OPPONENTS_DISCARD_TIMER, "Arena.PreviousOpponentsDiscardTimer", 120000);
     SetConfigValue<bool>(CONFIG_ARENA_AUTO_DISTRIBUTE_POINTS, "Arena.AutoDistributePoints", false);
+    SetConfigValue<bool>(CONFIG_ARENA_SEASON_IN_PROGRESS, "Arena.ArenaSeason.InProgress", true);
     SetConfigValue<uint32>(CONFIG_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS, "Arena.AutoDistributeInterval", 7);
     SetConfigValue<uint32>(CONFIG_ARENA_GAMES_REQUIRED, "Arena.GamesRequired", 10);
+    SetConfigValue<uint32>(CONFIG_ARENA_SEASON_ID, "Arena.ArenaSeason.ID", 1);
     SetConfigValue<uint32>(CONFIG_ARENA_START_RATING, "Arena.ArenaStartRating", 0);
     SetConfigValue<uint32>(CONFIG_LEGACY_ARENA_START_RATING, "Arena.LegacyArenaStartRating", 1500);
     SetConfigValue<uint32>(CONFIG_LEGACY_ARENA_POINTS_CALC, "Arena.LegacyArenaPoints", 0);
@@ -668,6 +670,7 @@ void WorldConfig::BuildConfigCache()
     SetConfigValue<uint32>(CONFIG_BG_REWARD_LOSER_HONOR_FIRST, "Battleground.RewardLoserHonorFirst", 5);
     SetConfigValue<uint32>(CONFIG_BG_REWARD_LOSER_HONOR_LAST, "Battleground.RewardLoserHonorLast", 5);
 
+    SetConfigValue<bool>(CONFIG_SET_ALL_CREATURES_WITH_WAYPOINT_MOVEMENT_ACTIVE, "SetAllCreaturesWithWaypointMovementActive", false);
     SetConfigValue<uint32>(CONFIG_WAYPOINT_MOVEMENT_STOP_TIME_FOR_PLAYER, "WaypointMovementStopTimeForPlayer", 120);
 
     SetConfigValue<uint32>(CONFIG_DUNGEON_ACCESS_REQUIREMENTS_PRINT_MODE, "DungeonAccessRequirements.PrintMode", 1);

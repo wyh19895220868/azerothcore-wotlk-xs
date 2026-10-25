@@ -27,6 +27,7 @@
 #include "MapReference.h"
 #include "ObjectMgr.h"
 #include "Player.h"
+#include "PoolMgr.h"
 #include "ScriptMgr.h"
 #include "Spell.h"
 #include "Vehicle.h"
@@ -513,7 +514,7 @@ void MotionTransport::LoadStaticPassengers()
                 CreatureData const* data = sObjectMgr->GetCreatureData(*guidItr);
 
                 // Pooled spawns are in the grid data but managed by the pool system, never as static passengers
-                if (data && data->poolId)
+                if (data && sPoolMgr->IsPartOfAPool<Creature>(*guidItr))
                     continue;
 
                 CreateNPCPassenger(*guidItr, data);

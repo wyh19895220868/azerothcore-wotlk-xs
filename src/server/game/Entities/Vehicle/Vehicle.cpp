@@ -89,7 +89,7 @@ void Vehicle::Install()
             if (_vehicleInfo->m_powerDisplayId == POWER_DISPLAY_PYRITE)
                 _me->SetPower(_me->getPowerType(), _me->GetMaxPower(_me->getPowerType()));
         }
-        else if (_me->IsClass(CLASS_ROGUE, CLASS_CONTEXT_ABILITY))
+        else if (_me->getClass() == CLASS_ROGUE)
             _me->setPowerType(POWER_ENERGY);
     }
 

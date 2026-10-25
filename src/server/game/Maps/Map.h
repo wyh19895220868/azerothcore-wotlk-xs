@@ -269,6 +269,8 @@ public:
 
     [[nodiscard]] uint32 GetInstanceId() const { return i_InstanceId; }
     [[nodiscard]] uint8 GetSpawnMode() const { return (i_spawnMode); }
+    [[nodiscard]] uint32 GetMapRank() const { return DoMapRank; }
+    void SetMapRank(uint32 mapRank) { DoMapRank = mapRank; }
 
     enum EnterState
     {
@@ -576,6 +578,7 @@ public:
     MapCollisionData const& GetMapCollisionData()  const { return _mapCollisionData; }
 
 private:
+    uint32 DoMapRank{0};
 
     template<class T> void InitializeObject(T* obj);
     void AddCreatureToMoveList(Creature* c);

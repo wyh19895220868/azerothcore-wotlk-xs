@@ -1,0 +1,74 @@
+#
+# 物品成长系统配置文件
+#
+
+[worldserver]
+
+###################################################################################################
+#
+# 物品成长系统设置
+#
+#    ItemGrowth.Enable
+#        描述: 启用物品成长系统
+#        默认: 1 - 启用
+#               0 - 禁用
+#
+
+ItemGrowth.Enable = 1
+
+#
+#    ItemGrowth.AnnounceModule
+#        描述: 在服务器启动时公告模块
+#        默认: 1 - 启用
+#               0 - 禁用
+#
+
+ItemGrowth.AnnounceModule = 1
+
+#
+#    ItemGrowth.MaxLevel
+#        描述: 物品成长的最大等级
+#        默认: 100
+#
+
+ItemGrowth.MaxLevel = 100
+
+#
+#    ItemGrowth.BaseExpMultiplier
+#        描述: 基础经验获取倍率
+#        默认: 1.0
+#
+
+ItemGrowth.BaseExpMultiplier = 1.0
+
+#
+#    ItemGrowth.UpgradeSuccessRate
+#        描述: 升级成功基础概率(0-100)
+#        默认: 80
+#
+
+ItemGrowth.UpgradeSuccessRate = 80
+
+
+
+#
+#    ItemGrowth.RequireSoulbound
+#        描述: 是否要求物品已绑定才能成长
+#        默认: 1 - 要求
+#               0 - 不要求
+#
+
+ItemGrowth.RequireSoulbound = 1
+
+#
+#    ItemGrowth.AutoApplyAttributes
+#        描述: 是否在物品升级时自动应用属性组效果
+#        功能: 当物品成长模板中的"物品属性_模板_组"字段大于0时，
+#              系统会调用mod-item-attributes模块为物品生成对应属性组的随机属性
+#        依赖: 需要安装并启用mod-item-attributes模块
+#        默认: 1 - 自动应用（推荐）
+#               0 - 手动应用（需要使用 .物品成长 属性 命令手动触发）
+#        注意: 即使设置为0，仍可通过命令手动应用属性组效果
+#
+
+ItemGrowth.AutoApplyAttributes = 1

@@ -36,7 +36,6 @@ namespace MMAP
                                              unsigned char* areas)
     {
         float const walkableThr = std::cos(playerSlopeAngle / 180.0f * static_cast<float>(M_PI));
-
         float norm[3];
 
         for (int i = 0; i < nt; ++i)
@@ -45,7 +44,6 @@ namespace MMAP
                 continue;
 
             int const* tri = &tris[i * 3];
-
             float e0[3], e1[3];
             rcVsub(e0, &verts[tri[1] * 3], &verts[tri[0] * 3]);
             rcVsub(e1, &verts[tri[2] * 3], &verts[tri[0] * 3]);
@@ -685,7 +683,6 @@ namespace MMAP
                 unsigned char* triFlags = new unsigned char[tTriCount];
                 memset(triFlags, NAV_GROUND, tTriCount * sizeof(unsigned char));
                 rcClearUnwalkableTriangles(m_rcContext, tileCfg.walkableSlopeAngle, tVerts, tVertCount, tTris, tTriCount, triFlags);
-                // mod_playerbots (bots should not attempt to use paths that includes slopes beyound 50 degrees)
                 modAlmostUnwalkableTriangles(50.0f, tVerts, tVertCount, tTris, tTriCount, triFlags);
                 rcRasterizeTriangles(m_rcContext, tVerts, tVertCount, tTris, triFlags, tTriCount, *tile.solid, config.walkableClimb);
                 delete[] triFlags;

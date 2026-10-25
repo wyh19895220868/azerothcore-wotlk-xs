@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by the
+ * Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -18,13 +18,12 @@
 #ifndef __SPELL_H
 #define __SPELL_H
 
-#include "ConditionMgr.h"
 #include "GridDefines.h"
-#include "LootMgr.h"
+#include "ObjectMgr.h"
 #include "PathGenerator.h"
 #include "SharedDefines.h"
 #include "SpellInfo.h"
-#include "Unit.h"
+#include "../../scripts/Custom/_Helper/AsInt64.h"
 
 class Unit;
 class Player;
@@ -38,17 +37,7 @@ class SpellEvent;
 class ByteBuffer;
 class BasicEvent;
 
-namespace Acore
-{
-    enum class WorldObjectSpellAreaTargetSearchReason
-    {
-        Area,
-        Chain
-    };
-}
-
 #define SPELL_CHANNEL_UPDATE_INTERVAL (1 * IN_MILLISECONDS)
-#define TRAJECTORY_MISSILE_SIZE 3.0f
 
 enum SpellCastFlags
 {
@@ -123,7 +112,7 @@ public:
     SpellCastTargets();
     ~SpellCastTargets();
 
-    void Read(ByteBuffer& data, WorldObject* caster);
+    void Read(ByteBuffer& data, Unit* caster);
     void Write(ByteBuffer& data);
 
     uint32 GetTargetMask() const { return m_targetMask; }
@@ -186,13 +175,13 @@ public:
     float GetSpeedXY() const { return m_speed * cos(m_elevation); }
     float GetSpeedZ() const { return m_speed * std::sin(m_elevation); }
 
-    void Update(WorldObject* caster);
+    void Update(Unit* caster);
     void OutDebug() const;
 
     // Xinef: Channel data
     void SetObjectTargetChannel(ObjectGuid targetGUID);
     void SetDstChannel(SpellDestination const& spellDest);
-    WorldObject* GetObjectTargetChannel(WorldObject* caster) const;
+    WorldObject* GetObjectTargetChannel(Unit* caster) const;
     bool HasDstChannel() const;
     SpellDestination const* GetDstChannel() const;
 
@@ -228,7 +217,6 @@ struct SpellValue
     uint8     AuraStackAmount;
     int32     AuraDuration;
     bool      ForcedCritResult;
-    uint32    MiscVal[MAX_SPELL_EFFECTS];
 };
 
 enum SpellState
@@ -252,7 +240,7 @@ enum SpellEffectHandleMode
 // Xinef: special structure containing data for channel target spells
 struct ChannelTargetData
 {
-    ChannelTargetData(ObjectGuid cguid, SpellDestination const* dst) : channelGUID(cguid)
+    ChannelTargetData(ObjectGuid cguid, const SpellDestination* dst) : channelGUID(cguid)
     {
         if (dst)
             spellDst = *dst;
@@ -275,7 +263,8 @@ struct TargetInfo
     bool   crit:1;
     bool   scaleAura:1;
     int32  damage;
-    int32  damageBeforeTakenMods;
+    AsInt64 asDamage;
+    AsInt64 asHeal;
 };
 
 static const uint32 SPELL_INTERRUPT_NONPLAYER = 32747;
@@ -299,7 +288,7 @@ class Spell
     friend void Unit::SetCurrentCastedSpell(Spell* pSpell);
     friend class SpellScript;
 public:
-    Spell(WorldObject* caster, SpellInfo const* info, TriggerCastFlags triggerFlags, ObjectGuid originalCasterGUID = ObjectGuid::Empty, bool skipCheck = false);
+    Spell(Unit* caster, SpellInfo const* info, TriggerCastFlags triggerFlags, ObjectGuid originalCasterGUID = ObjectGuid::Empty, bool skipCheck = false);
     ~Spell();
 
     void EffectNULL(SpellEffIndex effIndex);
@@ -450,10 +439,10 @@ public:
     void SelectEffectTypeImplicitTargets(uint8 effIndex);
 
     uint32 GetSearcherTypeMask(SpellTargetObjectTypes objType, ConditionList* condList);
-    template<class SEARCHER> void SearchTargets(SEARCHER& searcher, uint32 containerMask, WorldObject* referer, Position const* pos, float radius);
+    template<class SEARCHER> void SearchTargets(SEARCHER& searcher, uint32 containerMask, Unit* referer, Position const* pos, float radius);
 
     WorldObject* SearchNearbyTarget(float range, SpellTargetObjectTypes objectType, SpellTargetCheckTypes selectionType, ConditionList* condList = nullptr);
-    void SearchAreaTargets(std::list<WorldObject*>& targets, float range, Position const* position, WorldObject* referer, SpellTargetObjectTypes objectType, SpellTargetCheckTypes selectionType, ConditionList* condList, Acore::WorldObjectSpellAreaTargetSearchReason searchReason = Acore::WorldObjectSpellAreaTargetSearchReason::Area, SpellTargetReferenceTypes referenceType = TARGET_REFERENCE_TYPE_CASTER);
+    void SearchAreaTargets(std::list<WorldObject*>& targets, float range, Position const* position, Unit* referer, SpellTargetObjectTypes objectType, SpellTargetCheckTypes selectionType, ConditionList* condList);
     void SearchChainTargets(std::list<WorldObject*>& targets, uint32 chainTargets, WorldObject* target, SpellTargetObjectTypes objectType, SpellTargetCheckTypes selectType, SpellTargetSelectionCategories selectCategory, ConditionList* condList, bool isChainHeal);
 
     SpellCastResult prepare(SpellCastTargets const* targets, AuraEffect const* triggeredByAura = nullptr);
@@ -469,7 +458,7 @@ public:
     void TakeReagents();
     void TakeCastItem();
 
-    SpellCastResult CheckCast(bool strict, uint32* param1 = nullptr, uint32* param2 = nullptr);
+    SpellCastResult CheckCast(bool strict);
     SpellCastResult CheckPetCast(Unit* target);
 
     // handlers
@@ -481,7 +470,7 @@ public:
 
     void OnSpellLaunch();
 
-    SpellCastResult CheckItems(uint32* param1 = nullptr, uint32* param2 = nullptr);
+    SpellCastResult CheckItems();
     SpellCastResult CheckSpellFocus();
     SpellCastResult CheckRange(bool strict);
     SpellCastResult CheckPower();
@@ -511,7 +500,6 @@ public:
     void SendPetCastResult(SpellCastResult result);
     void SendSpellStart();
     void SendSpellGo();
-
     void SendSpellCooldown();
     void SendLogExecute();
     void ExecuteLogEffectTakeTargetPower(uint8 effIndex, Unit* target, uint32 PowerType, uint32 powerTaken, float gainMultiplier);
@@ -563,11 +551,10 @@ public:
     bool IsAutoRepeat() const { return m_autoRepeat; }
     void SetAutoRepeat(bool rep) { m_autoRepeat = rep; }
     void ReSetTimer() { m_timer = m_casttime > 0 ? m_casttime : 0; }
-    int32 GetCastTimeRemaining() { return m_timer;}
+    [[nodiscard]] int32 GetCastTimeRemaining() const { return m_timer; }
     bool IsNextMeleeSwingSpell() const;
-    bool IsTriggered() const { return HasTriggeredCastFlag(TRIGGERED_FULL_MASK); };
-    bool HasTriggeredCastFlag(TriggerCastFlags flag) const { return _triggeredCastFlags & flag; };
-    [[nodiscard]] bool IsProcDisabled() const { return HasTriggeredCastFlag(TRIGGERED_DISALLOW_PROC_EVENTS); }
+    bool IsTriggered() const { return _triggeredCastFlags & TRIGGERED_FULL_MASK; };
+    [[nodiscard]] bool IsProcDisabled() const { return _triggeredCastFlags & TRIGGERED_DISALLOW_PROC_EVENTS; }
     bool IsChannelActive() const { return m_caster->GetUInt32Value(UNIT_CHANNEL_SPELL) != 0; }
     bool IsAutoActionResetSpell() const;
     bool IsIgnoringCooldowns() const;
@@ -587,16 +574,9 @@ public:
 
     CurrentSpellTypes GetCurrentContainer() const;
 
-    WorldObject* GetCaster() const { return m_caster; }
+    Unit* GetCaster() const { return m_caster; }
     Unit* GetOriginalCaster() const { return m_originalCaster; }
-    // Resolves the Unit the effect handlers should act as: the original caster
-    // (e.g. the owner of a trap) when set, otherwise the caster itself if it is a Unit.
-    Unit* GetUnitCasterForEffectHandlers() const;
     Unit* GetOriginalTarget() const;
-    // the GameObject this spell is cast from, if any: the caster itself, a GameObject
-    // original caster, or the GameObject behind a summoned world trigger
-    GameObject* GetGameObjectCaster() const;
-    std::optional<float> GetLOSCollisionHeight() const;
     SpellInfo const* GetSpellInfo() const { return m_spellInfo; }
     int32 GetPowerCost() const { return m_powerCost; }
 
@@ -612,11 +592,9 @@ public:
     std::list<TargetInfo>* GetUniqueTargetInfo() { return &m_UniqueTargetInfo; }
 
     [[nodiscard]] uint32 GetTriggeredByAuraTickNumber() const { return m_triggeredByAuraSpell.tickNumber; }
-    [[nodiscard]] SpellInfo const* GetTriggeredByAuraSpellInfo() const { return m_triggeredByAuraSpell.spellInfo; }
 
     [[nodiscard]] TriggerCastFlags GetTriggeredCastFlags() const { return _triggeredCastFlags; }
-
-    [[nodiscard]] SpellSchoolMask GetSpellSchoolMask() const { return m_spellSchoolMask; }
+    [[nodiscard]] SpellInfo const* GetTriggeredByAuraSpellInfo() const { return m_triggeredByAuraSpell.spellInfo; }
 
  protected:
     bool HasGlobalCooldown() const;
@@ -625,19 +603,16 @@ public:
 
     void SendLoot(ObjectGuid guid, LootType loottype);
 
-    WorldObject* const m_caster;
+    Unit* const m_caster;
 
     SpellValue* const m_spellValue;
 
     ObjectGuid m_originalCasterGUID;                    // real source of cast (aura caster/etc), used for spell targets selection
+    ObjectGuid m_originalTargetGUID;                    // unit target saved before InitExplicitTargets strips it
     // e.g. damage around area spell trigered by victim aura and damage enemies of aura caster
     Unit* m_originalCaster;                             // cached pointer for m_originalCaster, updated at Spell::UpdatePointers()
 
-    ObjectGuid m_originalTargetGUID;                    // unit target saved before InitExplicitTargets strips it
-
     Spell** m_selfContainer;                            // pointer to our spell container (if applicable)
-
-    std::string GetDebugInfo() const;
 
     //Spell data
     SpellSchoolMask m_spellSchoolMask;                  // Spell school (can be overwrite for some spells (wand shoot for example)
@@ -682,9 +657,6 @@ public:
     WorldLocation* destTarget;
     int32 damage;
     SpellEffectHandleMode effectHandleMode;
-    Unit* m_reflectionTarget;
-    ObjectGuid m_reflectionTargetGuid;
-    Position m_reflectionTargetPosition;
     // used in effects handlers
     Aura* m_spellAura;
 
@@ -698,7 +670,6 @@ public:
     // Damage and healing in effects need just calculate
     int32 m_damage;           // Damge   in effects count here
     int32 m_healing;          // Healing in effects count here
-    int32 m_damageBeforeTakenMods;
 
     // ******************************************
     // Spell trigger system
@@ -745,7 +716,7 @@ public:
     bool UpdateChanneledTargetList();
     bool IsValidDeadOrAliveTarget(Unit const* target) const;
     void HandleLaunchPhase();
-    void DoAllEffectOnLaunchTarget(TargetInfo& targetInfo, float* multiplier);
+    void DoAllEffectOnLaunchTarget(TargetInfo& targetInfo, float* multiplier, bool firstTarget);
 
     void PrepareTargetProcessing();
     void FinishTargetProcessing();
@@ -776,7 +747,7 @@ public:
     {
         SpellInfo const* triggeredSpell;
         SpellInfo const* triggeredByAura;
-        uint8 triggeredByEffIdx;
+        // uint8 triggeredByEffIdx          This might be needed at a later stage - No need known for now
         int32 chance;
     };
 
@@ -786,7 +757,7 @@ public:
     HitTriggerSpellList m_hitTriggerSpells;
 
     // effect helpers
-    void SummonGuardian(uint32 i, uint32 entry, SummonPropertiesEntry const* properties, uint32 numSummons, bool personalSpawn);
+    void SummonGuardian(uint32 i, uint32 entry, SummonPropertiesEntry const* properties, uint32 numSummons);
     void CalculateJumpSpeeds(uint8 i, float dist, float& speedxy, float& speedz);
 
     SpellCastResult CanOpenLock(uint32 effIndex, uint32 lockid, SkillType& skillid, int32& reqSkillValue, int32& skillValue);
@@ -811,6 +782,14 @@ public:
     bool _spellTargetsSelected;
 
     ByteBuffer* m_effectExecuteData[MAX_SPELL_EFFECTS];
+
+#ifdef MAP_BASED_RAND_GEN
+    int32 irand(int32 min, int32 max)       { return int32 (m_caster->GetMap()->mtRand.randInt(max - min)) + min; }
+    uint32 urand(uint32 min, uint32 max)    { return m_caster->GetMap()->mtRand.randInt(max - min) + min; }
+    int32 rand32()                          { return m_caster->GetMap()->mtRand.randInt(); }
+    double rand_norm()                      { return m_caster->GetMap()->mtRand.randExc(); }
+    double rand_chance()                    { return m_caster->GetMap()->mtRand.randExc(100.0); }
+#endif
 };
 
 namespace Acore
@@ -834,7 +813,7 @@ namespace Acore
     {
         float _range;
         Position const* _position;
-        WorldObjectSpellNearbyTargetCheck(float range, WorldObject* caster, SpellInfo const* spellInfo,
+        WorldObjectSpellNearbyTargetCheck(float range, Unit* caster, SpellInfo const* spellInfo,
                                           SpellTargetCheckTypes selectionType, ConditionList* condList);
         bool operator()(WorldObject* target);
     };
@@ -843,24 +822,22 @@ namespace Acore
     {
         float _range;
         Position const* _position;
-        Acore::WorldObjectSpellAreaTargetSearchReason _searchReason;
-        SpellTargetReferenceTypes _referenceType;
-        WorldObjectSpellAreaTargetCheck(float range, Position const* position, WorldObject* caster,
-                                        WorldObject* referer, SpellInfo const* spellInfo, SpellTargetCheckTypes selectionType, ConditionList* condList, Acore::WorldObjectSpellAreaTargetSearchReason searchReason = Acore::WorldObjectSpellAreaTargetSearchReason::Area, SpellTargetReferenceTypes referenceType = TARGET_REFERENCE_TYPE_CASTER);
+        WorldObjectSpellAreaTargetCheck(float range, Position const* position, Unit* caster,
+                                        Unit* referer, SpellInfo const* spellInfo, SpellTargetCheckTypes selectionType, ConditionList* condList);
         bool operator()(WorldObject* target);
     };
 
     struct WorldObjectSpellConeTargetCheck : public WorldObjectSpellAreaTargetCheck
     {
         float _coneAngle;
-        WorldObjectSpellConeTargetCheck(float coneAngle, float range, WorldObject* caster,
+        WorldObjectSpellConeTargetCheck(float coneAngle, float range, Unit* caster,
                                         SpellInfo const* spellInfo, SpellTargetCheckTypes selectionType, ConditionList* condList);
         bool operator()(WorldObject* target);
     };
 
     struct WorldObjectSpellTrajTargetCheck : public WorldObjectSpellAreaTargetCheck
     {
-        WorldObjectSpellTrajTargetCheck(float range, Position const* position, WorldObject* caster,
+        WorldObjectSpellTrajTargetCheck(float range, Position const* position, Unit* caster,
                                         SpellInfo const* spellInfo, SpellTargetCheckTypes selectionType, ConditionList* condList);
         bool operator()(WorldObject* target);
     };

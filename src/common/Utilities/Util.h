@@ -25,10 +25,61 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstring>
 #include <list>
 #include <map>
 #include <string>
 #include <vector>
+
+class Tokenizer
+{
+public:
+    typedef std::vector<char const*> StorageType;
+    typedef StorageType::size_type size_type;
+    typedef StorageType::const_iterator const_iterator;
+    typedef StorageType::reference reference;
+    typedef StorageType::const_reference const_reference;
+
+    Tokenizer(std::string const& src, char const sep, uint32 vectorReserve = 0)
+    {
+        m_str = new char[src.length() + 1];
+        memcpy(m_str, src.c_str(), src.length() + 1);
+        if (vectorReserve)
+            m_storage.reserve(vectorReserve);
+
+        char* posold = m_str;
+        char* posnew = m_str;
+        for (;;)
+        {
+            if (*posnew == sep)
+            {
+                m_storage.push_back(posold);
+                posold = posnew + 1;
+                *posnew = '\0';
+            }
+            else if (*posnew == '\0')
+            {
+                if (posold != posnew)
+                    m_storage.push_back(posold);
+                break;
+            }
+            ++posnew;
+        }
+    }
+
+    ~Tokenizer() { delete[] m_str; }
+
+    const_iterator begin() const { return m_storage.begin(); }
+    const_iterator end() const { return m_storage.end(); }
+    size_type size() const { return m_storage.size(); }
+    bool IsEmpty() const { return m_storage.empty(); }
+    reference operator[](size_type i) { return m_storage[std::min(i, m_storage.size() - 1)]; }
+    const_reference operator[](size_type i) const { return m_storage[std::min(i, m_storage.size() - 1)]; }
+
+private:
+    char* m_str;
+    StorageType m_storage;
+};
 
 // Searcher for map of structs
 template<typename T, class S> struct Finder
@@ -46,6 +97,14 @@ AC_COMMON_API Optional<int32> MoneyStringToMoney(std::string_view moneyString);
 
 std::string secsToTimeString(uint64 timeInSecs, bool shortText = false);
 uint32 TimeStringToSecs(std::string const& timestring);
+
+inline void ApplyPercentModFloatVar(float& var, float val, bool apply)
+{
+    if (val == -100.0f)
+        val = -99.99f;
+
+    var *= apply ? (100.0f + val) / 100.0f : 100.0f / (100.0f + val);
+}
 
 // Percentage calculation
 template <class T, class U>

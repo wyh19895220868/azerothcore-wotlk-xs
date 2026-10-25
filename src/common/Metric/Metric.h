@@ -174,7 +174,7 @@ MetricStopWatch<LoggerType> MakeMetricStopWatch(LoggerType&& loggerFunc)
 #define METRIC_DETAILED_TIMER(category, ...) ((void)0)
 #define METRIC_DETAILED_NO_THRESHOLD_TIMER(category, ...) ((void)0)
 #else
-#if AC_PLATFORM != AC_PLATFORM_WINDOWS
+#if AC_PLATFORM != AC_PLATFORM_WINDOWS || defined(__MINGW32__)
 #define METRIC_EVENT(category, title, description)                  \
         do {                                                           \
             if (sMetric->IsEnabled())                                  \

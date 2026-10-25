@@ -122,7 +122,7 @@ namespace WorldPackets
         struct GuildRankData
         {
             uint32 Flags = 0;
-            uint32 WithdrawGoldLimit = 0;
+            uint64 WithdrawGoldLimit = 0;
             uint32 TabFlags[GUILD_BANK_MAX_TABS];
             uint32 TabWithdrawItemLimit[GUILD_BANK_MAX_TABS];
         };
@@ -260,7 +260,7 @@ namespace WorldPackets
             WorldPacket const* Write() override;
 
             int8 NumTabs = 0;
-            int32 WithdrawGoldLimit = 0;
+            uint64 WithdrawGoldLimit = 0;
             int32 Flags = 0;
             uint32 RankID = 0;
             std::array<GuildRankTabPermissions, GUILD_BANK_MAX_TABS> Tab;
@@ -274,7 +274,7 @@ namespace WorldPackets
             void Read() override;
 
             uint32 RankID = 0;
-            uint32 WithdrawGoldLimit = 0;
+            uint64 WithdrawGoldLimit = 0;
             uint32 Flags = 0;
             uint32 TabFlags[GUILD_BANK_MAX_TABS];
             uint32 TabWithdrawItemLimit[GUILD_BANK_MAX_TABS];
@@ -409,7 +409,7 @@ namespace WorldPackets
             void Read() override;
 
             ObjectGuid Banker;
-            uint32 Money = 0;
+            uint64 Money = 0;
         };
 
         class GuildBankQueryTab final : public ClientPacket
@@ -439,7 +439,7 @@ namespace WorldPackets
 
             WorldPacket const* Write() override;
 
-            int32 RemainingWithdrawMoney = 0;
+            uint64 RemainingWithdrawMoney = 0;
         };
 
         class GuildBankWithdrawMoney final : public ClientPacket
@@ -450,7 +450,7 @@ namespace WorldPackets
             void Read() override;
 
             ObjectGuid Banker;
-            uint32 Money = 0;
+            uint64 Money = 0;
         };
 
         struct GuildBankSocketEnchant
@@ -536,7 +536,7 @@ namespace WorldPackets
             ObjectGuid PlayerGUID;
             uint32 TimeOffset = 0;
             int8 EntryType = 0;
-            uint32 Money = 0;
+            uint64 Money = 0;
             int32 ItemID = 0;
             int32 Count = 0;
             int8 OtherTab = 0;

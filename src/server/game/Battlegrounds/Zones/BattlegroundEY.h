@@ -386,6 +386,7 @@ public:
     /* achievement req. */
     bool AllNodesConrolledByTeam(TeamId teamId) const override;
     TeamId GetPrematureWinner() override;
+    uint32 KillStore[TEAM_NEUTRAL] {};
 
 private:
     void PostUpdateImpl(uint32 diff) override;

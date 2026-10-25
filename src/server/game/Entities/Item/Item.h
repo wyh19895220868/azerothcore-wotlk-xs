@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by the
+ * Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -23,6 +23,7 @@
 #include "ItemTemplate.h"
 #include "LootMgr.h"
 #include "Object.h"
+#include "../../../scripts/Custom/_Helper/AsInt64.h"
 
 class SpellInfo;
 class Bag;
@@ -33,12 +34,6 @@ struct ItemSetEffect
     uint32 setid;
     uint32 item_count;
     SpellInfo const* spells[8];
-};
-
-enum InventorySlot
-{
-    NULL_BAG    = 0,
-    NULL_SLOT   = 255
 };
 
 // EnumUtils: DESCRIBE THIS
@@ -216,6 +211,31 @@ enum ItemUpdateState
 
 bool ItemCanGoIntoBag(ItemTemplate const* proto, ItemTemplate const* pBagProto);
 
+//-------------------------------------------------------------------------
+enum ItemTemp
+{
+    KT01 = 1,          //无效
+    KT02,                //解绑的标识
+    KT03,                //绑定
+    KTMAX,
+};
+
+typedef std::map<uint32, int32> TempKtMap;
+typedef std::unordered_map<uint32, TempKtMap> ItemTempKtCacheMap;
+extern ItemTempKtCacheMap ItemTempKtCacheStore;
+// 属性类型已扩展到 403；使用 int32 保留 -1 空槽标记并避免 127 以上类型溢出。
+typedef std::vector<std::pair<int32, AsInt64>> RmAtStatVect;
+#define MAX_AT_A_COUNT 16     //属性
+#define MAX_AT_B_COUNT 8       //技能
+#define MAX_RUNES_COUNT 8       //最多符文槽
+
+#define MAX_SX_B_COUNT 7       //随机属性
+#define MAX_KEY_SPELLS_COUNT 24       //秘境最多技能数
+
+#define MAX_CPET_SPELLS 24
+
+//-------------------------------------------------------------------------
+
 class Item : public Object
 {
 public:
@@ -224,7 +244,37 @@ public:
 
     Item();
 
-    virtual bool Create(ObjectGuid::LowType guidlow, uint32 itemid, Player const* owner);
+    //-------------------------------------------------------------------------
+
+    bool UnBinded;
+
+    TempKtMap TempKtStore;
+    void UpdateTempKt(ItemTemp Kt, int32 Value);
+    int32 GetTempKt(ItemTemp Kt);
+    uint32 RmAtLevel;
+    std::string Prefix, Suffix	, LevelStr;
+    uint32 MinWDmg, MaxWDmg;
+    AsInt64 AsMinWDmg, AsMaxWDmg;
+    RmAtStatVect RmAtStatStore;
+    uint32 RmAtSpell[MAX_AT_B_COUNT];
+    uint8 NowCount;    //当前插入的数量
+    uint8 RunesCount;  //自有的插槽数量
+    uint32 ResItems[MAX_RUNES_COUNT];
+    uint32 OSpells[MAX_RUNES_COUNT];
+    std::string GSpellName;
+    std::string GSpellListStr;
+
+    uint32 ItemRtsCount;
+    uint32 LastSellVendorId;
+
+    uint32 DeveLopRank;
+    uint32 DeveLopXp;
+
+    AsInt64 _Attribute[MAX_SX_B_COUNT];
+
+    //-------------------------------------------------------------------------
+
+    virtual bool Create(ObjectGuid::LowType guidlow, uint32 itemid, Player const* owner, int32 TempGroupId = -1);
 
     [[nodiscard]] ItemTemplate const* GetTemplate() const;
 
@@ -232,9 +282,9 @@ public:
     void SetOwnerGUID(ObjectGuid guid) { SetGuidValue(ITEM_FIELD_OWNER, guid); }
     [[nodiscard]] Player* GetOwner() const;
 
-    void SetBinding(bool val) { ApplyModFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_SOULBOUND, val); }
+    void SetBinding(bool val) { UnBinded ? ApplyModFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_SOULBOUND, false) : ApplyModFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_SOULBOUND, val); }
     [[nodiscard]] bool IsSoulBound() const { return HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_SOULBOUND); }
-    [[nodiscard]] bool IsBoundAccountWide() const { return GetTemplate()->HasFlag(ITEM_FLAG_IS_BOUND_TO_ACCOUNT) != 0; }
+    [[nodiscard]] bool IsBoundAccountWide() const { return (GetTemplate()->Flags & ITEM_FLAG_IS_BOUND_TO_ACCOUNT) != 0; }
     bool IsBindedNotWith(Player const* player) const;
     [[nodiscard]] bool IsBoundByEnchant() const;
     [[nodiscard]] bool IsBoundByTempEnchant() const;
@@ -248,19 +298,20 @@ public:
     void DeleteRefundDataFromDB(CharacterDatabaseTransaction* trans);
 
     Bag* ToBag() { if (IsBag()) return reinterpret_cast<Bag*>(this); else return nullptr; }
-    [[nodiscard]] Bag const* ToBag() const { if (IsBag()) return reinterpret_cast<Bag const*>(this); else return nullptr; }
+    [[nodiscard]] const Bag* ToBag() const { if (IsBag()) return reinterpret_cast<const Bag*>(this); else return nullptr; }
 
     [[nodiscard]] bool IsLocked() const { return !HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_UNLOCKED); }
     [[nodiscard]] bool IsBag() const { return GetTemplate()->InventoryType == INVTYPE_BAG; }
     [[nodiscard]] bool IsCurrencyToken() const { return GetTemplate()->IsCurrencyToken(); }
     [[nodiscard]] bool IsNotEmptyBag() const;
+    [[nodiscard]] ObjectGuid::LowType GetGUIDLow() const { return GetGUID().GetCounter(); }
+    [[nodiscard]] bool IsWrapped() const { return HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_WRAPPED); }
+    [[nodiscard]] bool IsRefundable() const { return HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_REFUNDABLE); }
+    [[nodiscard]] bool IsBOPTradable() const { return HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_BOP_TRADEABLE); }
     [[nodiscard]] bool IsBroken() const { return GetUInt32Value(ITEM_FIELD_MAXDURABILITY) > 0 && GetUInt32Value(ITEM_FIELD_DURABILITY) == 0; }
     [[nodiscard]] bool CanBeTraded(bool mail = false, bool trade = false) const;
     void SetInTrade(bool b = true) { mb_in_trade = b; }
     [[nodiscard]] bool IsInTrade() const { return mb_in_trade; }
-    [[nodiscard]] bool IsRefundable() const { return HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_REFUNDABLE); }
-    [[nodiscard]] bool IsBOPTradable() const { return HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_BOP_TRADEABLE); }
-    [[nodiscard]] bool IsWrapped() const { return HasFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_WRAPPED); }
 
     bool HasEnchantRequiredSkill(Player const* player) const;
     [[nodiscard]] uint32 GetEnchantRequiredLevel() const;
@@ -342,10 +393,10 @@ public:
     // Item Refund system
     void SetNotRefundable(Player* owner, bool changestate = true, CharacterDatabaseTransaction* trans = nullptr);
     void SetRefundRecipient(ObjectGuid::LowType pGuidLow) { m_refundRecipient = pGuidLow; }
-    void SetPaidMoney(uint32 money) { m_paidMoney = money; }
+    void SetPaidMoney(uint64 money) { m_paidMoney = money; }
     void SetPaidExtendedCost(uint32 iece) { m_paidExtendedCost = iece; }
     ObjectGuid::LowType GetRefundRecipient() { return m_refundRecipient; }
-    uint32 GetPaidMoney() { return m_paidMoney; }
+    uint64 GetPaidMoney() { return m_paidMoney; }
     uint32 GetPaidExtendedCost() { return m_paidExtendedCost; }
 
     void UpdatePlayedTime(Player* owner);
@@ -362,8 +413,6 @@ public:
     void RemoveFromObjectUpdate() override;
 
     [[nodiscard]] uint32 GetScriptId() const { return GetTemplate()->ScriptId; }
-
-    std::string GetDebugInfo() const override;
 private:
     std::string m_text;
     uint8 m_slot;
@@ -373,7 +422,7 @@ private:
     bool mb_in_trade;                                   // true if item is currently in trade-window
     time_t m_lastPlayedTimeUpdate;
     uint32 m_refundRecipient;
-    uint32 m_paidMoney;
+    uint64 m_paidMoney;
     uint32 m_paidExtendedCost;
     AllowedLooterSet allowedGUIDs;
 };

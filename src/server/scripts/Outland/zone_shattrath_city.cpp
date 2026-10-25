@@ -331,8 +331,8 @@ struct npc_shattrath_daily_quest : public NullCreatureAI
 
                 if (CreatureTemplate const* ci = sObjectMgr->GetCreatureTemplate(templateID))
                 {
-                    CreatureModel const* model = ObjectMgr::ChooseDisplayId(ci);
-                    me->SetDisplayId(model->CreatureDisplayID, model->DisplayScale);
+                    uint32 modelId = ObjectMgr::ChooseDisplayId(ci);
+                    me->SetDisplayId(modelId, ci->scale);
                 }
             }
         }

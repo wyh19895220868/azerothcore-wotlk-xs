@@ -839,7 +839,7 @@ public:
                     if (Player* AggroTarget = ObjectAccessor::GetPlayer(*me, AggroTargetGUID))
                     {
                         me->SetTarget(AggroTarget->GetGUID());
-                        me->AddThreat(AggroTarget, 1);
+                        me->AddThreat(AggroTarget, 1.0);
                         me->HandleEmoteCommand(EMOTE_ONESHOT_POINT);
                     }
                     break;

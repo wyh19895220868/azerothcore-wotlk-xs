@@ -57,3 +57,13 @@ void CloseGossipMenuFor(Player* player)
 {
     player->PlayerTalkClass->SendCloseGossip();
 }
+
+void GossipSetMenuId(Player* player, uint32 menuId)
+{
+    player->PlayerTalkClass->GetGossipMenu().SetMenuId(menuId);
+}
+
+uint32 GossipGetMenuId(Player* player)
+{
+    return player->PlayerTalkClass->GetGossipMenu().GetMenuId();
+}

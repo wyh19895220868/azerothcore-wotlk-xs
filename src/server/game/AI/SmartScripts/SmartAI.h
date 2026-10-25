@@ -22,6 +22,7 @@
 #include "CreatureAI.h"
 #include "GameObjectAI.h"
 #include "SmartScript.h"
+#include "WaypointDefines.h"
 #include "SmartScriptMgr.h"
 #include "Spell.h"
 #include "Unit.h"

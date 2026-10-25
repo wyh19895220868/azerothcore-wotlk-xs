@@ -766,10 +766,6 @@ void PathGenerator::CreateFilter()
     }
     else // assume Player
     {
-        // Bots navigate with a stricter filter: include ground + water but exclude lava/slime and
-        // NAV_GROUND_STEEP (the 50-60deg slopes the extractor tags via modAlmostUnwalkableTriangles), so
-        // they keep off steep mountainsides and follow gentle ground/roads. Real players are unchanged and
-        // may still path across steep terrain.
         Player const* player = _source->ToPlayer();
         if (player && player->GetSession() && player->GetSession()->IsHeadless())
         {
@@ -787,8 +783,6 @@ void PathGenerator::CreateFilter()
     _filter.setIncludeFlags(includeFlags);
     _filter.setExcludeFlags(excludeFlags);
 
-    // Bots bias their routes away from deep water (swim only when necessary). poly.area == poly.flags ==
-    // NavTerrain, so NAV_WATER doubles as the water area index. Real players and creatures assign no cost.
     if (isHeadless)
         _filter.setAreaCost(NAV_WATER, 20.0f);
 

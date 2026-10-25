@@ -39,4 +39,7 @@ public:
     [[nodiscard]] virtual bool CanAreaTrigger(Player* /*player*/, AreaTrigger const* /*trigger*/) { return false; }
 };
 
+// Compatibility name used by older Eluna module revisions.
+using ElunaScript = ALEScript;
+
 #endif

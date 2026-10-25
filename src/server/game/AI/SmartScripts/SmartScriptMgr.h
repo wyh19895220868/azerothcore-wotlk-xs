@@ -2079,6 +2079,50 @@ private:
 };
 typedef std::unordered_map<uint32, ObjectGuidVector> ObjectVectorMap;
 
+typedef std::list<WorldObject*> ObjectList;
+
+class ObjectGuidList
+{
+    ObjectList* m_objectList;
+    GuidList* m_guidList;
+    WorldObject* m_baseObject;
+
+public:
+    ObjectGuidList(ObjectList* objectList, WorldObject* baseObject)
+    {
+        ASSERT(objectList);
+        m_objectList = objectList;
+        m_baseObject = baseObject;
+        m_guidList = new GuidList();
+
+        for (ObjectList::iterator itr = objectList->begin(); itr != objectList->end(); ++itr)
+            m_guidList->push_back((*itr)->GetGUID());
+    }
+
+    ObjectList* GetObjectList()
+    {
+        if (m_baseObject)
+        {
+            m_objectList->clear();
+            for (GuidList::iterator itr = m_guidList->begin(); itr != m_guidList->end(); ++itr)
+                if (WorldObject* obj = ObjectAccessor::GetWorldObject(*m_baseObject, *itr))
+                    m_objectList->push_back(obj);
+        }
+
+        return m_objectList;
+    }
+
+    bool Equals(ObjectList* objectList) { return m_objectList == objectList; }
+
+    ~ObjectGuidList()
+    {
+        delete m_objectList;
+        delete m_guidList;
+    }
+};
+
+typedef std::unordered_map<uint32, ObjectGuidList*> ObjectListMap;
+
 class SmartWaypointMgr
 {
     SmartWaypointMgr() {}

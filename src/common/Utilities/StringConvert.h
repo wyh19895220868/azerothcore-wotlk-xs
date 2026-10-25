@@ -19,6 +19,7 @@
 #define _ACORE_STRINGCONVERT_H_
 
 #include "Define.h"
+#include "AsInt256.h"
 #include "Errors.h"
 #include "Optional.h"
 #include "Types.h"
@@ -33,6 +34,23 @@ namespace Acore::Impl::StringConvertImpl
     template <typename T, typename = void> struct For
     {
         static_assert(Acore::dependant_false_v<T>, "Unsupported type used for ToString or StringTo");
+    };
+
+    template <>
+    struct For<AsInt256, void>
+    {
+        static Optional<AsInt256> FromString(std::string_view text, int base = 10)
+        {
+            AsInt256 value;
+            if (base != 10 || !TryParseAsInt256(text, value))
+                return std::nullopt;
+            return value;
+        }
+
+        static std::string ToString(AsInt256 const& value)
+        {
+            return AsInt64ToString(value);
+        }
     };
 
     template <typename T>

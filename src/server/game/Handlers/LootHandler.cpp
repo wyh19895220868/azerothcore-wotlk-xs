@@ -197,7 +197,6 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket& /*recvData*/)
         }
 
         sScriptMgr->OnPlayerBeforeLootMoney(player, loot);
-        loot->NotifyMoneyRemoved();
         if (shareMoney && player->GetGroup())      //item, pickpocket and players can be looted only single player
         {
             Group* group = player->GetGroup();
@@ -213,11 +212,25 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket& /*recvData*/)
                     playersNear.push_back(member);
             }
 
-            uint32 goldPerPlayer = uint32((loot->gold) / (playersNear.size()));
+            if (playersNear.empty())
+                return;
+
+            uint64 goldPerPlayer = uint64((loot->gold) / (playersNear.size()));
+            for (Player* member : playersNear)
+            {
+                if (member->HasPlayerFlag(PLAYER_FLAGS_NO_PLAY_TIME))
+                    continue;
+                uint64 share = member->HasPlayerFlag(PLAYER_FLAGS_PARTIAL_PLAY_TIME) ? goldPerPlayer / 2 : goldPerPlayer;
+                if (share > MAX_MONEY_AMOUNT - member->GetMoney())
+                {
+                    member->SendEquipError(EQUIP_ERR_TOO_MUCH_GOLD, nullptr, nullptr);
+                    return;
+                }
+            }
 
             for (std::vector<Player*>::const_iterator i = playersNear.begin(); i != playersNear.end(); ++i)
             {
-                uint32 finalGold = goldPerPlayer;
+                uint64 finalGold = goldPerPlayer;
 
                 if ((*i)->HasPlayerFlag(PLAYER_FLAGS_NO_PLAY_TIME))
                     continue;
@@ -231,18 +244,19 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket& /*recvData*/)
                         continue;
                 }
 
-                (*i)->ModifyMoney(finalGold);
+                if (!(*i)->CreditMoney(finalGold))
+                    continue;
                 (*i)->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_MONEY, finalGold);
 
                 WorldPacket data(SMSG_LOOT_MONEY_NOTIFY, 4 + 1);
-                data << uint32(finalGold);
+                data << uint64(finalGold);
                 data << uint8(playersNear.size() > 1 ? 0 : 1);     // Controls the text displayed in chat. 0 is "Your share is..." and 1 is "You loot..."
                 (*i)->SendDirectMessage(&data);
             }
         }
         else
         {
-            uint32 finalGold = loot->gold;
+            uint64 finalGold = loot->gold;
             bool award = true; // full restriction already returned above
 
             if (player->HasPlayerFlag(PLAYER_FLAGS_PARTIAL_PLAY_TIME))
@@ -258,11 +272,12 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket& /*recvData*/)
 
             if (award)
             {
-                player->ModifyMoney(finalGold);
+                if (!player->CreditMoney(finalGold))
+                    return;
                 player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_MONEY, finalGold);
 
                 WorldPacket data(SMSG_LOOT_MONEY_NOTIFY, 4 + 1);
-                data << uint32(finalGold);
+                data << uint64(finalGold);
                 data << uint8(1);   // "You loot..."
                 SendPacket(&data);
             }
@@ -272,6 +287,7 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket& /*recvData*/)
         // a script that grants money from this hook bypasses the play time restriction
         sScriptMgr->OnLootMoney(player, loot->gold);
 
+        loot->NotifyMoneyRemoved();
         loot->gold = 0;
 
         // Delete the money loot record from the DB

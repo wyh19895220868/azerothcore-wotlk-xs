@@ -46,6 +46,7 @@ enum ContentLevels : uint8
 ContentLevels GetContentLevelsForMapAndZone(uint32 mapid, uint32 zoneId);
 
 void Zone2MapCoordinates(float& x, float& y, uint32 zone);
+int32 GetMapIdByZone(uint32 zoneId);
 void Map2ZoneCoordinates(float& x, float& y, uint32 zone);
 
 typedef std::map<uint32/*pair32(map, diff)*/, MapDifficulty> MapDifficultyMap;

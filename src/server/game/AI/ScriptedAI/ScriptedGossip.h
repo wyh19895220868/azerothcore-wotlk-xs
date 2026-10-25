@@ -99,5 +99,7 @@ void SendGossipMenuFor(Player* player, uint32 npcTextID, Creature const* creatur
 
 // Close menu
 void CloseGossipMenuFor(Player* player);
+void GossipSetMenuId(Player* player, uint32 menuId);
+uint32 GossipGetMenuId(Player* player);
 
 #endif

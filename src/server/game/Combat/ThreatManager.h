@@ -142,12 +142,16 @@ public:
 
     // Notify the ThreatManager that its owner may now be suppressed on others' threat lists
     void EvaluateSuppressed(bool canExpire = false);
+    void UpdateVisibility(bool checkThreat) { EvaluateSuppressed(checkThreat); }
 
     ///== AFFECT MY THREAT LIST ==
     void AddThreat(Unit* target, float amount, SpellInfo const* spell = nullptr, bool ignoreModifiers = false, bool ignoreRedirects = false);
+    void threatAssist(Unit* target, float amount, SpellInfo const* spell = nullptr) { AddThreat(target, amount, spell); }
     void ScaleThreat(Unit* target, float factor);
     // Modify target's threat by +percent%
     void ModifyThreatByPercent(Unit* target, int32 percent) { if (percent) ScaleThreat(target, 0.01f * float(100 + percent)); }
+    void modifyThreatPercent(Unit* target, int32 percent) { ModifyThreatByPercent(target, percent); }
+    void addThreatPercent(int32 percent);
     // Resets the specified unit's threat to zero
     void ResetThreat(Unit* target) { ScaleThreat(target, 0.0f); }
     // Sets the specified unit's threat to be equal to the highest entry on the threat list
@@ -161,6 +165,7 @@ public:
     void ClearThreat(ThreatReference* ref);
     // Removes all targets from the threat list (will cause evade in UpdateVictim if called)
     void ClearAllThreat();
+    void deleteReferences() { ClearAllThreat(); }
 
     // Fixate on the passed target; this target will always be selected until the fixate is cleared
     void FixateTarget(Unit* target);
@@ -176,6 +181,7 @@ public:
     void RemoveMeFromThreatLists();
     // re-calculates the temporary threat modifier from auras on myself
     void UpdateMyTempModifiers();
+    void addTempThreat(float threat, bool apply);
     // re-calculate SPELL_AURA_MOD_THREAT modifiers
     void UpdateMySpellSchoolModifiers();
 

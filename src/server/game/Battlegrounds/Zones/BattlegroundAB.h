@@ -273,6 +273,7 @@ public:
     bool IsTeamScores500Disadvantage(TeamId teamId) const { return _teamScores500Disadvantage[teamId]; }
 
     TeamId GetPrematureWinner() override;
+    uint32 KillStore[TEAM_NEUTRAL] {};
 private:
     void PostUpdateImpl(uint32 diff) override;
 

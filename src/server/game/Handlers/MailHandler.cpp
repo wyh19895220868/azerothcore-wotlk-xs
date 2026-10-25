@@ -67,7 +67,8 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
     ObjectGuid mailbox;
     uint64 unk3;
     std::string receiver, subject, body;
-    uint32 unk1, unk2, money, COD;
+    uint32 unk1, unk2;
+    uint64 money, COD;
     uint8 unk4;
 
     recvData >> mailbox;
@@ -162,7 +163,7 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
 
     uint32 cost = items_count ? 30 * items_count : 30; // price hardcoded in client
 
-    uint32 reqmoney = cost + money;
+    uint64 reqmoney = cost + money;
 
     // Check for overflow
     if (reqmoney < money)
@@ -292,6 +293,11 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
         return;
     }
 
+    if (!player->DebitMoney(reqmoney))
+    {
+        player->SendMailResult(0, MAIL_SEND, MAIL_ERR_NOT_ENOUGH_MONEY);
+        return;
+    }
     player->SendMailResult(0, MAIL_SEND, MAIL_OK);
 
     if (HasPermission(rbac::RBAC_PERM_LOG_GM_TRADE))
@@ -313,7 +319,6 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
         }
     }
 
-    player->ModifyMoney(-int32(reqmoney));
     player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_GOLD_SPENT_FOR_MAIL, cost);
 
     bool needItemDelay = false;
@@ -600,7 +605,7 @@ void WorldSession::HandleMailTakeItem(WorldPacket& recvData)
                 }
             }
 
-            player->ModifyMoney(-int32(m->COD));
+            player->DebitMoney(m->COD);
         }
 
         m->COD = 0;
@@ -652,7 +657,7 @@ void WorldSession::HandleMailTakeMoney(WorldPacket& recvData)
         return;
     }
 
-    if (!player->ModifyMoney(m->money, false))
+    if (!player->CreditMoney(m->money, false))
     {
         player->SendMailResult(mailId, MAIL_MONEY_TAKEN, MAIL_ERR_EQUIP_ERROR, EQUIP_ERR_TOO_MUCH_GOLD);
         return;
@@ -743,7 +748,7 @@ void WorldSession::SendMailList()
         // after sanitisation, because the sanitised ones are what gets written
         std::size_t const sender_size = mail->messageType == MAIL_NORMAL ? 8 : 4;
         std::size_t const item_size = 1 + 4 + 4 + MAX_INSPECTED_ENCHANTMENT_SLOT * 3 * 4 + 4 + 4 + 4 + 4 + 4 + 4 + 1;
-        std::size_t next_mail_size = 2 + 4 + 1 + sender_size + 7 * 4
+        std::size_t next_mail_size = 2 + 4 + 1 + sender_size + 7 * 4 + 8
             + (subject.size() + 1) + (body.size() + 1) + 1 + item_count * item_size;
 
         if (data.wpos() + next_mail_size > MAX_NETCLIENT_PACKET_SIZE)
@@ -769,10 +774,10 @@ void WorldSession::SendMailList()
                 break;
         }
 
-        data << uint32(mail->COD);                                      // COD
+        data << uint64(mail->COD);                                      // COD
         data << uint32(0);                                              // probably changed in 3.3.3
         data << uint32(mail->stationery);                               // stationery (Stationery.dbc)
-        data << uint32(mail->money);                                    // Gold
+        data << uint64(mail->money);                                    // Gold
         data << uint32(mail->checked);                                  // flags
         data << float(float(mail->expire_time - GameTime::GetGameTime().count()) / DAY);  // Time
         data << uint32(mail->mailTemplateId);                           // mail template (MailTemplate.dbc)

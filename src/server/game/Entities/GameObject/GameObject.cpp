@@ -1596,6 +1596,8 @@ void GameObject::Use(Unit* user)
 
     if (Player* playerUser = user->ToPlayer())
     {
+        sScriptMgr->OnUseGameObject(playerUser, this);
+
         if (sScriptMgr->OnGossipHello(playerUser, this))
             return;
 
@@ -1838,7 +1840,7 @@ void GameObject::Use(Unit* user)
                 Player* player = user->ToPlayer();
 
                 if (info->camera.cinematicId)
-                    player->GetCinematicMgr().StartCinematic(info->camera.cinematicId);
+                    player->GetCinematicMgr()->StartCinematic(info->camera.cinematicId);
 
                 if (info->camera.eventID)
                 {

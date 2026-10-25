@@ -197,7 +197,7 @@ struct boss_sacrolash : public BossAI
         if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 50.0f, true))
         {
             summon->AI()->AttackStart(target);
-            summon->AddThreat(target, 10000000);
+            summon->AddThreat(target, 10000000.0);
         }
     }
 

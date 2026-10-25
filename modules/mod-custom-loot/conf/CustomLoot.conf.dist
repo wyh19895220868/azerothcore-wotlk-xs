@@ -1,0 +1,16 @@
+[worldserver]
+
+# 是否启用自定义掉落模块
+CustomLoot.Enable = 1
+
+# 自定义掉落调试日志
+CustomLoot.Debug = 0
+
+# 单条配置受多倍掉落影响后，每次来源最多掷骰次数
+CustomLoot.MaxRollsPerEntry = 20
+
+# 单次掉落最多允许生成的实际物品堆数（120堆约等于10封邮件）
+CustomLoot.MaxDeliveryStacks = 120
+
+# 单次掷骰的绝对数量上限；最终上限还会受物品堆叠数限制
+CustomLoot.MaxCountPerRoll = 1000000

@@ -278,7 +278,7 @@ class spell_warl_demonic_knowledge : public AuraScript
     {
         if (Unit* caster = GetCaster())
         {
-            uint8 pct = aurEff->GetBaseAmount() + aurEff->GetDieSides();
+            uint8 pct = aurEff->GetBaseAmount() + GetSpellInfo()->Effects[aurEff->GetEffIndex()].DieSides;
             amount = CalculatePct(caster->GetStat(STAT_STAMINA) + caster->GetStat(STAT_INTELLECT), pct);
         }
     }

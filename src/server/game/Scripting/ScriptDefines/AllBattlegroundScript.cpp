@@ -119,6 +119,11 @@ bool ScriptMgr::GetPlayerMatchmakingRating(ObjectGuid playerGuid, BattlegroundTy
     CALL_ENABLED_BOOLEAN_HOOKS_WITH_DEFAULT_FALSE(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_GET_PLAYER_MATCHMAKING_RATING, script->GetPlayerMatchmakingRating(playerGuid, bgTypeId, outRating));
 }
 
+void ScriptMgr::OnBattlegroundKillPlayer(Battleground* bg, Player* killer, Player* killed)
+{
+    CALL_ENABLED_HOOKS(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_ON_BATTLEGROUND_KILL_PLAYER, script->OnBattlegroundKillPlayer(bg, killer, killed));
+}
+
 AllBattlegroundScript::AllBattlegroundScript(char const* name, std::vector<uint16> enabledHooks) :
     ScriptObject(name, ALLBATTLEGROUNDHOOK_END)
 {

@@ -37,6 +37,8 @@ namespace WorldPackets::NPC
     class TrainerList;
 }
 
+class Guardian;
+
 enum PlayerHook
 {
     PLAYERHOOK_ON_PLAYER_JUST_DIED,
@@ -210,6 +212,7 @@ enum PlayerHook
     PLAYERHOOK_ON_GET_QUEST_RATE,
     PLAYERHOOK_ON_CAN_PLAYER_FLY_IN_ZONE,
     PLAYERHOOK_ANTICHEAT_SET_CAN_FLY_BY_SERVER,
+    PLAYERHOOK_ANTICHEAT_SET_SKIP_ONE_PACKET,
     PLAYERHOOK_ANTICHEAT_SET_UNDER_ACK_MOUNT,
     PLAYERHOOK_ANTICHEAT_SET_ROOT_ACK_UPD,
     PLAYERHOOK_ANTICHEAT_SET_JUMPING_BY_OPCODE,
@@ -235,6 +238,16 @@ enum PlayerHook
     PLAYERHOOK_ON_BEFORE_RECEIVE_SPELL_LIST_FROM_TRAINER,
     PLAYERHOOK_ON_GET_TRAINER_SPELL_STATE,
     PLAYERHOOK_ON_AFTER_TRAIN_SPELL,
+    PLAYERHOOK_ON_PLAYER_SOLO_CUSTOM_DUEL_END,
+    PLAYERHOOK_CAN_APPLY_ITEM_TEMPLATE_STATS,
+    PLAYERHOOK_ON_AFTER_GAMEOBJECT_LOOT_GENERATED,
+    PLAYERHOOK_ON_AFTER_ITEM_LOOT_GENERATED,
+    PLAYERHOOK_ON_LOOT_ADD_ITEM_FOR_COUNT,
+    PLAYERHOOK_ON_USE_GAME_OBJECT,
+    PLAYERHOOK_ON_PLAYER_ADD_AURA,
+    PLAYERHOOK_ON_PLAYER_AURA_REMOVE,
+    PLAYERHOOK_ON_PLAYER_MODE_CHANGED,
+    PLAYERHOOK_ON_SELL_ITEM,
     PLAYERHOOK_END
 };
 
@@ -263,13 +276,15 @@ public:
     virtual void OnPlayerCompleteQuest(Player* /*player*/, Quest const* /*quest_id*/) { }
 
     // Called when a player kills another player
-    virtual void OnPlayerPVPKill(Player* /*killer*/, Player* /*killed*/) { }
+    virtual void OnPlayerPVPKill(Player* killer, Player* killed) { OnPVPKill(killer, killed); }
+    virtual void OnPVPKill(Player* /*killer*/, Player* /*killed*/) { }
 
     // Called when a player toggles pvp
     virtual void OnPlayerPVPFlagChange(Player* /*player*/, bool /*state*/) { }
 
     // Called when a player kills a creature
-    virtual void OnPlayerCreatureKill(Player* /*killer*/, Creature* /*killed*/) { }
+    virtual void OnPlayerCreatureKill(Player* killer, Creature* killed) { OnCreatureKill(killer, killed); }
+    virtual void OnCreatureKill(Player* /*killer*/, Creature* /*killed*/) { }
 
     // Called when a player's pet kills a creature
     virtual void OnPlayerCreatureKilledByPet(Player* /*PetOwner*/, Creature* /*killed*/) { }
@@ -282,13 +297,16 @@ public:
     virtual void OnPlayerCreatureKillCredit(Player* /*player*/, Creature* /*killed*/) { }
 
     // Called when a player's level changes (right after the level is applied)
-    virtual void OnPlayerLevelChanged(Player* /*player*/, uint8 /*oldlevel*/) { }
+    virtual void OnPlayerLevelChanged(Player* player, uint8 oldLevel) { OnLevelChanged(player, oldLevel); }
+    virtual void OnLevelChanged(Player* /*player*/, uint8 /*oldLevel*/) { }
 
     // Called when a player's free talent points change (right before the change is applied)
-    virtual void OnPlayerFreeTalentPointsChanged(Player* /*player*/, uint32 /*points*/) { }
+    virtual void OnPlayerFreeTalentPointsChanged(Player* player, uint32 points) { OnFreeTalentPointsChanged(player, points); }
+    virtual void OnFreeTalentPointsChanged(Player* /*player*/, uint32 /*points*/) { }
 
     // Called when a player's talent points are reset (right before the reset is done)
-    virtual void OnPlayerTalentsReset(Player* /*player*/, bool /*noCost*/) { }
+    virtual void OnPlayerTalentsReset(Player* player, bool noCost) { OnTalentsReset(player, noCost); }
+    virtual void OnTalentsReset(Player* /*player*/, bool /*noCost*/) { }
 
     // Called when a player attempts to put a point in a talent.
     virtual bool OnPlayerCanLearnTalent(Player* /*player*/, TalentEntry const* /*talent*/, uint32 /*rank*/) { return true; }
@@ -297,12 +315,15 @@ public:
     virtual void OnPlayerAfterSpecSlotChanged(Player* /*player*/, uint8 /*newSlot*/) { }
 
     // Called for player::update
-    virtual void OnPlayerBeforeUpdate(Player* /*player*/, uint32 /*p_time*/) { }
+    virtual void OnPlayerBeforeUpdate(Player* player, uint32 p_time) { OnBeforeUpdate(player, p_time); }
+    virtual void OnBeforeUpdate(Player* /*player*/, uint32 /*p_time*/) { }
     virtual void OnPlayerAfterUpdate(Player* /*player*/, uint32 /*p_time*/) { }
-    virtual void OnPlayerUpdate(Player* /*player*/, uint32 /*p_time*/) { }
+    virtual void OnPlayerUpdate(Player* player, uint32 p_time) { OnUpdate(player, p_time); }
+    virtual void OnUpdate(Player* /*player*/, uint32 /*p_time*/) { }
 
     // Called when a player's money is modified (before the modification is done)
-    virtual void OnPlayerMoneyChanged(Player* /*player*/, int32& /*amount*/) { }
+    virtual void OnPlayerMoneyChanged(Player* player, int64& amount) { OnMoneyChanged(player, amount); }
+    virtual void OnMoneyChanged(Player* /*player*/, int64& /*amount*/) { }
 
     // Called before looted money is added to a player
     virtual void OnPlayerBeforeLootMoney(Player* /*player*/, Loot* /*loot*/) {}
@@ -311,10 +332,15 @@ public:
     virtual void OnPlayerBeforeSendLoot(Player* /*player*/, ObjectGuid /*lootGuid*/, Loot* /*loot*/) { }
 
     // Called when a player gains XP (before anything is given)
-    virtual void OnPlayerGiveXP(Player* /*player*/, uint32& /*amount*/, Unit* /*victim*/, uint8 /*xpSource*/) { }
+    virtual void OnPlayerGiveXP(Player* player, uint32& amount, Unit* victim, uint8 /*xpSource*/) { OnGiveXP(player, amount, victim); }
+    virtual void OnGiveXP(Player* /*player*/, uint32& /*amount*/, Unit* /*victim*/) { }
 
     // Called when a player's reputation changes (before it is actually changed)
-    virtual bool OnPlayerReputationChange(Player* /*player*/, uint32 /*factionID*/, int32& /*standing*/, bool /*incremental*/) { return true; }
+    virtual bool OnPlayerReputationChange(Player* player, uint32 factionID, int32& standing, bool incremental)
+    {
+        return OnReputationChange(player, factionID, standing, incremental);
+    }
+    virtual bool OnReputationChange(Player* /*player*/, uint32 /*factionID*/, int32& /*standing*/, bool /*incremental*/) { return true; }
 
     // Called when a player's reputation rank changes (before it is actually changed)
     virtual void OnPlayerReputationRankChange(Player* /*player*/, uint32 /*factionID*/, ReputationRank /*newRank*/, ReputationRank /*olRank*/, bool /*increased*/) { }
@@ -323,70 +349,108 @@ public:
     virtual void OnPlayerGiveReputation(Player* /*player*/, int32 /*factionID*/, float& /*amount*/, ReputationSource /*repSource*/) { }
 
     // Called when a player learned new spell
-    virtual void OnPlayerLearnSpell(Player* /*player*/, uint32 /*spellID*/) {}
+    virtual void OnPlayerLearnSpell(Player* player, uint32 spellId) { OnLearnSpell(player, spellId); }
+    virtual void OnLearnSpell(Player* /*player*/, uint32 /*spellId*/) {}
+    virtual void OnPlayerAddAura(Player* /*player*/, uint32 /*auraId*/) {}
+    virtual void OnPlayerAuraRemove(Player* /*player*/, uint32 /*auraId*/) {}
+    virtual void OnPlayerModeChanged(Player* /*player*/, uint32 /*modeId*/) {}
 
     // Called when a player forgot spell
-    virtual void OnPlayerForgotSpell(Player* /*player*/, uint32 /*spellID*/) {}
+    virtual void OnPlayerForgotSpell(Player* player, uint32 spellId) { OnForgotSpell(player, spellId); }
+    virtual void OnForgotSpell(Player* /*player*/, uint32 /*spellId*/) {}
 
     // Called when a duel is requested
-    virtual void OnPlayerDuelRequest(Player* /*target*/, Player* /*challenger*/) { }
+    virtual void OnPlayerDuelRequest(Player* target, Player* challenger) { OnDuelRequest(target, challenger); }
+    virtual void OnDuelRequest(Player* /*target*/, Player* /*challenger*/) { }
 
     // Called when a duel starts (after 3s countdown)
-    virtual void OnPlayerDuelStart(Player* /*player1*/, Player* /*player2*/) { }
+    virtual void OnPlayerDuelStart(Player* player1, Player* player2) { OnDuelStart(player1, player2); }
+    virtual void OnDuelStart(Player* /*player1*/, Player* /*player2*/) { }
 
     // Called when a duel ends
-    virtual void OnPlayerDuelEnd(Player* /*winner*/, Player* /*loser*/, DuelCompleteType /*type*/) { }
+    virtual void OnPlayerDuelEnd(Player* winner, Player* loser, DuelCompleteType type) { OnDuelEnd(winner, loser, type); }
+    virtual void OnDuelEnd(Player* /*winner*/, Player* /*loser*/, DuelCompleteType /*type*/) { }
 
     // The following methods are called when a player sends a chat message.
-    virtual void OnPlayerBeforeSendChatMessage(Player* /*player*/, uint32& /*type*/, uint32& /*lang*/, std::string& /*msg*/) { }
+    virtual void OnPlayerBeforeSendChatMessage(Player* player, uint32& type, uint32& lang, std::string& msg)
+    {
+        OnChat(player, type, lang, msg);
+        OnBeforeSendChatMessage(player, type, lang, msg);
+    }
+    virtual void OnChat(Player* /*player*/, uint32 /*type*/, uint32 /*lang*/, std::string& /*msg*/) { }
+    virtual void OnChat(Player* /*player*/, uint32 /*type*/, uint32 /*lang*/, std::string& /*msg*/, Player* /*receiver*/) { }
+    virtual void OnBeforeSendChatMessage(Player* /*player*/, uint32& /*type*/, uint32& /*lang*/, std::string& /*msg*/) { }
 
     // Both of the below are called on emote opcodes.
-    virtual void OnPlayerEmote(Player* /*player*/, uint32 /*emote*/) { }
+    virtual void OnPlayerEmote(Player* player, uint32 emote) { OnEmote(player, emote); }
+    virtual void OnEmote(Player* /*player*/, uint32 /*emote*/) { }
 
-    virtual void OnPlayerTextEmote(Player* /*player*/, uint32 /*textEmote*/, uint32 /*emoteNum*/, ObjectGuid /*guid*/) { }
+    virtual void OnPlayerTextEmote(Player* player, uint32 textEmote, uint32 emoteNum, ObjectGuid guid) { OnTextEmote(player, textEmote, emoteNum, guid); }
+    virtual void OnTextEmote(Player* /*player*/, uint32 /*textEmote*/, uint32 /*emoteNum*/, ObjectGuid /*guid*/) { }
+
+    virtual void OnUseGameObject(Player* /*player*/, GameObject* /*gameObject*/) { }
 
     // Called in Spell::Cast.
-    virtual void OnPlayerSpellCast(Player* /*player*/, Spell* /*spell*/, bool /*skipCheck*/) { }
+    virtual void OnPlayerSpellCast(Player* player, Spell* spell, bool skipCheck) { OnSpellCast(player, spell, skipCheck); }
+    virtual void OnSpellCast(Player* /*player*/, Spell* /*spell*/, bool /*skipCheck*/) { }
 
     // Called during data loading
-    virtual void OnPlayerLoadFromDB(Player* /*player*/) { };
+    virtual void OnPlayerLoadFromDB(Player* player) { OnLoadFromDB(player); }
+    virtual void OnLoadFromDB(Player* /*player*/) { }
 
     // Called when a player logs in.
-    virtual void OnPlayerLogin(Player* /*player*/) { }
+    virtual void OnPlayerLogin(Player* player) { OnLogin(player); }
+    virtual void OnLogin(Player* /*player*/) { }
 
     // Called before the player is logged out
     virtual void OnPlayerBeforeLogout(Player* /*player*/) { }
 
     // Called when a player logs out.
-    virtual void OnPlayerLogout(Player* /*player*/) { }
+    virtual void OnPlayerLogout(Player* player) { OnLogout(player); }
+    virtual void OnLogout(Player* /*player*/) { }
 
     // Called before every character of the account is marked offline on logout.
     // Return false to keep the core from doing so, e.g. when a script holds several characters of one account online.
     [[nodiscard]] virtual bool OnPlayerCanMarkAccountOffline(ObjectGuid /*guid*/, uint32 /*accountId*/) { return true; }
 
     // Called when a player is created.
-    virtual void OnPlayerCreate(Player* /*player*/) { }
+    virtual void OnPlayerCreate(Player* player) { OnCreate(player); }
+    virtual void OnCreate(Player* /*player*/) { }
 
     // Called when a player is deleted.
-    virtual void OnPlayerDelete(ObjectGuid /*guid*/, uint32 /*accountId*/) { }
+    virtual void OnPlayerDelete(ObjectGuid guid, uint32 accountId) { OnDelete(guid, accountId); }
+    virtual void OnDelete(ObjectGuid /*guid*/, uint32 /*accountId*/) { }
 
     // Called when a player delete failed.
     virtual void OnPlayerFailedDelete(ObjectGuid /*guid*/, uint32 /*accountId*/) { }
 
     // Called when a player is about to be saved.
-    virtual void OnPlayerSave(Player* /*player*/) { }
+    virtual void OnPlayerSave(Player* player) { OnSave(player); }
+    virtual void OnSave(Player* /*player*/) { }
 
     // Called when a player is bound to an instance
-    virtual void OnPlayerBindToInstance(Player* /*player*/, Difficulty /*difficulty*/, uint32 /*mapId*/, bool /*permanent*/) { }
+    virtual void OnPlayerBindToInstance(Player* player, Difficulty difficulty, uint32 mapId, bool permanent)
+    {
+        OnBindToInstance(player, difficulty, mapId, permanent);
+    }
+    virtual void OnBindToInstance(Player* /*player*/, Difficulty /*difficulty*/, uint32 /*mapId*/, bool /*permanent*/) { }
 
     // Called when a player switches to a new zone
-    virtual void OnPlayerUpdateZone(Player* /*player*/, uint32 /*newZone*/, uint32 /*newArea*/) { }
+    virtual void OnPlayerUpdateZone(Player* player, uint32 newZone, uint32 newArea) { OnUpdateZone(player, newZone, newArea); }
+    virtual void OnUpdateZone(Player* /*player*/, uint32 /*newZone*/, uint32 /*newArea*/) { }
 
     // Called when a player switches to a new area (more accurate than UpdateZone)
-    virtual void OnPlayerUpdateArea(Player* /*player*/, uint32 /*oldArea*/, uint32 /*newArea*/) { }
+    virtual void OnPlayerUpdateArea(Player* player, uint32 oldArea, uint32 newArea)
+    {
+        OnUpdateArea(player, oldArea, newArea);
+        OnUpdateAreaEnd(player, newArea);
+    }
+    virtual void OnUpdateArea(Player* /*player*/, uint32 /*oldArea*/, uint32 /*newArea*/) { }
+    virtual void OnUpdateAreaEnd(Player* /*player*/, uint32 /*newArea*/) { }
 
     // Called when a player changes to a new map (after moving to new map)
-    virtual void OnPlayerMapChanged(Player* /*player*/) { }
+    virtual void OnPlayerMapChanged(Player* player) { OnMapChanged(player); }
+    virtual void OnMapChanged(Player* /*player*/) { }
 
     // Called before a player is being teleported to new coords
     [[nodiscard]] virtual bool OnPlayerBeforeTeleport(Player* /*player*/, uint32 /*mapid*/, float /*x*/, float /*y*/, float /*z*/, float /*orientation*/, uint32 /*options*/, Unit* /*target*/) { return true; }
@@ -404,7 +468,8 @@ public:
     virtual void OnPlayerRemoveFromBattleground(Player* /*player*/, Battleground* /*bg*/) { }
 
     // Called when a player complete an achievement
-    virtual void OnPlayerAchievementComplete(Player* /*player*/, AchievementEntry const* /*achievement*/) { }
+    virtual void OnPlayerAchievementComplete(Player* player, AchievementEntry const* achievement) { OnAchiComplete(player, achievement); }
+    virtual void OnAchiComplete(Player* /*player*/, AchievementEntry const* /*achievement*/) { }
 
     // Called before player complete an achievement, can be used to disable achievements in certain conditions
     virtual bool OnPlayerBeforeAchievementComplete(Player* /*player*/, AchievementEntry const* /*achievement*/) { return true; }
@@ -422,25 +487,36 @@ public:
     virtual void OnPlayerCriteriaSave(CharacterDatabaseTransaction /*trans*/, Player* /*player*/, uint16 /*achId*/, CriteriaProgress /*criteriaData*/) { }
 
     // Called when a player selects an option in a player gossip window
-    virtual void OnPlayerGossipSelect(Player* /*player*/, uint32 /*menu_id*/, uint32 /*sender*/, uint32 /*action*/) { }
+    virtual void OnPlayerGossipSelect(Player* player, uint32 menuId, uint32 sender, uint32 action) { OnGossipSelect(player, menuId, sender, action); }
+    virtual void OnGossipSelect(Player* /*player*/, uint32 /*menuId*/, uint32 /*sender*/, uint32 /*action*/) { }
 
     // Called when a player selects an option in a player gossip window
-    virtual void OnPlayerGossipSelectCode(Player* /*player*/, uint32 /*menu_id*/, uint32 /*sender*/, uint32 /*action*/, char const* /*code*/) { }
+    virtual void OnPlayerGossipSelectCode(Player* player, uint32 menuId, uint32 sender, uint32 action, char const* code)
+    {
+        OnGossipSelectCode(player, menuId, sender, action, code);
+    }
+    virtual void OnGossipSelectCode(Player* /*player*/, uint32 /*menuId*/, uint32 /*sender*/, uint32 /*action*/, char const* /*code*/) { }
 
     // On player getting charmed
     virtual void OnPlayerBeingCharmed(Player* /*player*/, Unit* /*charmer*/, uint32 /*oldFactionId*/, uint32 /*newFactionId*/) { }
 
     // To change behaviour of set visible item slot
-    virtual void OnPlayerAfterSetVisibleItemSlot(Player* /*player*/, uint8 /*slot*/, Item* /*item*/) { }
+    virtual void OnPlayerAfterSetVisibleItemSlot(Player* player, uint8 slot, Item* item) { OnAfterSetVisibleItemSlot(player, slot, item); }
+    virtual void OnAfterSetVisibleItemSlot(Player* /*player*/, uint8 /*slot*/, Item* /*item*/) { }
 
     // After an item has been moved from inventory
-    virtual void OnPlayerAfterMoveItemFromInventory(Player* /*player*/, Item* /*it*/, uint8 /*bag*/, uint8 /*slot*/, bool /*update*/) { }
+    virtual void OnPlayerAfterMoveItemFromInventory(Player* player, Item* item, uint8 bag, uint8 slot, bool update)
+    {
+        OnAfterMoveItemFromInventory(player, item, bag, slot, update);
+    }
+    virtual void OnAfterMoveItemFromInventory(Player* /*player*/, Item* /*item*/, uint8 /*bag*/, uint8 /*slot*/, bool /*update*/) { }
 
     // After an item has been moved to inventory
     virtual void OnPlayerAfterMoveItemToInventory(Player* /*player*/, Item* /*it*/, bool /*update*/) { }
 
     // After an item has been equipped
-    virtual void OnPlayerEquip(Player* /*player*/, Item* /*it*/, uint8 /*bag*/, uint8 /*slot*/, bool /*update*/) { }
+    virtual void OnPlayerEquip(Player* player, Item* item, uint8 bag, uint8 slot, bool update) { OnEquip(player, item, bag, slot, update); }
+    virtual void OnEquip(Player* /*player*/, Item* /*item*/, uint8 /*bag*/, uint8 /*slot*/, bool /*update*/) { }
 
     // After an item has been unequipped
     virtual void OnPlayerUnequip(Player* /*player*/, Item* /*it*/) { }
@@ -452,22 +528,31 @@ public:
     virtual void OnPlayerJoinArena(Player* /*player*/) { }
 
     //Called after the normal slots (0..2) for arena have been evaluated so that custom arena teams could modify it if nececasry
-    virtual void OnPlayerGetMaxPersonalArenaRatingRequirement(Player const* /*player*/, uint32 /*minSlot*/, uint32& /*maxArenaRating*/) const {}
+    virtual void OnPlayerGetMaxPersonalArenaRatingRequirement(Player const* player, uint32 minSlot, uint32& maxArenaRating) const
+    {
+        OnGetMaxPersonalArenaRatingRequirement(player, minSlot, maxArenaRating);
+    }
+    virtual void OnGetMaxPersonalArenaRatingRequirement(Player const* /*player*/, uint32 /*minSlot*/, uint32& /*maxArenaRating*/) const {}
 
     //After looting item
-    virtual void OnPlayerLootItem(Player* /*player*/, Item* /*item*/, uint32 /*count*/, ObjectGuid /*lootguid*/) { }
+    virtual void OnPlayerLootItem(Player* player, Item* item, uint32 count, ObjectGuid lootguid) { OnLootItem(player, item, count, lootguid); }
+    virtual void OnLootItem(Player* /*player*/, Item* /*item*/, uint32 /*count*/, ObjectGuid /*lootguid*/) { }
+
+    virtual void OnLootAddItemForCount(Player const* /*player*/, uint32& /*count*/) { }
 
     //Before looting item
     virtual void OnPlayerBeforeFillQuestLootItem(Player* /*player*/, LootItem& /*item*/) { }
 
     //After looting item (includes master loot).
-    virtual void OnPlayerStoreNewItem(Player* /*player*/, Item* /*item*/, uint32 /*count*/) { }
+    virtual void OnPlayerStoreNewItem(Player* player, Item* item, uint32 count) { OnStoreNewItem(player, item, count); }
+    virtual void OnStoreNewItem(Player* /*player*/, Item* /*item*/, uint32 /*count*/) { }
 
     //After creating item (eg profession item creation)
     virtual void OnPlayerCreateItem(Player* /*player*/, Item* /*item*/, uint32 /*count*/) { }
 
     // After receiving item as a quest reward
-    virtual void OnPlayerQuestRewardItem(Player* /*player*/, Item* /*item*/, uint32 /*count*/) { }
+    virtual void OnPlayerQuestRewardItem(Player* player, Item* item, uint32 count) { OnQuestRewardItem(player, item, count); }
+    virtual void OnQuestRewardItem(Player* /*player*/, Item* /*item*/, uint32 /*count*/) { }
 
     // When placing a bid or buying out an auction
     [[nodiscard]] virtual bool OnPlayerCanPlaceAuctionBid(Player* /*player*/, AuctionEntry* /*auction*/) { return true; }
@@ -505,11 +590,16 @@ public:
 
     virtual void OnPlayerBeforeInitTalentForLevel(Player* /*player*/, uint8& /*level*/, uint32& /*talentPointsForLevel*/) { }
 
-    virtual void OnPlayerFirstLogin(Player* /*player*/) { }
+    virtual void OnPlayerFirstLogin(Player* player) { OnFirstLogin(player); }
+    virtual void OnFirstLogin(Player* /*player*/) { }
 
     virtual void OnPlayerSetMaxLevel(Player* /*player*/, uint32& /*maxPlayerLevel*/) { }
 
-    [[nodiscard]] virtual bool OnPlayerCanJoinInBattlegroundQueue(Player* /*player*/, ObjectGuid /*BattlemasterGuid*/, BattlegroundTypeId /*BGTypeID*/, uint8 /*joinAsGroup*/, GroupJoinBattlegroundResult& /*err*/) { return true; }
+    [[nodiscard]] virtual bool OnPlayerCanJoinInBattlegroundQueue(Player* player, ObjectGuid battlemasterGuid, BattlegroundTypeId bgTypeId, uint8 joinAsGroup, GroupJoinBattlegroundResult& err)
+    {
+        return CanJoinInBattlegroundQueue(player, battlemasterGuid, bgTypeId, joinAsGroup, err);
+    }
+    [[nodiscard]] virtual bool CanJoinInBattlegroundQueue(Player* /*player*/, ObjectGuid /*battlemasterGuid*/, BattlegroundTypeId /*bgTypeId*/, uint8 /*joinAsGroup*/, GroupJoinBattlegroundResult& /*err*/) { return true; }
     virtual bool OnPlayerShouldBeRewardedWithMoneyInsteadOfExp(Player* /*player*/) { return false; }
 
     // Called before the player's temporary summoned creature has initialized it's stats
@@ -526,7 +616,11 @@ public:
 
     [[nodiscard]] virtual bool OnPlayerCanJoinInArenaQueue(Player* /*player*/, ObjectGuid /*BattlemasterGuid*/, uint8 /*arenaslot*/, BattlegroundTypeId /*BGTypeID*/, uint8 /*joinAsGroup*/, uint8 /*IsRated*/, GroupJoinBattlegroundResult& /*err*/) { return true; }
 
-    [[nodiscard]] virtual bool OnPlayerCanBattleFieldPort(Player* /*player*/, uint8 /*arenaType*/, BattlegroundTypeId /*BGTypeID*/, uint8 /*action*/) { return true; }
+    [[nodiscard]] virtual bool OnPlayerCanBattleFieldPort(Player* player, uint8 arenaType, BattlegroundTypeId bgTypeId, uint8 action)
+    {
+        return CanBattleFieldPort(player, arenaType, bgTypeId, action);
+    }
+    [[nodiscard]] virtual bool CanBattleFieldPort(Player* /*player*/, uint8 /*arenaType*/, BattlegroundTypeId /*bgTypeId*/, uint8 /*action*/) { return true; }
 
     [[nodiscard]] virtual bool OnPlayerCanGroupInvite(Player* /*player*/, std::string& /*membername*/) { return true; }
 
@@ -534,7 +628,10 @@ public:
 
     [[nodiscard]] virtual bool OnPlayerCanSellItem(Player* /*player*/, Item* /*item*/, Creature* /*creature*/) { return true; }
 
-    [[nodiscard]] virtual bool OnPlayerCanSendMail(Player* /*player*/, ObjectGuid /*receiverGuid*/, ObjectGuid /*mailbox*/, std::string& /*subject*/, std::string& /*body*/, uint32 /*money*/, uint32 /*COD*/, Item* /*item*/) { return true; }
+    virtual void OnPlayerSellItem(Player* player, Item* item, uint32 count) { OnSellItem(player, item, count); }
+    virtual void OnSellItem(Player* /*player*/, Item* /*item*/, uint32 /*count*/) { }
+
+    [[nodiscard]] virtual bool OnPlayerCanSendMail(Player* /*player*/, ObjectGuid /*receiverGuid*/, ObjectGuid /*mailbox*/, std::string& /*subject*/, std::string& /*body*/, uint64 /*money*/, uint64 /*COD*/, Item* /*item*/) { return true; }
 
     virtual void OnPlayerPetitionBuy(Player* /*player*/, Creature* /*creature*/, uint32& /*charterid*/, uint32& /*cost*/, uint32& /*type*/) { }
 
@@ -548,9 +645,11 @@ public:
 
     [[nodiscard]] virtual bool OnPlayerCanGiveMailRewardAtGiveLevel(Player* /*player*/, uint8 /*level*/) { return true; }
 
-    virtual void OnPlayerDeleteFromDB(CharacterDatabaseTransaction /*trans*/, uint32 /*guid*/) { }
+    virtual void OnPlayerDeleteFromDB(CharacterDatabaseTransaction trans, uint32 guid) { OnDeleteFromDB(trans, guid); }
+    virtual void OnDeleteFromDB(CharacterDatabaseTransaction /*trans*/, uint32 /*guid*/) { }
 
-    [[nodiscard]] virtual bool OnPlayerCanRepopAtGraveyard(Player* /*player*/) { return true; }
+    [[nodiscard]] virtual bool OnPlayerCanRepopAtGraveyard(Player* player) { return CanRepopAtGraveyard(player); }
+    [[nodiscard]] virtual bool CanRepopAtGraveyard(Player* /*player*/) { return true; }
 
     [[nodiscard]] virtual Optional<bool> OnPlayerIsClass(Player const* /*player*/, Classes /*playerClass*/, ClassContext /*context*/) { return std::nullopt; }
 
@@ -615,11 +714,17 @@ public:
 
     virtual void OnPlayerApplyAmmoBonuses(Player* /*player*/, ItemTemplate const* /*proto*/, float& /*currentAmmoDPS*/) { }
 
-    [[nodiscard]] virtual bool OnPlayerCanEquipItem(Player* /*player*/, uint8 /*slot*/, uint16& /*dest*/, Item* /*pItem*/, bool /*swap*/, bool /*not_loading*/) { return true; }
+    [[nodiscard]] virtual bool OnPlayerCanEquipItem(Player* player, uint8 slot, uint16& dest, Item* item, bool swap, bool notLoading)
+    {
+        return CanEquipItem(player, slot, dest, item, swap, notLoading);
+    }
+    [[nodiscard]] virtual bool CanEquipItem(Player* /*player*/, uint8 /*slot*/, uint16& /*dest*/, Item* /*item*/, bool /*swap*/, bool /*notLoading*/) { return true; }
 
-    [[nodiscard]] virtual bool OnPlayerCanUnequipItem(Player* /*player*/, uint16 /*pos*/, bool /*swap*/) { return true; }
+    [[nodiscard]] virtual bool OnPlayerCanUnequipItem(Player* player, uint16 pos, bool swap) { return CanUnequipItem(player, pos, swap); }
+    [[nodiscard]] virtual bool CanUnequipItem(Player* /*player*/, uint16 /*pos*/, bool /*swap*/) { return true; }
 
-    [[nodiscard]] virtual bool OnPlayerCanUseItem(Player* /*player*/, ItemTemplate const* /*proto*/, InventoryResult& /*result*/) { return true; }
+    [[nodiscard]] virtual bool OnPlayerCanUseItem(Player* player, ItemTemplate const* proto, InventoryResult& result) { return CanUseItem(player, proto, result); }
+    [[nodiscard]] virtual bool CanUseItem(Player* /*player*/, ItemTemplate const* /*proto*/, InventoryResult& /*result*/) { return true; }
 
     [[nodiscard]] virtual bool OnPlayerCanSaveEquipNewItem(Player* /*player*/, Item* /*item*/, uint16 /*pos*/, bool /*update*/) { return true; }
 
@@ -635,9 +740,11 @@ public:
 
     [[nodiscard]] virtual bool OnPlayerNotVisibleGloballyFor(Player* /*player*/, Player const* /*u*/) { return true; } // Whats that?
 
-    virtual void OnPlayerGetArenaPersonalRating(Player* /*player*/, uint8 /*slot*/, uint32& /*result*/) { }
+    virtual void OnPlayerGetArenaPersonalRating(Player* player, uint8 slot, uint32& result) { GetCustomArenaPersonalRating(player, slot, result); }
+    virtual void GetCustomArenaPersonalRating(Player const* /*player*/, uint8 /*slot*/, uint32& /*result*/) const { }
 
-    virtual void OnPlayerGetArenaTeamId(Player* /*player*/, uint8 /*slot*/, uint32& /*result*/) { }
+    virtual void OnPlayerGetArenaTeamId(Player* player, uint8 slot, uint32& result) { GetCustomGetArenaTeamId(player, slot, result); }
+    virtual void GetCustomGetArenaTeamId(Player const* /*player*/, uint8 /*slot*/, uint32& /*result*/) const { }
 
     virtual void OnPlayerIsFFAPvP(Player* /*player*/, bool& /*result*/) { }
 
@@ -648,7 +755,11 @@ public:
 
     virtual void OnPlayerGetMaxSkillValueForLevel(Player* /*player*/, uint16& /*result*/) { }
 
-    [[nodiscard]] virtual bool OnPlayerNotSetArenaTeamInfoField(Player* /*player*/, uint8 /*slot*/, ArenaTeamInfoType /*type*/, uint32 /*value*/) { return true; } // Whats that?
+    [[nodiscard]] virtual bool OnPlayerNotSetArenaTeamInfoField(Player* player, uint8 slot, ArenaTeamInfoType type, uint32 value)
+    {
+        return NotSetArenaTeamInfoField(player, slot, type, value);
+    }
+    [[nodiscard]] virtual bool NotSetArenaTeamInfoField(Player* /*player*/, uint8 /*slot*/, ArenaTeamInfoType /*type*/, uint32 /*value*/) { return true; }
 
     [[nodiscard]] virtual bool OnPlayerCanJoinLfg(Player* /*player*/, uint8 /*roles*/, std::set<uint32>& /*dungeons*/, std::string const& /*comment*/) { return true; }
 
@@ -670,7 +781,7 @@ public:
 
     virtual void OnPlayerSetServerSideVisibilityDetect(Player* /*player*/, ServerSideVisibilityType& /*type*/, AccountTypes& /*sec*/) { }
 
-    virtual void OnPlayerResurrect(Player* /*player*/, float /*restore_percent*/, bool& /*applySickness*/) { }
+    virtual void OnPlayerResurrect(Player* /*player*/, float /*restorePercent*/, bool& /*applySickness*/) { }
 
     // Called before selecting the graveyard when releasing spirit
     virtual void OnPlayerBeforeChooseGraveyard(Player* /*player*/, TeamId /*teamId*/, bool /*nearCorpse*/, uint32& /*graveyardOverride*/) { }
@@ -685,7 +796,8 @@ public:
      *
      * @return True if you want to continue sending the message, false if you want to disable sending the message
      */
-    [[nodiscard]] virtual bool OnPlayerCanUseChat(Player* /*player*/, uint32 /*type*/, uint32 /*language*/, std::string& /*msg*/) { return true; }
+    [[nodiscard]] virtual bool OnPlayerCanUseChat(Player* player, uint32 type, uint32 language, std::string& msg) { return CanPlayerUseChat(player, type, language, msg); }
+    [[nodiscard]] virtual bool CanPlayerUseChat(Player* /*player*/, uint32 /*type*/, uint32 /*language*/, std::string& /*msg*/) { return true; }
 
     /**
      * @brief This hook called before player sending message to other player via private
@@ -698,7 +810,8 @@ public:
      *
      * @return True if you want to continue sending the message, false if you want to disable sending the message
      */
-    [[nodiscard]] virtual bool OnPlayerCanUseChat(Player* /*player*/, uint32 /*type*/, uint32 /*language*/, std::string& /*msg*/, Player* /*receiver*/) { return true; }
+    [[nodiscard]] virtual bool OnPlayerCanUseChat(Player* player, uint32 type, uint32 language, std::string& msg, Player* receiver) { return CanPlayerUseChat(player, type, language, msg, receiver); }
+    [[nodiscard]] virtual bool CanPlayerUseChat(Player* /*player*/, uint32 /*type*/, uint32 /*language*/, std::string& /*msg*/, Player* /*receiver*/) { return true; }
 
     /**
      * @brief This hook called before player sending message to group
@@ -711,7 +824,8 @@ public:
      *
      * @return True if you want to continue sending the message, false if you want to disable sending the message
      */
-    [[nodiscard]] virtual bool OnPlayerCanUseChat(Player* /*player*/, uint32 /*type*/, uint32 /*language*/, std::string& /*msg*/, Group* /*group*/) { return true; }
+    [[nodiscard]] virtual bool OnPlayerCanUseChat(Player* player, uint32 type, uint32 language, std::string& msg, Group* group) { return CanPlayerUseChat(player, type, language, msg, group); }
+    [[nodiscard]] virtual bool CanPlayerUseChat(Player* /*player*/, uint32 /*type*/, uint32 /*language*/, std::string& /*msg*/, Group* /*group*/) { return true; }
 
     /**
      * @brief This hook called before player sending message to guild
@@ -724,7 +838,8 @@ public:
      *
      * @return True if you want to continue sending the message, false if you want to disable sending the message
      */
-    [[nodiscard]] virtual bool OnPlayerCanUseChat(Player* /*player*/, uint32 /*type*/, uint32 /*language*/, std::string& /*msg*/, Guild* /*guild*/) { return true; }
+    [[nodiscard]] virtual bool OnPlayerCanUseChat(Player* player, uint32 type, uint32 language, std::string& msg, Guild* guild) { return CanPlayerUseChat(player, type, language, msg, guild); }
+    [[nodiscard]] virtual bool CanPlayerUseChat(Player* /*player*/, uint32 /*type*/, uint32 /*language*/, std::string& /*msg*/, Guild* /*guild*/) { return true; }
 
     /**
      * @brief This hook called before player sending message to channel
@@ -737,7 +852,8 @@ public:
      *
      * @return True if you want to continue sending the message, false if you want to disable sending the message
      */
-    [[nodiscard]] virtual bool OnPlayerCanUseChat(Player* /*player*/, uint32 /*type*/, uint32 /*language*/, std::string& /*msg*/, Channel* /*channel*/) { return true; }
+    [[nodiscard]] virtual bool OnPlayerCanUseChat(Player* player, uint32 type, uint32 language, std::string& msg, Channel* channel) { return CanPlayerUseChat(player, type, language, msg, channel); }
+    [[nodiscard]] virtual bool CanPlayerUseChat(Player* /*player*/, uint32 /*type*/, uint32 /*language*/, std::string& /*msg*/, Channel* /*channel*/) { return true; }
 
     /**
      * @brief This hook called after player learning talents
@@ -770,7 +886,8 @@ public:
      * @param player Contains information about the Player
      * @param questId Contains information about the quest id
      */
-    virtual void OnPlayerQuestAbandon(Player* /*player*/, uint32 /*questId*/) { }
+    virtual void OnPlayerQuestAbandon(Player* player, uint32 questId) { OnQuestAbandon(player, questId); }
+    virtual void OnQuestAbandon(Player* /*player*/, uint32 /*questId*/) { }
 
     /**
      * @brief This hook called after a player accepts a quest, regardless of quest giver type
@@ -792,12 +909,29 @@ public:
 
     // Passive Anticheat System
     virtual void AnticheatSetCanFlybyServer(Player* /*player*/, bool /*apply*/) { }
+    virtual void AnticheatSetSkipOnePacketForASH(Player* /*player*/, bool /*apply*/) { }
     virtual void AnticheatSetUnderACKmount(Player* /*player*/) { }
     virtual void AnticheatSetRootACKUpd(Player* /*player*/) { }
     virtual void AnticheatSetJumpingbyOpcode(Player* /*player*/, bool /*jump*/) { }
     virtual void AnticheatUpdateMovementInfo(Player* /*player*/, MovementInfo const& /*movementInfo*/) { }
     [[nodiscard]] virtual bool AnticheatHandleDoubleJump(Player* /*player*/, Unit* /*mover*/) { return true; }
     [[nodiscard]] virtual bool AnticheatCheckMovementInfo(Player* /*player*/, MovementInfo const& /*movementInfo*/, Unit* /*mover*/, bool /*jump*/) { return true; }
+
+    virtual void OnBeforeGuardianInitStatsForLevel(Player* /*player*/, Guardian* /*guardian*/,
+        CreatureTemplate const* /*cinfo*/, PetType& /*petType*/) { }
+    virtual void OnAfterGuardianInitStatsForLevel(Player* /*player*/, Guardian* /*guardian*/) { }
+    virtual void OnBeforeLoadPetFromDB(Player* /*player*/, uint32& /*petEntry*/, uint32& /*petNumber*/,
+        bool& /*current*/, bool& /*forceLoadFromDB*/) { }
+    virtual void OnCustomSoloDuelEnd(Player* /*winner*/, Player* /*loser*/) { }
+    virtual void OnCustomScalingStatValueBefore(Player* /*player*/, ItemTemplate const* /*proto*/, uint8 /*slot*/,
+        bool /*apply*/, uint32& /*customScalingStatValue*/) { }
+    [[nodiscard]] virtual bool CanApplyItemTemplateStats(Player* /*player*/, Item* /*item*/,
+        ItemTemplate const* /*proto*/, uint8 /*slot*/, bool /*apply*/) { return true; }
+    virtual void OnCustomScalingStatValue(Player* /*player*/, ItemTemplate const* /*proto*/, uint32& /*statType*/,
+        int32& /*value*/, uint8 /*itemProtoStatNumber*/, uint32 /*scalingStatValue*/,
+        ScalingStatValuesEntry const* /*scalingStatValues*/) { }
+    virtual void OnAfterGameObjectLootGenerated(Player* /*player*/, GameObject* /*gameObject*/, Loot* /*loot*/) { }
+    virtual void OnAfterItemLootGenerated(Player* /*player*/, Item* /*item*/, Loot* /*loot*/) { }
 
     /**
      * @brief This hook is called, to avoid displaying the error message that the body has already been stripped
@@ -835,7 +969,8 @@ public:
      *
      * @return true if player is authorized to resurect
      */
-    virtual bool OnPlayerCanResurrect(Player* /*player*/) { return true; }
+    virtual bool OnPlayerCanResurrect(Player* player) { return CanPlayerResurrect(player); }
+    virtual bool CanPlayerResurrect(Player* /*player*/) { return true; }
 
     /**
      * @brief This hook is called, to cancel the normal level up flow

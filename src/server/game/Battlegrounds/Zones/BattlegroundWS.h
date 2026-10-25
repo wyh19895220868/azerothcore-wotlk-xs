@@ -248,6 +248,7 @@ public:
 
     /* Scorekeeping */
     void AddPoints(TeamId teamId, uint32 points) { m_TeamScores[teamId] += points; }
+    uint32 KillStore[TEAM_NEUTRAL] {};
 
     TeamId GetPrematureWinner() override;
     uint32 GetMatchTime() const { return 1 + (BG_WS_TOTAL_GAME_TIME - GetStartTime()) / (MINUTE * IN_MILLISECONDS); }

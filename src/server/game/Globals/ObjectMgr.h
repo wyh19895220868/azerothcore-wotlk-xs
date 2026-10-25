@@ -538,11 +538,17 @@ struct PetLevelInfo
     }
 
     std::array<uint32, MAX_STATS> stats = { };
+    std::array<AsInt64, MAX_STATS> asStats = { };
     uint32 health{0};
+    AsInt64 asHealth{0};
     uint32 mana{0};
+    AsInt64 asMana{0};
     uint32 armor{0};
+    AsInt64 asArmor{0};
     uint32 min_dmg{0};
+    AsInt64 asMinDmg{0};
     uint32 max_dmg{0};
+    AsInt64 asMaxDmg{0};
 };
 
 struct MailLevelReward
@@ -670,6 +676,8 @@ typedef std::unordered_map<uint32, QuestPOIVector> QuestPOIContainer;
 typedef std::map<std::pair<uint32, uint8>, QuestGreeting> QuestGreetingContainer;
 
 typedef std::unordered_map<uint32, VendorItemData> CacheVendorItemContainer;
+typedef std::unordered_map<uint32, TrainerSpellData> CacheTrainerSpellContainer;
+typedef std::unordered_map<uint32, LegacyServerMail> LegacyServerMailContainer;
 
 typedef std::vector<uint32> CreatureCustomIDsContainer;
 
@@ -773,9 +781,14 @@ public:
     CreatureTemplate const* GetCreatureTemplate(uint32 entry);
     [[nodiscard]] CreatureTemplateContainer const* GetCreatureTemplates() const { return &_creatureTemplateStore; }
     CreatureModelInfo const* GetCreatureModelInfo(uint32 modelId) const;
-    CreatureModelInfo const* GetCreatureModelRandomGender(CreatureModel* model, CreatureTemplate const* creatureTemplate) const;
-    static CreatureModel const* ChooseDisplayId(CreatureTemplate const* cinfo, CreatureData const* data = nullptr);
+    CreatureModelInfo const* GetCreatureModelRandomGender(uint32* displayId) const;
+    static uint32 ChooseDisplayId(CreatureTemplate const* cinfo, CreatureData const* data = nullptr);
     static void ChooseCreatureFlags(CreatureTemplate const* cinfo, uint32& npcflag, uint32& unit_flags, uint32& dynamicflags, CreatureData const* data = nullptr);
+    [[nodiscard]] TrainerSpellData const* GetNpcTrainerSpells(uint32 entry) const
+    {
+        CacheTrainerSpellContainer::const_iterator itr = _cacheTrainerSpellStore.find(entry);
+        return itr == _cacheTrainerSpellStore.end() ? nullptr : &itr->second;
+    }
     EquipmentInfo const* GetEquipmentInfo(uint32 entry, int8& id);
     CreatureAddon const* GetCreatureAddon(ObjectGuid::LowType lowguid);
     GameObjectAddon const* GetGameObjectAddon(ObjectGuid::LowType lowguid);
@@ -783,6 +796,10 @@ public:
     CreatureAddon const* GetCreatureTemplateAddon(uint32 entry);
     CreatureMovementData const* GetCreatureMovementOverride(ObjectGuid::LowType spawnId) const;
     ItemTemplate const* GetItemTemplate(uint32 entry);
+    ItemTemplate const* GetCustomItemTemplateOs(uint32 entry);
+    bool UpdateItemTempForEntry(uint32 entry);
+    void UpdateItemTempForAll();
+    void UpdateCreTempForEntry(uint32 creatureId);
     [[nodiscard]] ItemTemplateContainer const* GetItemTemplateStore() const { return &_itemTemplateStore; }
     [[nodiscard]] std::vector<ItemTemplate*> const* GetItemTemplateStoreFast() const { return &_itemTemplateStoreFast; }
 
@@ -1074,6 +1091,8 @@ public:
     void LoadInstanceTemplate();
     void LoadInstanceEncounters();
     void LoadMailLevelRewards();
+    void LoadMailServerTemplates();
+    void ReturnOrDeleteOldMails(bool serverUp);
     void LoadVehicleTemplateAccessories();
     void LoadVehicleAccessories();
     void LoadVehicleSeatAddon();
@@ -1117,6 +1136,9 @@ public:
 
     void LoadVendors();
     void LoadTrainers();
+    void AddSpellToTrainer(uint32 entry, uint32 spell, uint32 spellCost, uint32 reqSkill, uint32 reqSkillValue,
+        uint32 reqLevel, uint32 reqSpell);
+    void LoadTrainerSpell();
     void LoadCreatureDefaultTrainers();
 
     std::string GeneratePetName(uint32 entry);
@@ -1242,7 +1264,12 @@ public:
 
     [[nodiscard]] CreatureSparringContainer const& GetSparringData() const { return _creatureSparringStore; }
 
-    CreatureData& NewOrExistCreatureData(ObjectGuid::LowType spawnId) { return _creatureDataStore[spawnId]; }
+    CreatureData& NewOrExistCreatureData(ObjectGuid::LowType spawnId)
+    {
+        CreatureData& data = _creatureDataStore[spawnId];
+        data.spawnId = spawnId;
+        return data;
+    }
     /**
      * @brief Loads a single creature spawn entry from the database into the data store cache.
      *
@@ -1274,6 +1301,7 @@ public:
         if (itr == _gameObjectDataStore.end()) return nullptr;
             return &itr->second;
     }
+    [[nodiscard]] GameObjectData const* GetGOData(ObjectGuid::LowType spawnId) const { return GetGameObjectData(spawnId); }
     [[nodiscard]] SpawnData const* GetSpawnData(SpawnObjectType type, ObjectGuid::LowType spawnId) const;
 
     [[nodiscard]] SpawnGroupTemplateData const* GetSpawnGroupData(uint32 groupId) const
@@ -1408,6 +1436,7 @@ public:
     ObjectGuid::LowType AddCreData(uint32 entry, uint32 map, float x, float y, float z, float o, uint32 spawntimedelay = 0);
 
     // reserved names
+    void LoadReservedPlayersNames();
     void LoadReservedPlayerNamesDB();
     void LoadReservedPlayerNamesDBC();
     [[nodiscard]] bool IsReservedName(std::string_view name) const;
@@ -1454,9 +1483,12 @@ public:
         return &iter->second;
     }
 
-    void AddVendorItem(uint32 entry, uint32 item, uint32 maxcount, uint32 incrtime, uint32 extendedCost, bool persist = true); // for event
+    void AddVendorItem(uint32 entry, uint32 item, int32 maxcount, uint32 incrtime, uint32 extendedCost, bool persist = true); // for event
     bool RemoveVendorItem(uint32 entry, uint32 item, bool persist = true); // for event
-    bool IsVendorItemValid(uint32 vendor_entry, uint32 item, uint32 maxcount, uint32 ptime, uint32 ExtendedCost, Player* player = nullptr, std::set<uint32>* skip_vendors = nullptr, uint32 ORnpcflag = 0) const;
+    bool IsVendorItemValid(uint32 vendor_entry, uint32 item, int32 maxcount, uint32 ptime, uint32 ExtendedCost, Player* player = nullptr, std::set<uint32>* skip_vendors = nullptr, uint32 ORnpcflag = 0) const;
+    void SendServerMail(Player* player, uint32 id, uint32 reqLevel, uint32 reqPlayTime, uint32 rewardMoneyA,
+        uint32 rewardMoneyH, uint32 rewardItemA, uint32 rewardItemCountA, uint32 rewardItemH,
+        uint32 rewardItemCountH, std::string subject, std::string body, uint8 active) const;
 
     void LoadScriptNames();
     ScriptNameContainer& GetScriptNames() { return _scriptNamesStore; }
@@ -1683,6 +1715,7 @@ private:
     BroadcastTextContainer _broadcastTextStore;
     ItemTemplateContainer _itemTemplateStore;
     std::vector<ItemTemplate*> _itemTemplateStoreFast; // pussywizard
+    std::vector<ItemTemplate*> CustomItemTemplateStoreOs;
     ItemLocaleContainer _itemLocaleStore;
     ItemSetNameLocaleContainer _itemSetNameLocaleStore;
     QuestLocaleContainer _questLocaleStore;
@@ -1696,6 +1729,8 @@ private:
     PointOfInterestLocaleContainer _pointOfInterestLocaleStore;
 
     CacheVendorItemContainer _cacheVendorItemStore;
+    CacheTrainerSpellContainer _cacheTrainerSpellStore;
+    LegacyServerMailContainer _serverMailStore;
     std::unordered_map<uint32, Trainer::Trainer> _trainers;
     std::unordered_map<uint8, std::vector<Trainer::Trainer const*>> _classTrainers;
     std::unordered_map<uint32, uint32> _creatureDefaultTrainers;

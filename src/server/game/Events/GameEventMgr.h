@@ -58,6 +58,7 @@ struct GameEventData
     GameEventData()  = default;
     uint32 EventId;
     time_t Start{1};           // occurs after this time
+    time_t OriginStartTime{1}; // preserves the configured start for repeating custom events
     time_t End{0};             // occurs before this time
     time_t NextStart{0};       // after this time the follow-up events count this phase completed
     uint32 Occurence{0};       // time between end and start
@@ -94,6 +95,11 @@ class Player;
 class Creature;
 class Quest;
 
+typedef std::map<uint8, std::string> CustomGEventStoreMap;
+extern CustomGEventStoreMap CustomGEventStore;
+typedef std::set<uint8> CustomEventStoreSet;
+extern CustomEventStoreSet CustomEventSetStore;
+
 class GameEventMgr
 {
 private:
@@ -117,7 +123,7 @@ public:
     void Initialize();
     void StartInternalEvent(uint16 event_id);
     bool StartEvent(uint16 event_id, bool overwrite = false);
-    void StopEvent(uint16 event_id, bool overwrite = false);
+    void StopEvent(uint16 event_id, bool overwrite = false, bool custom = false);
     void HandleQuestComplete(uint32 quest_id);  // called on world event type quest completions
     uint32 GetNPCFlag(Creature* cr);
     // Load the game event npc vendor table from the DB

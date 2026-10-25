@@ -19,8 +19,12 @@
 #define ACORE_DEFINE_H
 
 #include "CompilerDefs.h"
+#include <boost/multiprecision/cpp_int.hpp>
 #include <cinttypes>
 #include <climits>
+#include <cmath>
+#include <limits>
+#include <type_traits>
 
 #define ACORE_LITTLEENDIAN 0
 #define ACORE_BIGENDIAN    1
@@ -104,8 +108,92 @@ typedef std::int32_t int32;
 typedef std::int16_t int16;
 typedef std::int8_t int8;
 typedef std::uint64_t uint64;
+
+// Preserve existing custom APIs while restoring the original 256-bit magnitude backend.
+// Signed values use Boost sign-magnitude; stock WoW fields remain explicitly clamped projections.
+using AsInt256 = boost::multiprecision::int256_t;
+using AsInt64 = AsInt256;
 typedef std::uint32_t uint32;
 typedef std::uint16_t uint16;
 typedef std::uint8_t uint8;
 
+namespace Acore::Number
+{
+template <typename T>
+inline long double ToLongDouble(T value)
+{
+    return static_cast<long double>(value);
+}
+
+template <typename T>
+inline float ToFloat(T value)
+{
+    long double const converted = ToLongDouble(value);
+    if (converted >= static_cast<long double>(std::numeric_limits<float>::max()))
+        return std::numeric_limits<float>::max();
+    if (converted <= static_cast<long double>(-std::numeric_limits<float>::max()))
+        return -std::numeric_limits<float>::max();
+    return static_cast<float>(converted);
+}
+
+template <typename T>
+inline int32 ToInt32Saturated(T value)
+{
+    long double const converted = ToLongDouble(value);
+    if (converted >= static_cast<long double>(std::numeric_limits<int32>::max()))
+        return std::numeric_limits<int32>::max();
+    if (converted <= static_cast<long double>(std::numeric_limits<int32>::min()))
+        return std::numeric_limits<int32>::min();
+    return static_cast<int32>(value);
+}
+
+template <typename T>
+inline uint32 ToUInt32Saturated(T value)
+{
+    long double const converted = ToLongDouble(value);
+    if (converted <= 0.0L)
+        return 0;
+    if (converted >= static_cast<long double>(std::numeric_limits<uint32>::max()))
+        return std::numeric_limits<uint32>::max();
+    return static_cast<uint32>(value);
+}
+
+template <typename T>
+inline uint64 ToUInt64Saturated(T value)
+{
+    long double const converted = ToLongDouble(value);
+    if (converted <= 0.0L)
+        return 0;
+    if (converted >= static_cast<long double>(std::numeric_limits<uint64>::max()))
+        return std::numeric_limits<uint64>::max();
+    return static_cast<uint64>(value);
+}
+
+template <typename T>
+inline int64 ToInt64Saturated(T value)
+{
+    long double const converted = ToLongDouble(value);
+    if (converted <= static_cast<long double>(std::numeric_limits<int64>::min()))
+        return std::numeric_limits<int64>::min();
+    if (converted >= static_cast<long double>(std::numeric_limits<int64>::max()))
+        return std::numeric_limits<int64>::max();
+    return static_cast<int64>(value);
+}
+
+template <typename Value, typename Percent>
+inline auto CalculatePct(Value value, Percent percent)
+{
+    if constexpr (std::is_same_v<Value, AsInt256> || std::is_same_v<Percent, AsInt256>)
+    {
+        boost::multiprecision::int512_t result = boost::multiprecision::int512_t(value) * percent / 100;
+        if (result > std::numeric_limits<AsInt256>::max())
+            return std::numeric_limits<AsInt256>::max();
+        if (result < std::numeric_limits<AsInt256>::min())
+            return std::numeric_limits<AsInt256>::min();
+        return static_cast<AsInt256>(result);
+    }
+    else
+        return (value * percent) / 100;
+}
+}
 #endif //ACORE_DEFINE_H

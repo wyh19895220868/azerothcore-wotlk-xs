@@ -428,6 +428,28 @@ Battleground* BattlegroundMgr::CreateNewBattleground(BattlegroundTypeId original
 // used to create the BG templates
 bool BattlegroundMgr::CreateBattleground(BattlegroundTemplate const* bgTemplate)
 {
+    // Battleground constructors read custom configuration. Allocate their
+    // prototypes during world loading, after every global store is initialized.
+    if (bgtypeToBattleground.empty())
+    {
+        bgtypeToBattleground =
+        {
+            { BATTLEGROUND_AV, new BattlegroundAV },
+            { BATTLEGROUND_WS, new BattlegroundWS },
+            { BATTLEGROUND_AB, new BattlegroundAB },
+            { BATTLEGROUND_NA, new BattlegroundNA },
+            { BATTLEGROUND_BE, new BattlegroundBE },
+            { BATTLEGROUND_EY, new BattlegroundEY },
+            { BATTLEGROUND_RL, new BattlegroundRL },
+            { BATTLEGROUND_SA, new BattlegroundSA },
+            { BATTLEGROUND_DS, new BattlegroundDS },
+            { BATTLEGROUND_RV, new BattlegroundRV },
+            { BATTLEGROUND_IC, new BattlegroundIC },
+            { BATTLEGROUND_AA, new Battleground },
+            { BATTLEGROUND_RB, new Battleground },
+        };
+    }
+
     // Create the BG
     Battleground* bg = GetBattlegroundTemplate(bgTemplate->Id);
 
@@ -1010,22 +1032,7 @@ std::unordered_map<int, BattlegroundTypeId> BattlegroundMgr::queueToBg =
     { BATTLEGROUND_QUEUE_5v5,   BATTLEGROUND_AA },
 };
 
-std::unordered_map<int, Battleground*> BattlegroundMgr::bgtypeToBattleground =
-{
-    { BATTLEGROUND_AV, new BattlegroundAV },
-    { BATTLEGROUND_WS, new BattlegroundWS },
-    { BATTLEGROUND_AB, new BattlegroundAB },
-    { BATTLEGROUND_NA, new BattlegroundNA },
-    { BATTLEGROUND_BE, new BattlegroundBE },
-    { BATTLEGROUND_EY, new BattlegroundEY },
-    { BATTLEGROUND_RL, new BattlegroundRL },
-    { BATTLEGROUND_SA, new BattlegroundSA },
-    { BATTLEGROUND_DS, new BattlegroundDS },
-    { BATTLEGROUND_RV, new BattlegroundRV },
-    { BATTLEGROUND_IC, new BattlegroundIC },
-    { BATTLEGROUND_AA, new Battleground },
-    { BATTLEGROUND_RB, new Battleground },
-};
+std::unordered_map<int, Battleground*> BattlegroundMgr::bgtypeToBattleground;
 
 std::unordered_map<int, bgRef> BattlegroundMgr::bgTypeToTemplate =
 {

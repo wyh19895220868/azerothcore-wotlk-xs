@@ -37,6 +37,7 @@ struct CharacterCacheEntry
     ObjectGuid::LowType GuildId;
     std::array<uint32, MAX_ARENA_SLOT> ArenaTeamId;
     ObjectGuid GroupGuid;
+    std::string VipPrefix;
 };
 
 class AC_GAME_API CharacterCache
@@ -57,6 +58,9 @@ class AC_GAME_API CharacterCache
         void UpdateCharacterAccountId(ObjectGuid const& guid, uint32 accountId);
         void UpdateCharacterGuildId(ObjectGuid const& guid, ObjectGuid::LowType guildId);
         void UpdateCharacterArenaTeamId(ObjectGuid const& guid, uint8 slot, uint32 arenaTeamId);
+        void UpdateCharacterDataOnClass(ObjectGuid const& guid, uint8 playerClass);
+        void DoUpdateNamePrefix(ObjectGuid const& guid, std::string prefix);
+        [[nodiscard]] std::string GetNamePrefix(ObjectGuid const& guid) const;
 
         [[nodiscard]] bool HasCharacterCacheEntry(ObjectGuid const& guid) const;
         [[nodiscard]] CharacterCacheEntry const* GetCharacterCacheByGuid(ObjectGuid const& guid) const;
@@ -66,6 +70,7 @@ class AC_GAME_API CharacterCache
         void ClearCharacterGroup(ObjectGuid const& guid) { UpdateCharacterGroup(guid, ObjectGuid::Empty); };
 
         [[nodiscard]] ObjectGuid GetCharacterGuidByName(std::string const& name) const;
+        [[nodiscard]] std::string GetCharacterNameForGuid(ObjectGuid guid) const;
         bool GetCharacterNameByGuid(ObjectGuid guid, std::string& name) const;
         [[nodiscard]] uint32 GetCharacterTeamByGuid(ObjectGuid guid) const;
         [[nodiscard]] uint32 GetCharacterAccountIdByGuid(ObjectGuid guid) const;
@@ -83,6 +88,7 @@ class AC_GAME_API CharacterCache
         void IncreaseCharacterMailCount(ObjectGuid const& guid) { UpdateCharacterMailCount(guid, 1); }
 
         friend class MailMgr;
+        friend class ObjectMgr;
 };
 
 #define sCharacterCache CharacterCache::instance()

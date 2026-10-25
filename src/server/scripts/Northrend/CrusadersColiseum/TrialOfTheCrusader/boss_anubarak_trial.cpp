@@ -771,7 +771,7 @@ public:
             // Physical immunity (Hand of Protection) does not break pursuit, but full immunity does.
             return target && me->IsValidAttackTarget(target) && !target->HasAuraType(SPELL_AURA_FEIGN_DEATH)
                 && !target->HasStealthAura()
-                && !target->HasSchoolImmunityForMask(SPELL_SCHOOL_MASK_ALL, me, nullptr);
+                && !target->IsImmunedToDamageOrSchool(SPELL_SCHOOL_MASK_ALL);
         }
 
         void SelectNewTarget(bool next)

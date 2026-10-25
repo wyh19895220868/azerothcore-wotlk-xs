@@ -268,9 +268,12 @@ enum AuraType
     SPELL_AURA_MOD_SCHOOL_CRIT_DMG_TAKEN                    = 205,
     SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED                    = 206,
     SPELL_AURA_MOD_INCREASE_MOUNTED_FLIGHT_SPEED            = 207,
+    SPELL_AURA_MOD_INCREASE_VEHICLE_FLIGHT_SPEED            = SPELL_AURA_MOD_INCREASE_MOUNTED_FLIGHT_SPEED,
     SPELL_AURA_MOD_FLIGHT_SPEED_ALWAYS                      = 208,
+    SPELL_AURA_MOD_VEHICLE_SPEED_ALWAYS                     = SPELL_AURA_MOD_FLIGHT_SPEED_ALWAYS,
     SPELL_AURA_MOD_MOUNTED_FLIGHT_SPEED_ALWAYS              = 209,
     SPELL_AURA_MOD_FLIGHT_SPEED_NOT_STACKING                = 210,
+    SPELL_AURA_MOD_FLIGHT_SPEED_NOT_STACK                   = SPELL_AURA_MOD_FLIGHT_SPEED_NOT_STACKING,
     SPELL_AURA_MOD_FLIGHT_SPEED_MOUNTED_NOT_STACKING        = 211,
     SPELL_AURA_MOD_RANGED_ATTACK_POWER_OF_STAT_PERCENT      = 212,
     SPELL_AURA_MOD_RAGE_FROM_DAMAGE_DEALT                   = 213,
@@ -331,6 +334,7 @@ enum AuraType
     SPELL_AURA_MOD_ATTACK_POWER_OF_STAT_PERCENT             = 268,
     SPELL_AURA_MOD_IGNORE_TARGET_RESIST_MODIFIERS           = 269,  // Sanctified Wrath, reduces effectiveness of a target's damage reduction effects like Shield Wall
     SPELL_AURA_MOD_ABILITY_IGNORE_TARGET_RESIST             = 270,  // Possibly need swap vs 195 aura used only in 1 spell Chaos Bolt Passive
+    SPELL_AURA_MOD_IGNORE_TARGET_RESIST                     = SPELL_AURA_MOD_ABILITY_IGNORE_TARGET_RESIST,
     SPELL_AURA_MOD_DAMAGE_FROM_CASTER                       = 271,
     SPELL_AURA_IGNORE_MELEE_RESET                           = 272,
     SPELL_AURA_X_RAY                                        = 273,
@@ -377,7 +381,15 @@ enum AuraType
     SPELL_AURA_PREVENT_RESURRECTION                         = 314,
     SPELL_AURA_UNDERWATER_WALKING                           = 315,
     SPELL_AURA_PERIODIC_HASTE                               = 316,
-    TOTAL_AURAS                                             = 317
+    SPELL_AURA_CUSTOM_CAST_SPELL                            = 317,
+    SPELL_AURA_CUSTOM_CAST_MJ                               = 318,
+    SPELL_AURA_CUSTOM_CAST_LL                               = 319,
+    SPELL_AURA_CUSTOM_CAST_ZL                               = 320,
+    SPELL_AURA_CUSTOM_CAST_JS                               = 321,
+    SPELL_AURA_CUSTOM_CAST_NL                               = 322,
+    SPELL_AURA_CUSTOM_CAST_WL                               = 323,
+    SPELL_AURA_CUSTOM_CAST_FS                               = 324,
+    TOTAL_AURAS                                             = 325
 };
 
 enum AuraObjectType

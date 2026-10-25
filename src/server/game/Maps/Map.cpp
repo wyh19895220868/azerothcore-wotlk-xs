@@ -228,7 +228,12 @@ void Map::LoadAllGrids()
 void Map::LoadGridsInRange(Position const& center, float radius)
 {
     if (_mapGridManager.IsGridsFullyLoaded())
+    {
+        LOG_INFO("visdiag", "LoadGridsInRange EARLY-RETURN map={} loaded={} created={}", GetId(), GetLoadedGridsCount(), GetCreatedGridsCount());
         return;
+    }
+
+    LOG_INFO("visdiag", "LoadGridsInRange map={} loaded={} created={} center={:.1f},{:.1f}", GetId(), GetLoadedGridsCount(), GetCreatedGridsCount(), center.GetPositionX(), center.GetPositionY());
 
     float const x = center.GetPositionX();
     float const y = center.GetPositionY();
@@ -626,6 +631,9 @@ void Map::RemoveObjectFromMapUpdateList(WorldObject* obj)
         return;
 
     UpdatableMapObject* mapUpdatableObject = dynamic_cast<UpdatableMapObject*>(obj);
+    if (!mapUpdatableObject)
+        return;
+
     if (mapUpdatableObject->GetUpdateState() == UpdatableMapObject::UpdateState::PendingAdd)
         _pendingAddUpdatableObjectList.erase(obj);
     else if (mapUpdatableObject->GetUpdateState() == UpdatableMapObject::UpdateState::Updating)
@@ -699,9 +707,12 @@ void Map::HandleDelayedVisibility()
 {
     if (i_objectsForDelayedVisibility.empty())
         return;
-    for (std::unordered_set<Unit*>::iterator itr = i_objectsForDelayedVisibility.begin(); itr != i_objectsForDelayedVisibility.end(); ++itr)
-        (*itr)->ExecuteDelayedUnitRelocationEvent();
-    i_objectsForDelayedVisibility.clear();
+    while (!i_objectsForDelayedVisibility.empty())
+    {
+        Unit* unit = *i_objectsForDelayedVisibility.begin();
+        i_objectsForDelayedVisibility.erase(unit);
+        unit->ExecuteDelayedUnitRelocationEvent();
+    }
 }
 
 struct ResetNotifier
@@ -1662,7 +1673,7 @@ void Map::SendInitSelf(Player* player)
     player->SendDirectMessage(&packet);
 
     // send to player his own auras (this is needed here for timely initialization of some fields on client)
-    player->GetAurasForTarget(player, true);
+    player->GetAurasForTarget(player);
 
     // clean buffers for further work
     packet.clear();
@@ -2082,6 +2093,9 @@ bool InstanceMap::AddPlayerToMap(Player* player)
 
     if (IsDungeon())
     {
+        if (GetMapRank() == 0)
+            SetMapRank(player->GetMapRank());
+
         Group* group = player->GetGroup();
 
         // get an instance save for the map
@@ -2837,19 +2851,20 @@ void Map::ProcessCreatureRespawn(ObjectGuid::LowType spawnId)
 
     // Compat-mode creatures handle their own respawn in-place — don't interfere.
     // Clean up the stale respawn time entry since the legacy system manages these.
-    SpawnGroupTemplateData const* groupData = sObjectMgr->GetSpawnGroupData(data->spawnGroupId);
-    if (!groupData || (groupData->flags & SPAWNGROUP_FLAG_COMPATIBILITY_MODE))
+    if (data->spawnGroupId)
     {
-        RemoveCreatureRespawnTime(spawnId);
-        return;
-    }
+        SpawnGroupTemplateData const* groupData = sObjectMgr->GetSpawnGroupData(data->spawnGroupId);
+        if (!groupData || (groupData->flags & SPAWNGROUP_FLAG_COMPATIBILITY_MODE))
+        {
+            RemoveCreatureRespawnTime(spawnId);
+            return;
+        }
 
-    // Don't respawn if the spawn group is not active
-    if (!IsSpawnGroupActive(data->spawnGroupId))
-    {
-        // Re-queue — will be checked again next ProcessRespawns() tick
-        _respawnQueue.insert({GameTime::GetGameTime().count() + 5, SPAWN_TYPE_CREATURE, spawnId});
-        return;
+        if (!IsSpawnGroupActive(data->spawnGroupId))
+        {
+            _respawnQueue.insert({GameTime::GetGameTime().count() + 5, SPAWN_TYPE_CREATURE, spawnId});
+            return;
+        }
     }
 
     // Skip if grid isn't loaded (will be handled in grid loader)

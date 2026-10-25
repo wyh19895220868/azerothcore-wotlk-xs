@@ -291,6 +291,7 @@ class WorldPacket;
 
 class AchievementMgr
 {
+    friend class Player;
 public:
     AchievementMgr(Player* player);
     ~AchievementMgr();
@@ -314,6 +315,7 @@ public:
 
     void RemoveCriteriaProgress(AchievementCriteriaEntry const* entry);
     CriteriaProgress* GetCriteriaProgress(AchievementCriteriaEntry const* entry);
+    [[nodiscard]] CriteriaProgressMap GetCompletedCriteriaProgress() const { return _criteriaProgress; }
     CompletedAchievementMap const& GetCompletedAchievements();
 
 private:

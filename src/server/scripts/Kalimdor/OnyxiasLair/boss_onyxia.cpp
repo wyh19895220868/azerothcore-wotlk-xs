@@ -491,7 +491,7 @@ struct boss_onyxia : public BossAI
             {
                 // Onyxia as original caster makes her the summoner, so the guard joins her summons and engages in JustSummoned
                 if (Creature* trigger = ObjectAccessor::GetCreature(*me, _lairGuardTriggerGUID))
-                    trigger->CastSpell(trigger, SPELL_SUMMON_LAIR_GUARD, CastSpellExtraArgs(true).SetOriginalCaster(me->GetGUID()));
+                    trigger->CastSpell(trigger, SPELL_SUMMON_LAIR_GUARD, true, nullptr, nullptr, me->GetGUID());
 
                 events.Repeat(46s);
                 break;

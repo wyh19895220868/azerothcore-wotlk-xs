@@ -248,6 +248,12 @@ public:
     void   SetCleaningFlags(uint32 flags) override { _cleaningFlags = flags; }
     void   ResetEventSeasonalQuests(uint16 event_id) override;
     void   ReloadRBAC() override;
+    [[nodiscard]] SessionMap const& GetAllSessions() const override;
+    void SendServerMessage(ServerMessageType messageID, std::string stringParam = "", Player* player = nullptr) override;
+    void setWorldState(uint32 index, uint64 value) override;
+    [[nodiscard]] uint64 getWorldState(uint32 index) const override;
+    void SendGlobalMessage(WorldPacket const* packet, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL) override;
+    void SendGlobalGMMessage(WorldPacket const* packet, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL) override;
 
     [[nodiscard]] std::string const& GetRealmName() const override { return _realmName; } // pussywizard
     void SetRealmName(std::string name) override { _realmName = name; } // pussywizard

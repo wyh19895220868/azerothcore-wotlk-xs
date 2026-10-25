@@ -27,12 +27,12 @@ function(CopyApplicationConfig projectName appName)
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_APP_PATH}/${appName}.conf.dist" "${CMAKE_BINARY_DIR}/bin/$(ConfigurationName)/configs")
     elseif(MINGW)
-      add_custom_command(TARGET ${servertype}
+      add_custom_command(TARGET ${projectName}
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin/configs")
-      add_custom_command(TARGET ${servertype}
+      add_custom_command(TARGET ${projectName}
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_APP_PATH}/${appName}.conf.dist ${CMAKE_BINARY_DIR}/bin/configs")
+        COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_APP_PATH}/${appName}.conf.dist" "${CMAKE_BINARY_DIR}/bin/configs")
     endif()
   endif()
 
@@ -55,12 +55,12 @@ function(CopyToolConfig projectName appName)
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_APP_PATH}/${appName}.conf.dist" "${CMAKE_BINARY_DIR}/bin/$(ConfigurationName)/configs")
     elseif(MINGW)
-      add_custom_command(TARGET ${servertype}
+      add_custom_command(TARGET ${projectName}
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin/configs")
-      add_custom_command(TARGET ${servertype}
+      add_custom_command(TARGET ${projectName}
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_APP_PATH}/${appName}.conf.dist ${CMAKE_BINARY_DIR}/bin/configs")
+        COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_APP_PATH}/${appName}.conf.dist" "${CMAKE_BINARY_DIR}/bin/configs")
     endif()
   endif()
 
@@ -93,7 +93,7 @@ function(CopyModuleConfig configDir)
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin/${postPath}")
       add_custom_command(TARGET modules
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy "${configDir} ${CMAKE_BINARY_DIR}/bin/${postPath}")
+        COMMAND ${CMAKE_COMMAND} -E copy "${configDir}" "${CMAKE_BINARY_DIR}/bin/${postPath}")
     endif()
   endif()
 

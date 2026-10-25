@@ -193,7 +193,7 @@ void KillRewarder::_RewardReputation(Player* player)
 {
     // 4.3. Give reputation (player must not be on BG).
     // Even dead players and corpses are rewarded.
-    player->RewardReputation(_victim);
+    player->RewardReputation(_victim, 1.0f);
 }
 
 void KillRewarder::_RewardKillCredit(Player* player)

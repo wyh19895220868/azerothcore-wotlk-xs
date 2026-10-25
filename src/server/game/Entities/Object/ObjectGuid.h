@@ -153,6 +153,9 @@ class ObjectGuid
                    : LowType(_guid & UI64LIT(0x00000000FFFFFFFF));
         }
 
+        // Legacy custom-script compatibility.
+        [[nodiscard]] LowType ToGuidLow() const { return GetCounter(); }
+
         static LowType GetMaxCounter(HighGuid high)
         {
             return HasEntry(high)

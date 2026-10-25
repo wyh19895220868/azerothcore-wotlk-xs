@@ -165,7 +165,7 @@ WorldPacket const* WorldPackets::Guild::GuildPermissionsQueryResults::Write()
 {
     _worldPacket << uint32(RankID);
     _worldPacket << int32(Flags);
-    _worldPacket << int32(WithdrawGoldLimit);
+    _worldPacket << uint64(WithdrawGoldLimit);
     _worldPacket << int8(NumTabs);
 
     for (GuildRankTabPermissions const& tab : Tab)
@@ -194,7 +194,7 @@ void WorldPackets::Guild::GuildSetRankPermissions::Read()
 ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::Guild::GuildRankData const& rankData)
 {
     data << uint32(rankData.Flags);
-    data << uint32(rankData.WithdrawGoldLimit);
+    data << uint64(rankData.WithdrawGoldLimit);
 
     for (uint8 i = 0; i < GUILD_BANK_MAX_TABS; i++)
     {
@@ -406,7 +406,7 @@ WorldPacket const* WorldPackets::Guild::GuildBankLogQueryResults::Write()
                 _worldPacket << uint8(logEntry.OtherTab);
                 break;
             default:
-                _worldPacket << uint32(logEntry.Money);
+                _worldPacket << uint64(logEntry.Money);
                 break;
         }
 

@@ -1242,7 +1242,7 @@ struct boss_yoggsaron : public ScriptedAI
         else if (param == ACTION_YOGG_SARON_START_P3)
         {
             me->SetHealth(me->GetMaxHealth() * 0.3f);
-            me->LowerPlayerDamageReq(me->GetMaxHealth() * 0.7f);
+            me->LowerPlayerDamageReq(AsInt64(me->GetMaxHealth() * 0.7f));
 
             me->RemoveAura(SPELL_SHADOW_BARRIER);
 
@@ -1657,7 +1657,7 @@ struct boss_yoggsaron_crusher_tentacle : public ScriptedAI
         if (who && damagetype == DIRECT_DAMAGE)
         {
             DoResetThreatList();
-            me->AddThreat(who, 100000);
+            me->AddThreat(who, 100000.0);
             AttackStart(who);
         }
     }
@@ -2713,7 +2713,7 @@ class spell_yogg_saron_insane_periodic_trigger : public SpellScript
     {
         std::list<WorldObject*> tmplist;
         for (std::list<WorldObject*>::iterator itr = targets.begin(); itr != targets.end(); ++itr)
-            if ((*itr)->IsPlayer() && !(*itr)->ToPlayer()->HasAOECharmAura() && !(*itr)->ToPlayer()->HasAura(SPELL_SANITY))
+            if ((*itr)->IsPlayer() && !(*itr)->ToPlayer()->HasAuraType(SPELL_AURA_AOE_CHARM) && !(*itr)->ToPlayer()->HasAura(SPELL_SANITY))
                 tmplist.push_back(*itr);
 
         targets.clear();

@@ -1,3 +1,4 @@
+#include "MoneyMath.h"
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
@@ -27,6 +28,7 @@
 #include "SpellMgr.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
+#include "../../scripts/Custom/CustomVendorMgr/CustomVendorMgr.h"
 #include <cmath>
 
 #include "ItemPackets.h"
@@ -339,6 +341,11 @@ bool ItemTemplate::HasStat(ItemModType stat) const
     return false;
 }
 
+void ItemTemplate::InitializeQueryData()
+{
+    // Item query packets are built per session so localized names and descriptions are preserved.
+}
+
 bool ItemTemplate::HasSpellPowerStat() const
 {
     bool invalid = false;
@@ -423,8 +430,11 @@ void WorldSession::HandleItemQuerySingleOpcode(WorldPacket& recvData)
         queryData << pProto->Quality;
         queryData << pProto->Flags;
         queryData << pProto->Flags2;
-        queryData << pProto->BuyPrice;
-        queryData << pProto->SellPrice;
+        // 3.3.5a client reads both prices as uint32 in SMSG_ITEM_QUERY_SINGLE_RESPONSE.
+        // ItemTemplate stores them as uint64 for the custom big-number economy, so
+        // narrow them here or every field after BuyPrice is shifted by 8 bytes.
+        queryData << uint32(pProto->BuyPrice);
+        queryData << uint32(pProto->SellPrice);
         queryData << pProto->InventoryType;
         queryData << pProto->AllowableClass;
         queryData << pProto->AllowableRace;
@@ -652,8 +662,14 @@ void WorldSession::HandleSellItemOpcode(WorldPackets::Item::SellItem& packet)
         {
             if (pProto->SellPrice > 0)
             {
-                uint32 money = pProto->SellPrice * packet.Count;
-                if (_player->GetMoney() >= MAX_MONEY_AMOUNT - money)               // prevent exceeding gold limit
+                Item* soldItem = pItem;
+                if (packet.Count && pProto->SellPrice > UINT64_MAX / packet.Count)
+                {
+                    _player->SendEquipError(EQUIP_ERR_TOO_MUCH_GOLD, nullptr, nullptr);
+                    return;
+                }
+                uint64 money = pProto->SellPrice * packet.Count;
+                if (money > MAX_MONEY_AMOUNT - _player->GetMoney())               // prevent exceeding gold limit
                 {
                     _player->SendEquipError(EQUIP_ERR_TOO_MUCH_GOLD, nullptr, nullptr);
                     _player->SendSellError(SELL_ERR_UNK, creature, packet.ItemGuid, 0);
@@ -720,6 +736,7 @@ void WorldSession::HandleSellItemOpcode(WorldPackets::Item::SellItem& packet)
                         pItem->SendUpdateToPlayer(_player);
                     pItem->SetState(ITEM_CHANGED, _player);
 
+                    soldItem = pNewItem;
                     _player->AddItemToBuyBackSlot(pNewItem, money);
                     if (_player->IsInWorld())
                         pNewItem->SendUpdateToPlayer(_player);
@@ -733,8 +750,9 @@ void WorldSession::HandleSellItemOpcode(WorldPackets::Item::SellItem& packet)
                     _player->UpdateTitansGrip();
                 }
 
-                _player->ModifyMoney(money);
+                _player->CreditMoney(money);
                 _player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_MONEY_FROM_VENDORS, money);
+                sScriptMgr->OnPlayerSellItem(_player, soldItem, packet.Count);
             }
             else
                 _player->SendSellError(SELL_ERR_CANT_SELL_ITEM, creature, packet.ItemGuid, 0);
@@ -762,7 +780,7 @@ void WorldSession::HandleBuybackItem(WorldPackets::Item::BuybackItem& packet)
     Item* pItem = _player->GetItemFromBuyBackSlot(packet.Slot);
     if (pItem)
     {
-        uint32 price = _player->GetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE_1 + packet.Slot - BUYBACK_SLOT_START);
+        uint64 price = _player->GetUInt64Value(PLAYER_FIELD_BUYBACK_PRICE_1 + 2 * (packet.Slot - BUYBACK_SLOT_START));
         if (!_player->HasEnoughMoney(price))
         {
             _player->SendBuyError(BUY_ERR_NOT_ENOUGHT_MONEY, creature, pItem->GetEntry(), 0);
@@ -782,7 +800,7 @@ void WorldSession::HandleBuybackItem(WorldPackets::Item::BuybackItem& packet)
                 CharacterDatabase.Execute(stmt);
             }
 
-            _player->ModifyMoney(-(int32)price);
+            _player->DebitMoney(price);
             _player->RemoveItemFromBuyBackSlot(packet.Slot, false);
             _player->ItemAddedQuestCheck(pItem->GetEntry(), pItem->GetCount());
             _player->StoreItem(dest, pItem, true);
@@ -934,12 +952,14 @@ void WorldSession::SendListInventory(ObjectGuid vendorGuid, uint32 vendorEntry)
                 }
 
                 // reputation discount
-                int32 price = item->IsGoldRequired(itemTemplate) ? uint32(std::floor(itemTemplate->BuyPrice * discountMod)) : 0;
+                uint64 price = item->IsGoldRequired(itemTemplate) ? MoneyMath::Scale(itemTemplate->BuyPrice, discountMod) : 0;
 
                 data << uint32(slot + 1);       // client expects counting to start at 1
                 data << uint32(item->item);
                 data << uint32(itemTemplate->DisplayInfoID);
                 data << int32(leftInStock);
+                // Client (OnListInventory) reads price/durability/buyCount/cost as
+                // uint32; sending uint64 shifted every following row by 4 bytes.
                 data << uint32(price);
                 data << uint32(itemTemplate->MaxDurability);
                 data << uint32(itemTemplate->BuyCount);
@@ -954,6 +974,93 @@ void WorldSession::SendListInventory(ObjectGuid vendorGuid, uint32 vendorEntry)
     }
 
     if (count == 0)
+    {
+        data << uint8(0);
+        SendPacket(&data);
+        return;
+    }
+
+    data.put<uint8>(countPos, count);
+    SendPacket(&data);
+}
+
+void WorldSession::SendCustomListInventory(ObjectGuid vendorGuid, uint32 vendorEntry)
+{
+    Creature* vendor = GetPlayer()->GetNPCIfCanInteractWith(vendorGuid, UNIT_NPC_FLAG_VENDOR);
+    if (!vendor)
+    {
+        _player->SendSellError(SELL_ERR_CANT_FIND_VENDOR, nullptr, ObjectGuid::Empty, 0);
+        return;
+    }
+
+    uint32 actualVendorEntry = vendorEntry ? vendorEntry : vendor->GetEntry();
+    SetCurrentVendor(actualVendorEntry);
+
+    if (GetPlayer()->HasUnitState(UNIT_STATE_DIED))
+        GetPlayer()->RemoveAurasByType(SPELL_AURA_FEIGN_DEATH);
+
+    if (uint32 pause = vendor->GetMovementTemplate().GetInteractionPauseTimer())
+        vendor->PauseMovement(pause);
+    vendor->SetHomePosition(vendor->GetPosition());
+
+    CustomVendorItemVect const* customItems = sCustomVendorMgr->GetCustomVendorItemList(actualVendorEntry);
+    if (!customItems || customItems->empty())
+    {
+        WorldPacket data(SMSG_LIST_INVENTORY, 8 + 1 + 1);
+        data << vendorGuid;
+        data << uint8(0);
+        data << uint8(0);
+        SendPacket(&data);
+        return;
+    }
+
+    uint8 itemCount = customItems->size();
+    uint8 count = 0;
+    WorldPacket data(SMSG_LIST_INVENTORY, 8 + 1 + itemCount * 8 * 4);
+    data << vendorGuid;
+    std::size_t countPos = data.wpos();
+    data << uint8(count);
+
+    float discountMod = _player->GetReputationPriceDiscount(vendor);
+    for (uint8 slot = 0; slot < itemCount; ++slot)
+    {
+        CustomVendorItem const& item = (*customItems)[slot];
+        ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(item.item);
+        if (!itemTemplate)
+            continue;
+
+        if (!(itemTemplate->AllowableClass & _player->getClassMask()) && itemTemplate->Bonding == BIND_WHEN_PICKED_UP
+            && !_player->IsGameMaster())
+            continue;
+
+        if (!_player->IsGameMaster()
+            && ((itemTemplate->HasFlag2(ITEM_FLAG2_FACTION_HORDE) && _player->GetTeamId() == TEAM_ALLIANCE)
+                || (itemTemplate->HasFlag2(ITEM_FLAG2_FACTION_ALLIANCE) && _player->GetTeamId() == TEAM_HORDE)))
+            continue;
+
+        uint32 leftInStock = sCustomVendorMgr->GetCustomVendorCurrentCount(
+            actualVendorEntry, item.item, item.maxcount, item.incrtime);
+        if (!_player->IsGameMaster() && !leftInStock)
+            continue;
+
+        uint64 price = item.ExtendedCost ? 0 : MoneyMath::Scale(itemTemplate->BuyPrice, discountMod);
+        if (item.NTempId)
+            price = 0;
+
+        data << uint32(slot + 1);
+        data << uint32(item.item);
+        data << uint32(itemTemplate->DisplayInfoID);
+        data << int32(leftInStock);
+        data << uint32(price);
+        data << uint32(itemTemplate->MaxDurability);
+        data << uint32(itemTemplate->BuyCount);
+        data << uint32(item.NTempId ? 0 : item.ExtendedCost);
+
+        if (++count >= MAX_VENDOR_ITEMS)
+            break;
+    }
+
+    if (!count)
     {
         data << uint8(0);
         SendPacket(&data);

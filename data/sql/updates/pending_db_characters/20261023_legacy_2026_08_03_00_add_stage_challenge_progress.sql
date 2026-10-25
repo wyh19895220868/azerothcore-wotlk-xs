@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS `_副本闯关进度` (
+  `角色GUID` int(10) unsigned NOT NULL,
+  `最高已解锁关卡` int(10) unsigned NOT NULL DEFAULT '1',
+  `最高完成章节` int(10) unsigned NOT NULL DEFAULT '0',
+  `更新时间` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`角色GUID`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='章节制副本闯关角色进度';

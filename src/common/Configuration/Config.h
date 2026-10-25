@@ -19,6 +19,7 @@
 #define CONFIG_H
 
 #include <cstdint>
+#include <string>
 #include <stdexcept>
 #include <string_view>
 #include <vector>
@@ -67,6 +68,10 @@ public:
 
     template<class T>
     T GetOption(std::string const& name, T const& def, bool showLogs = true) const;
+    bool GetBoolDefault(std::string const& name, bool def) const;
+    int32_t GetIntDefault(std::string const& name, int32_t def) const;
+    float GetFloatDefault(std::string const& name, float def) const;
+    std::string GetStringDefault(std::string const& name, std::string const& def) const;
 
     bool isDryRun() { return dryRun; }
     void setDryRun(bool mode) { dryRun = mode; }

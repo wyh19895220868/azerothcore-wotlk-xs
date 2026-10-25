@@ -290,8 +290,9 @@ int main(int argc, char** argv)
     // Declared right after dbHandle so it runs after every other shutdown step; a crash before this leaves EndTime NULL
     std::shared_ptr<void> sessionEndHandle(nullptr, [](void*) { sWorld->SaveSessionEnd(true); });
 
-    // set server offline (not connectable)
-    LoginDatabase.DirectExecute("UPDATE realmlist SET flag = (flag & ~{}) | {} WHERE id = '{}'", REALM_FLAG_OFFLINE, REALM_FLAG_VERSION_MISMATCH, realm.Id.Realm);
+    // A dry run exits before clearing the loading flag; preserve the realm's current state.
+    if (!sConfigMgr->isDryRun())
+        LoginDatabase.DirectExecute("UPDATE realmlist SET flag = (flag & ~{}) | {} WHERE id = '{}'", REALM_FLAG_OFFLINE, REALM_FLAG_VERSION_MISMATCH, realm.Id.Realm);
 
     LoadRealmInfo(*ioContext);
 

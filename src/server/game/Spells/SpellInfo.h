@@ -488,6 +488,7 @@ public:
     bool IsPositiveEffect(uint8 effIndex) const;
     bool IsChanneled() const;
     [[nodiscard]] bool IsActionAllowedChannel() const;
+    bool CheckElixirStacking(Unit const* caster) const;
     bool NeedsComboPoints() const;
     bool IsBreakingStealth() const;
     bool IsRangedWeaponSpell() const;

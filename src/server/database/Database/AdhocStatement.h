@@ -20,6 +20,7 @@
 
 #include "DatabaseEnvFwd.h"
 #include "Define.h"
+#include "QueryResult.h"
 #include "SQLOperation.h"
 
 /*! Raw, ad-hoc query. */

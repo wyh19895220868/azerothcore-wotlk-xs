@@ -24,6 +24,14 @@
 #include "Spell.h"
 #include "Transport.h"
 
+static void MarkUnreachableTarget(Creature* creature, ObjectGuid const& target)
+{
+    if (creature->GetCannotReachTarget() != target)
+        creature->SetCannotReachTarget(false);
+    creature->AtCannotReachTarget = target;
+    creature->SetCannotReachTarget(true);
+}
+
 static bool IsMutualChase(Unit* owner, Unit* target)
 {
     if (target->GetMotionMaster()->GetCurrentMovementGeneratorType() != CHASE_MOTION_TYPE)
@@ -82,6 +90,11 @@ void ChaseMovementGenerator<T>::SetNewTarget(Unit* target)
 template<class T>
 void ChaseMovementGenerator<T>::DistanceYourself(T* owner, float distance)
 {
+    // Reached from SmartAI outside DoUpdate, so the target-validity check there
+    // has not run. The target is cleared when it leaves the world.
+    if (!GetTarget())
+        return;
+
     // make a new path if we have to...
     if (!i_path)
         i_path = std::make_unique<PathGenerator>(owner);
@@ -174,7 +187,7 @@ bool ChaseMovementGenerator<T>::DispatchSplineToPosition(T* owner, float x, floa
         _fallbackPositioning = false;
         if (cOwner)
         {
-            cOwner->SetCannotReachTarget(GetTarget()->GetGUID());
+            MarkUnreachableTarget(cOwner, GetTarget()->GetGUID());
 
             if (cOwner->IsPet() || cOwner->IsControlledByPlayer())
                 cOwner->AttackStop();
@@ -332,7 +345,7 @@ bool ChaseMovementGenerator<T>::DoUpdate(T* owner, uint32 time_diff)
             // can we get to the target?
             if (cOwner && !target->isInAccessiblePlaceFor(cOwner))
             {
-                cOwner->SetCannotReachTarget(target->GetGUID());
+                MarkUnreachableTarget(cOwner, target->GetGUID());
                 cOwner->StopMoving();
                 i_path = nullptr;
                 return true;
@@ -458,7 +471,8 @@ void ChaseMovementGenerator<T>::MovementInform(T* owner)
         {
             // Pass back the GUIDLow of the target. If it is pet's owner then PetAI will handle
             if (CreatureAI* AI = owner->ToCreature()->AI())
-                AI->MovementInform(CHASE_MOTION_TYPE, GetTarget()->GetGUID().GetCounter());
+                if (Unit* target = GetTarget())
+                    AI->MovementInform(CHASE_MOTION_TYPE, target->GetGUID().GetCounter());
             break;
         }
         case CHASE_MODE_DISTANCING:
@@ -775,7 +789,8 @@ void FollowMovementGenerator<T>::MovementInform(T* owner)
 
     // Pass back the GUIDLow of the target. If it is pet's owner then PetAI will handle
     if (CreatureAI* AI = owner->ToCreature()->AI())
-        AI->MovementInform(FOLLOW_MOTION_TYPE, GetTarget()->GetGUID().GetCounter());
+        if (Unit* target = GetTarget())
+            AI->MovementInform(FOLLOW_MOTION_TYPE, target->GetGUID().GetCounter());
 }
 
 //-----------------------------------------------//

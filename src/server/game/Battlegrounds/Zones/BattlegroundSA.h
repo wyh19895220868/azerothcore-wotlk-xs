@@ -432,6 +432,7 @@ class AC_GAME_API BattlegroundSA : public Battleground
 public:
     BattlegroundSA();
     ~BattlegroundSA() override;
+    uint32 KillStore[TEAM_NEUTRAL] {};
 
     /**
      * \brief Called every time for update battle data

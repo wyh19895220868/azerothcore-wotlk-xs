@@ -104,6 +104,11 @@ void ScriptMgr::OnLoadSpellCustomAttr(SpellInfo* spell)
     CALL_ENABLED_HOOKS(GlobalScript, GLOBALHOOK_ON_LOAD_SPELL_CUSTOM_ATTR, script->OnLoadSpellCustomAttr(spell));
 }
 
+void ScriptMgr::OnAfterCreatureLootGenerated(Player* player, Creature* creature, Loot* loot)
+{
+    CALL_ENABLED_HOOKS(GlobalScript, GLOBALHOOK_ON_AFTER_CREATURE_LOOT_GENERATED, script->OnAfterCreatureLootGenerated(player, creature, loot));
+}
+
 bool ScriptMgr::OnAllowedForPlayerLootCheck(Player const* player, ObjectGuid source)
 {
     CALL_ENABLED_BOOLEAN_HOOKS(GlobalScript, GLOBALHOOK_ON_ALLOWED_FOR_PLAYER_LOOT_CHECK, script->OnAllowedForPlayerLootCheck(player, source));

@@ -137,7 +137,10 @@ public:
 
                         if (!meleeTargets.empty())
                         {
-                            meleeTargets.sort(Acore::HealthOrderPred(false));
+                            meleeTargets.sort([](Unit const* left, Unit const* right)
+                            {
+                                return left->GetHealth() > right->GetHealth();
+                            });
                             hatefulTarget = meleeTargets.front();
                         }
 

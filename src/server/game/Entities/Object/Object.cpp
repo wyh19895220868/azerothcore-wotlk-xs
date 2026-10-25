@@ -50,6 +50,7 @@
 #include "Totem.h"
 #include "Transport.h"
 #include "UpdateData.h"
+#include <cmath>
 #include "UpdateFieldFlags.h"
 #include "UpdateMask.h"
 #include "Util.h"
@@ -833,6 +834,16 @@ void Object::ApplyModPositiveFloatValue(uint16 index, float  val, bool apply)
     SetFloatValue(index, cur);
 }
 
+void Object::ApplyPercentModFloatValue(uint16 index, float val, bool apply)
+{
+    if (val == -100.0f)
+        val = -99.99f;
+
+    float value = GetFloatValue(index);
+    value *= (apply ? (100.0f + val) / 100.0f : 100.0f / (100.0f + val));
+    SetFloatValue(index, value);
+}
+
 void Object::SetFlag(uint16 index, uint32 newFlag)
 {
     ASSERT(index < m_valuesCount || PrintIndexError(index, true));
@@ -1110,6 +1121,9 @@ void WorldObject::setActive(bool on)
 
 float WorldObject::GetVisibilityOverrideDistance() const
 {
+    if (IsPlayer() && _playerVisibilityDistanceOverride > 0.0f)
+        return _playerVisibilityDistanceOverride;
+
     ASSERT(_visibilityDistanceOverrideType < VisibilityDistanceType::Max);
     return VisibilityDistances[AsUnderlyingType(_visibilityDistanceOverrideType)];
 }
@@ -1132,6 +1146,35 @@ void WorldObject::SetVisibilityDistanceOverride(VisibilityDistanceType type)
 
     // Finally, add to new visibility override containers
     AddToMapVisibilityOverrideContainers();
+}
+
+void WorldObject::SetVisibilityDistanceOverride(float distance)
+{
+    if (!IsPlayer())
+        return;
+
+    if (!(distance > 0.0f) || !std::isfinite(distance))
+    {
+        ResetVisibilityDistanceOverride();
+        return;
+    }
+
+    if (_playerVisibilityDistanceOverride == distance)
+        return;
+
+    _playerVisibilityDistanceOverride = distance;
+    if (IsInWorld())
+        UpdateObjectVisibility();
+}
+
+void WorldObject::ResetVisibilityDistanceOverride()
+{
+    if (!IsPlayer() || _playerVisibilityDistanceOverride == 0.0f)
+        return;
+
+    _playerVisibilityDistanceOverride = 0.0f;
+    if (IsInWorld())
+        UpdateObjectVisibility();
 }
 
 void WorldObject::RemoveFromMapVisibilityOverrideContainers()
@@ -1689,11 +1732,11 @@ float WorldObject::GetGridActivationRange() const
 {
     if (ToPlayer())
     {
-        if (ToPlayer()->GetCinematicMgr().IsOnCinematic())
+        if (ToPlayer()->GetCinematicMgr()->IsOnCinematic())
         {
             return DEFAULT_VISIBILITY_INSTANCE;
         }
-        return IsInWintergrasp() ? VISIBILITY_DIST_WINTERGRASP : GetMap()->GetVisibilityRange();
+        return IsInWintergrasp() ? VISIBILITY_DIST_WINTERGRASP : GetVisibilityRange();
     }
     else if (ToCreature())
     {
@@ -1709,6 +1752,9 @@ float WorldObject::GetGridActivationRange() const
 
 float WorldObject::GetVisibilityRange() const
 {
+    if (IsPlayer() && _playerVisibilityDistanceOverride > 0.0f)
+        return _playerVisibilityDistanceOverride;
+
     if (IsCreature() && IsVisibilityOverridden())
         return GetVisibilityOverrideDistance();
     else if (IsGameObject())
@@ -1740,15 +1786,15 @@ float WorldObject::GetSightRange(WorldObject const* target) const
                         return VISIBILITY_DIST_WINTERGRASP;
                     else if (target->IsVisibilityOverridden())
                         return target->GetVisibilityOverrideDistance();
-                    else if (ToPlayer()->GetCinematicMgr().IsOnCinematic())
+                    else if (ToPlayer()->GetCinematicMgr()->IsOnCinematic())
                         return DEFAULT_VISIBILITY_INSTANCE;
                     else
-                        return GetMap()->GetVisibilityRange();
+                        return GetVisibilityRange();
                 }
 
-                return IsInWintergrasp() && target->IsInWintergrasp() ? VISIBILITY_DIST_WINTERGRASP : GetMap()->GetVisibilityRange();
+                return IsInWintergrasp() && target->IsInWintergrasp() ? VISIBILITY_DIST_WINTERGRASP : GetVisibilityRange();
             }
-            return IsInWintergrasp() ? VISIBILITY_DIST_WINTERGRASP : GetMap()->GetVisibilityRange();
+            return IsInWintergrasp() ? VISIBILITY_DIST_WINTERGRASP : GetVisibilityRange();
         }
         else if (ToCreature())
             return ToCreature()->m_SightDistance;
@@ -3300,7 +3346,48 @@ SpellCastResult WorldObject::CastSpell(CastSpellTargetArg const& targets, SpellI
     if (!originalCaster && args.TriggeringAura)
         originalCaster = args.TriggeringAura->GetCasterGUID();
 
-    Spell* spell = new Spell(this, info, args.TriggerFlags, originalCaster);
+    Unit* caster = ToUnit();
+    if (IsGameObject())
+    {
+        // The legacy wide-number spell engine needs a Unit caster. Use a world
+        // trigger at the GO, so unowned traps work and owned casts keep their origin.
+        Creature* trigger = SummonTrigger(GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation(),
+            info->CalcCastTime() + std::max(info->GetDuration(), 0) + 2000);
+        if (!trigger)
+            return SPELL_FAILED_ERROR;
+
+        Unit* owner = GetOwnerUnit();
+        if (owner)
+        {
+            trigger->SetLevel(owner->GetLevel(), false);
+            trigger->SetFaction(owner->GetFaction());
+            trigger->SetOwnerGUID(owner->GetGUID());
+            if (owner->HasUnitFlag(UNIT_FLAG_PLAYER_CONTROLLED))
+                trigger->SetUnitFlag(UNIT_FLAG_PLAYER_CONTROLLED);
+            if (owner->IsFFAPvP())
+            {
+                sScriptMgr->OnFfaPvpStateUpdate(trigger, true);
+                trigger->SetByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_FFA_PVP);
+            }
+            trigger->SetImmuneToNPC(false);
+        }
+        else
+        {
+            GameObjectTemplateAddon const* addon = ToGameObject()->GetTemplateAddon();
+            trigger->SetFaction(addon && addon->faction ? addon->faction : 14);
+        }
+
+        Unit* target = targets.Targets->GetUnitTarget();
+        if (target)
+            trigger->SetInFront(target);
+        if (!originalCaster)
+            originalCaster = owner ? owner->GetGUID() : (target ? target->GetGUID() : trigger->GetGUID());
+        caster = trigger;
+    }
+    if (!caster)
+        return SPELL_FAILED_BAD_TARGETS;
+
+    Spell* spell = new Spell(caster, info, args.TriggerFlags, originalCaster);
     for (auto const& kv : args.SpellValueOverrides)
         spell->SetSpellValue(kv.first, kv.second);
     spell->m_CastItem = args.CastItem;
@@ -3653,7 +3740,7 @@ SpellMissInfo WorldObject::MagicSpellHitResult(Unit* victim, SpellInfo const* sp
         }
 
         if (spellInfo->HasAttribute(SPELL_ATTR0_CU_BINARY_SPELL) && (spellInfo->GetSchoolMask() & (SPELL_SCHOOL_MASK_NORMAL | SPELL_SCHOOL_MASK_HOLY)) == 0)
-            tmp += int32(Unit::GetEffectiveResistChance(unitCaster, spellInfo->GetSchoolMask(), victim, spellInfo) * 10000.0f);
+            tmp += int32(Unit::GetEffectiveResistChance(unitCaster, spellInfo->GetSchoolMask(), victim) * 10000.0f);
     }
 
     // Roll chance
@@ -3746,7 +3833,7 @@ SpellMissInfo WorldObject::SpellHitResult(Unit* victim, Spell const* spell, bool
     SpellInfo const* spellInfo = spell->GetSpellInfo();
 
     // Check for immune
-    if (victim->IsImmunedToSpell(spellInfo, spell))
+    if (victim->IsImmunedToSpell(spellInfo))
     {
         return SPELL_MISS_IMMUNE;
     }
@@ -3760,14 +3847,14 @@ SpellMissInfo WorldObject::SpellHitResult(Unit* victim, Spell const* spell, bool
     }
 
     // Check for immune to spell effects (includes school, mechanics, state, dispel immunities)
-    if (victim->IsImmunedToSpell(spellInfo, MAX_EFFECT_MASK, ToUnit()))
+    if (victim->IsImmunedToSpell(spellInfo))
     {
         return SPELL_MISS_IMMUNE;
     }
 
     // Damage immunity is only checked if the spell has damage effects, this immunity must not prevent aura apply
     // returns SPELL_MISS_IMMUNE in that case, for other spells, the SMSG_SPELL_GO must show hit
-    if (spellInfo->HasOnlyDamageEffects() && victim->IsImmunedToDamage(ToUnit(), spellInfo))
+    if (spellInfo->HasOnlyDamageEffects() && victim->IsImmunedToDamage(spellInfo))
         return SPELL_MISS_IMMUNE;
 
     if (this == victim)
@@ -4022,9 +4109,9 @@ bool WorldObject::IsValidAttackTarget(WorldObject const* target, SpellInfo const
     // ownerless world object: a creature needs a hostile side, a player only needs neither side friendly,
     // so faction 0 traps (no faction template, always neutral) still hit players
     if (!unitTarget->HasUnitFlag(UNIT_FLAG_PLAYER_CONTROLLED))
-        return IsHostileTo(unitTarget) || unitTarget->IsHostileTo(this);
+        return IsHostileTo(unitTarget) || unitTarget->WorldObject::IsHostileTo(this);
 
-    return !IsFriendlyTo(unitTarget) && !unitTarget->IsFriendlyTo(this);
+    return !IsFriendlyTo(unitTarget) && !unitTarget->WorldObject::IsFriendlyTo(this);
 }
 
 bool WorldObject::IsValidAssistTarget(WorldObject const* target, SpellInfo const* bySpell /*= nullptr*/) const

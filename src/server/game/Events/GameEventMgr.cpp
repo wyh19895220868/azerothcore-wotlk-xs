@@ -43,6 +43,9 @@ GameEventMgr* GameEventMgr::instance()
     return &instance;
 }
 
+CustomGEventStoreMap CustomGEventStore;
+CustomEventStoreSet CustomEventSetStore;
+
 bool GameEventMgr::CheckOneGameEvent(uint16 entry) const
 {
     switch (_gameEvent[entry].State)
@@ -191,13 +194,28 @@ bool GameEventMgr::StartEvent(uint16 eventId, bool overwrite)
     }
 }
 
-void GameEventMgr::StopEvent(uint16 eventId, bool overwrite)
+void GameEventMgr::StopEvent(uint16 eventId, bool overwrite, bool custom)
 {
     GameEventData& data = _gameEvent[eventId];
     bool serverwide_evt = data.State != GAMEEVENT_NORMAL && data.State != GAMEEVENT_INTERNAL;
 
     RemoveActiveEvent(eventId);
     UnApplyEvent(eventId);
+
+    if (custom)
+    {
+        time_t const now = GameTime::GetGameTime().count();
+        uint32 const cycle = data.Occurence * MINUTE;
+        if (cycle)
+            data.Start = now + cycle - ((now - data.OriginStartTime) % cycle);
+        if (data.End <= data.Start)
+            data.End = data.Start + data.Length;
+
+        sWorldState->setWorldState(eventId, 0);
+        if (!IsActiveEvent(eventId))
+            sScriptMgr->OnGameEventStop(eventId);
+        return;
+    }
 
      // When event is stopped, clean up its worldstate
     sWorldState->setWorldState(eventId, 0);
@@ -328,6 +346,8 @@ void GameEventMgr::LoadEvents()
 {
     LOG_INFO("server.loading", "Loading Game Events...");
     uint32 oldMSTime = getMSTime();
+    CustomGEventStore.clear();
+    CustomEventSetStore.clear();
     _holidayMainStages.clear();
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENTS);
     PreparedQueryResult result = WorldDatabase.Query(stmt);
@@ -335,6 +355,7 @@ void GameEventMgr::LoadEvents()
     if (!result)
     {
         _gameEvent.clear();
+        CustomGEventStore.clear();
         LOG_WARN("server.loading", ">> Loaded 0 game events. DB table `game_event` is empty.");
         LOG_INFO("server.loading", " ");
         return;
@@ -355,6 +376,7 @@ void GameEventMgr::LoadEvents()
         GameEventData& pGameEvent = _gameEvent[eventId];
         pGameEvent.EventId      = fields[0].Get<uint32>();
         uint64 starttime        = fields[1].Get<uint64>();
+        pGameEvent.OriginStartTime = time_t(starttime);
         pGameEvent.Start        = time_t(starttime);
         uint64 endtime          = fields[2].Get<uint64>();
         if (fields[2].IsNull())
@@ -365,6 +387,10 @@ void GameEventMgr::LoadEvents()
         pGameEvent.HolidayId    = HolidayIds(fields[5].Get<uint32>());
         pGameEvent.HolidayStage = fields[6].Get<uint8>();
         pGameEvent.Description  = fields[7].Get<std::string>();
+        if (eventId < 100)
+            CustomEventSetStore.insert(eventId);
+        else if (eventId > 100)
+            CustomGEventStore[eventId] = pGameEvent.Description;
         pGameEvent.State        = (GameEventState)(fields[8].Get<uint8>());
         pGameEvent.Announce     = fields[9].Get<uint8>();
         pGameEvent.NextStart    = 0;

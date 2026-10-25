@@ -238,4 +238,15 @@ struct AC_GAME_API CastSpellExtraArgs
     CustomSpellValues SpellValueOverrides;
 };
 
+struct SpellImmune
+{
+    SpellImmune() : spellId(0), type(IMMUNITY_EFFECT), blockType(SPELL_BLOCK_TYPE_ALL) { }
+
+    uint32 spellId;
+    uint32 type;
+    uint32 blockType;
+};
+
+typedef std::vector<SpellImmune> SpellImmuneList;
+
 #endif // SPELLDEFINES_H
