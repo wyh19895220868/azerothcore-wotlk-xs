@@ -2371,7 +2371,8 @@ void Creature::LoadTemplateImmunities(int32 creatureImmunitiesId)
 {
     // uint32 max used for "spell id", the immunity system will not perform SpellInfo checks against invalid spells
     // used so we know which immunities were loaded from template
-    static uint32 constexpr placeholderSpellId = std::numeric_limits<uint32>::max();
+    // Keep the modern table separate from the legacy school-mask immunities.
+    static uint32 constexpr placeholderSpellId = std::numeric_limits<uint32>::max() - 1;
 
     auto applyCreatureImmunities = [this](CreatureImmunities const* immunities, bool apply)
     {

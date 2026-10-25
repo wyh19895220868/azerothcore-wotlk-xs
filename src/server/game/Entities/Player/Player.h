@@ -1873,6 +1873,10 @@ public:
     [[nodiscard]] InventoryResult CanUseAmmo(uint32 item) const;
     InventoryResult CanRollForItemInLFG(ItemTemplate const* item, WorldObject const* lootedObject) const;
     Item* StoreNewItem(ItemPosCountVec const& pos, uint32 item, bool update, std::string Info = "", int32 randomPropertyId = 0);
+    Item* StoreNewItem(ItemPosCountVec const& pos, uint32 item, bool update, int32 randomPropertyId)
+    {
+        return StoreNewItem(pos, item, update, std::string{}, randomPropertyId);
+    }
     Item* StoreNewItem(ItemPosCountVec const& pos, uint32 item, bool update, int32 randomPropertyId, AllowedLooterSet& allowedLooters, std::string Info = "");
 
     Item* StoreNewItemAtOnLoot(ItemPosCountVec const& pos, uint32 item, int32 randomPropertyId, AllowedLooterSet& allowedLooters, int32 TempGroupId, std::string Info);
