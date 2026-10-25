@@ -12,8 +12,11 @@
 
 # Need to pass old ${CMAKE_BINARY_DIR} as param because its different at build stage
 add_custom_target(revision.h ALL
-  COMMAND "${CMAKE_COMMAND}" -DBUILDDIR="${CMAKE_BINARY_DIR}" -P "${CMAKE_SOURCE_DIR}/src/cmake/genrev.cmake" "${CMAKE_BINARY_DIR}"
-  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+  COMMAND "${CMAKE_COMMAND}" "-DBUILDDIR=${CMAKE_BINARY_DIR}"
+    "-DGIT_EXECUTABLE:FILEPATH=${GIT_EXECUTABLE}" "-DWITHOUT_GIT:BOOL=${WITHOUT_GIT}"
+    -P "${CMAKE_SOURCE_DIR}/src/cmake/genrev.cmake" "${CMAKE_BINARY_DIR}"
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  VERBATIM)
 
 set_target_properties(revision.h
   PROPERTIES

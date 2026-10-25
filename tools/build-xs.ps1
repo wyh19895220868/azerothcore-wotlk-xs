@@ -10,6 +10,7 @@ $ErrorActionPreference = 'Stop'
 $sourceRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $buildRoot = Join-Path $sourceRoot 'build-xs-vs2022'
 $vsRoot = 'E:/Vs2022-IDE'
+$gitExe = (Get-Command git -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
 $cmakeCandidates = @(
     'E:/CMake3.25.3/bin/cmake.exe',
     (Join-Path $vsRoot 'Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe')
@@ -37,6 +38,7 @@ if ($LASTEXITCODE -eq 0) {
 $cmakeArguments = @(
     '-S', $sourceRoot, '-B', $buildRoot, '-G', 'Visual Studio 17 2022', '-A', 'x64',
     "-DCMAKE_GENERATOR_INSTANCE=$vsRoot",
+    "-DGIT_EXECUTABLE:FILEPATH=$gitExe",
     '-DBoost_ROOT=E:/boost_1_78_0', '-DBOOST_ROOT=E:/boost_1_78_0',
     '-DBOOST_LIBRARYDIR=E:/boost_1_78_0/lib64-msvc-14.3', '-DBoost_NO_SYSTEM_PATHS=ON',
     '-DOPENSSL_ROOT_DIR=E:/OpenSSL-Win64',
