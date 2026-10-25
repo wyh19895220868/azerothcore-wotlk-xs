@@ -324,6 +324,16 @@ void ScriptMgr::OnScriptEffectAbsorbEnd(Unit* Caster, Unit* UnitOwner, AuraEffec
         });
 }
 
+void ScriptMgr::OnUnitEnterCombat(Unit* unit, Unit* victim)
+{
+    CALL_ENABLED_HOOKS(UnitScript, UNITHOOK_ON_UNIT_ENTER_COMBAT, script->OnUnitEnterCombat(unit, victim));
+}
+
+void ScriptMgr::OnUnitExitCombat(Unit* unit)
+{
+    CALL_ENABLED_HOOKS(UnitScript, UNITHOOK_ON_UNIT_EXIT_COMBAT, script->OnUnitExitCombat(unit));
+}
+
 UnitScript::UnitScript(char const* name, bool addToScripts, std::vector<uint16> enabledHooks)
     : ScriptObject(name, UNITHOOK_END)
 {
