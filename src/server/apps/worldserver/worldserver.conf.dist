@@ -4961,3 +4961,44 @@ Cluster.IsCrossrealm=0
 # CLUSTER SETTINGS END                                                                            #
 #                                                                                                 #
 ###################################################################################################
+
+###################################################################################################
+# LOCAL CUSTOM DEFAULTS
+# Keep these values explicit so startup does not warn when the corresponding custom code is loaded.
+###################################################################################################
+
+Arena.ArenaSeason.InProgress = 1
+Arena.ArenaSeason.ID = 1
+SetAllCreaturesWithWaypointMovementActive = 0
+
+Transmogrification.EnableSetInfo = 1
+Transmogrification.EnableSets = 1
+Transmogrification.MaxSets = 10
+Transmogrification.SetCostModifier = 3
+Transmogrification.SetCopperCost = 0
+Transmogrification.EnableTransmogInfo = 1
+Transmogrification.Allowed = ""
+Transmogrification.NotAllowed = ""
+Transmogrification.ScaledCostModifier = 1
+Transmogrification.CopperCost = 0
+Transmogrification.RequireToken = 0
+Transmogrification.TokenEntry = 49426
+Transmogrification.TokenAmount = 1
+Transmogrification.AllowPoor = 0
+Transmogrification.AllowCommon = 0
+Transmogrification.AllowUncommon = 1
+Transmogrification.AllowRare = 1
+Transmogrification.AllowEpic = 1
+Transmogrification.AllowLegendary = 0
+Transmogrification.AllowArtifact = 0
+Transmogrification.AllowHeirloom = 1
+Transmogrification.AllowMixedArmorTypes = 0
+Transmogrification.AllowMixedWeaponTypes = 0
+Transmogrification.AllowFishingPoles = 0
+Transmogrification.IgnoreReqRace = 0
+Transmogrification.IgnoreReqClass = 0
+Transmogrification.IgnoreReqSkill = 0
+Transmogrification.IgnoreReqSpell = 0
+Transmogrification.IgnoreReqLevel = 0
+Transmogrification.IgnoreReqEvent = 0
+Transmogrification.IgnoreReqStats = 0
