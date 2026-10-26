@@ -3,6 +3,13 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- These six legacy reference tables are absent from the new world database.
+CREATE TABLE IF NOT EXISTS `___角色库变量说明_仅作对照_不要改动` (
+  `序号` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `说明` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  PRIMARY KEY (`序号`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = gbk COLLATE = gbk_chinese_ci ROW_FORMAT = DYNAMIC;
+
 -- ___角色库变量说明_仅作对照_不要改动: 68 legacy rows.
 DELETE FROM `___角色库变量说明_仅作对照_不要改动` WHERE 1 = 0;
 INSERT IGNORE INTO `___角色库变量说明_仅作对照_不要改动` VALUES
@@ -75,6 +82,12 @@ INSERT IGNORE INTO `___角色库变量说明_仅作对照_不要改动` VALUES
 ('6000', '一命模式类型'),
 ('6001', '一命模式锁定');
 
+CREATE TABLE IF NOT EXISTS `___脚本表_仅作对照_不要改动` (
+  `脚本名` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `备注说明` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  PRIMARY KEY (`脚本名`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = gbk COLLATE = gbk_chinese_ci ROW_FORMAT = DYNAMIC;
+
 -- ___脚本表_仅作对照_不要改动: 53 legacy rows.
 DELETE FROM `___脚本表_仅作对照_不要改动` WHERE 1 = 0;
 INSERT IGNORE INTO `___脚本表_仅作对照_不要改动` VALUES
@@ -131,6 +144,13 @@ INSERT IGNORE INTO `___脚本表_仅作对照_不要改动` VALUES
 ('NpcSoloPvpTopScript', 'NPC脚本 比武大会报名'),
 ('ItemUseSumPet', '物品脚本'),
 ('npc_reincarnation', 'NPC脚本 转生');
+
+CREATE TABLE IF NOT EXISTS `___控制类型说明表` (
+  `编号` int(11) NOT NULL,
+  `说明` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `备注` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  PRIMARY KEY (`编号`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ___控制类型说明表: 31 legacy rows.
 DELETE FROM `___控制类型说明表` WHERE 1 = 0;
@@ -275,6 +295,17 @@ INSERT IGNORE INTO `___命令表` VALUES
 ('.rune reload', '重新加载符文配置的英文兼容命令。权限：管理员；控制台可用；来源：mod-rune-system。'),
 ('.reload caiji', '热重载生物采集配置和当前种植状态。权限：管理员；控制台可用；来源：mod-creature-harvest。'),
 ('.reload baoxiang', '重新加载生物击杀参与宝箱配置。权限：管理员；控制台可用；来源：mod-creature-loot-chest。');
+
+CREATE TABLE IF NOT EXISTS `___命令表_仅作对照_不要改动` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `命令` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '命令名称',
+  `语法格式` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '命令语法',
+  `功能说明` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '命令功能描述',
+  `命令来源` enum('自定义','核心') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '自定义' COMMENT '命令来源类型',
+  `备注` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '额外说明',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_command`(`命令`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 275 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'GM命令参考表 - 仅作对照，不要改动' ROW_FORMAT = DYNAMIC;
 
 -- ___命令表_仅作对照_不要改动: 274 legacy rows.
 DELETE FROM `___命令表_仅作对照_不要改动` WHERE 1 = 0;
@@ -554,6 +585,12 @@ INSERT IGNORE INTO `___命令表_仅作对照_不要改动` VALUES
 (273, '.reload caiji', '.reload caiji', '热重载生物采集配置和当前种植状态。', '自定义', '权限：管理员；控制台可用；来源：mod-creature-harvest。'),
 (274, '.reload baoxiang', '.reload baoxiang', '重新加载生物击杀参与宝箱配置。', '自定义', '权限：管理员；控制台可用；来源：mod-creature-loot-chest。');
 
+CREATE TABLE IF NOT EXISTS `___属性说明表_仅作对照_不要改动` (
+  `类型` int(11) NOT NULL COMMENT '序号(不能改动)',
+  `说明` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  PRIMARY KEY (`类型`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = gbk COLLATE = gbk_chinese_ci ROW_FORMAT = DYNAMIC;
+
 -- ___属性说明表_仅作对照_不要改动: 44 legacy rows.
 DELETE FROM `___属性说明表_仅作对照_不要改动` WHERE 1 = 0;
 INSERT IGNORE INTO `___属性说明表_仅作对照_不要改动` VALUES
@@ -601,6 +638,13 @@ INSERT IGNORE INTO `___属性说明表_仅作对照_不要改动` VALUES
 (46, '每5秒回复生命'),
 (47, '法术穿透'),
 (48, '格挡值提高');
+
+CREATE TABLE IF NOT EXISTS `___重载表_仅作对照_不要改动` (
+  `编号` int(11) NOT NULL COMMENT '序号(不能改动)',
+  `类型` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '功能的名称',
+  `备注` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  PRIMARY KEY (`编号`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = gbk COLLATE = gbk_chinese_ci ROW_FORMAT = DYNAMIC;
 
 -- ___重载表_仅作对照_不要改动: 40 legacy rows.
 DELETE FROM `___重载表_仅作对照_不要改动` WHERE 1 = 0;
@@ -3363,6 +3407,74 @@ INSERT IGNORE INTO `_大秘境_杂项配置` VALUES
 (34, '|cFFFF3333进度未满100%击杀最终首领%，无法通关！', 'progressNotFullStr', '进度不足时的提示'),
 (35, '|cFF00FF33最终首领已击败，挑战完成！', 'finalBossKilledStr', '击杀最终首领成功提示');
 
+-- Structure restored from the legacy backup for _地图生物属性控制.
+CREATE TABLE IF NOT EXISTS `_地图生物属性控制`  (
+  `配置ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '配置ID',
+  `生物ID` int(11) NOT NULL DEFAULT -1 COMMENT '生物模板ID(-1=适用所有生物)',
+  `生物类型` int(11) NOT NULL DEFAULT -1 COMMENT '生物类型(-1=所有类型,1=普通,2=精英,3=boss)',
+  `地图ID` int(11) NOT NULL DEFAULT -1 COMMENT '地图ID(-1=适用所有地图)',
+  `区域ID` int(11) NOT NULL DEFAULT -1 COMMENT '区域ID(-1=适用所有区域)',
+  `难度` int(11) NOT NULL DEFAULT -1 COMMENT '副本难度(-1=所有难度,0=普通/10人普通,1=英雄/10人英雄,2=25人普通,3=25人英雄)',
+  `生物等级范围最小` int(11) NOT NULL DEFAULT -1 COMMENT '生物等级范围最小值(-1=无限制)',
+  `生物等级范围最大` int(11) NOT NULL DEFAULT -1 COMMENT '生物等级范围最大值(-1=无限制)',
+  `血量倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '血量倍率',
+  `血量值` decimal(65, 0) UNSIGNED NOT NULL DEFAULT 0 COMMENT '血量固定值(0=使用倍率,>0=使用固定值)',
+  `法力倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '法力倍率',
+  `法力值` decimal(65, 0) UNSIGNED NOT NULL DEFAULT 0 COMMENT '法力固定值(0=使用倍率,>0=使用固定值)',
+  `最小伤害倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '最小伤害倍率',
+  `最小伤害值` decimal(65, 0) UNSIGNED NOT NULL DEFAULT 0 COMMENT '最小伤害固定值(0=使用倍率,>0=使用固定值)',
+  `最大伤害倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '最大伤害倍率',
+  `最大伤害值` decimal(65, 0) UNSIGNED NOT NULL DEFAULT 0 COMMENT '最大伤害固定值(0=使用倍率,>0=使用固定值)',
+  `真实伤害值` decimal(65, 0) UNSIGNED NOT NULL DEFAULT 0 COMMENT '近战附加真实伤害，无视玩家护甲并强制命中(0=关闭,>0=每次近战附加值)',
+  `护甲倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '护甲倍率',
+  `护甲值` decimal(65, 0) UNSIGNED NOT NULL DEFAULT 0 COMMENT '护甲固定值(0=使用倍率,>0=使用固定值)',
+  `火抗倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '火焰抗性倍率',
+  `火抗值` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '火焰抗性固定值(0=使用倍率,>0=使用固定值)',
+  `自然抗倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '自然抗性倍率',
+  `自然抗值` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '自然抗性固定值(0=使用倍率,>0=使用固定值)',
+  `冰霜抗倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '冰霜抗性倍率',
+  `冰霜抗值` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '冰霜抗性固定值(0=使用倍率,>0=使用固定值)',
+  `暗影抗倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '暗影抗性倍率',
+  `暗影抗值` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '暗影抗性固定值(0=使用倍率,>0=使用固定值)',
+  `奥术抗倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '奥术抗性倍率',
+  `奥术抗值` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '奥术抗性固定值(0=使用倍率,>0=使用固定值)',
+  `攻击强度倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '攻击强度倍率',
+  `攻击强度值` decimal(65, 0) UNSIGNED NOT NULL DEFAULT 0 COMMENT '攻击强度固定值(0=使用倍率,>0=使用固定值)',
+  `法术强度倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '法术强度倍率',
+  `法术强度值` decimal(65, 0) UNSIGNED NOT NULL DEFAULT 0 COMMENT '法术强度固定值(0=使用倍率,>0=使用固定值)',
+  `移动速度倍率` float(10, 2) UNSIGNED NOT NULL DEFAULT 1.00 COMMENT '移动速度倍率',
+  `移动速度值` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '移动速度固定值(0=使用倍率,>0=使用固定值)',
+  `攻击速度倍率` float(10, 2) UNSIGNED NOT NULL DEFAULT 1.00 COMMENT '攻击速度倍率',
+  `攻击速度值` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '攻击速度固定值(0=使用倍率,>0=使用固定值)',
+  `施法速度倍率` float(10, 2) UNSIGNED NOT NULL DEFAULT 1.00 COMMENT '施法速度倍率',
+  `施法速度值` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '施法速度固定值(0=使用倍率,>0=使用固定值)',
+  `血条数量` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '血条数量倍率(0=不启用血条系统,>0=在官方血量基础上增加N倍血条,如100表示100个血条)',
+  `命中率加成` float(10, 2) NOT NULL DEFAULT 0.00 COMMENT '命中率加成百分比(如20.00表示+20%命中率)',
+  `护甲穿透值` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '护甲穿透数值',
+  `护甲穿透百分比` float(10, 2) UNSIGNED NOT NULL DEFAULT 0.00 COMMENT '护甲穿透百分比(如50.00表示无视50%护甲)',
+  `格挡穿透值` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '格挡穿透数值',
+  `格挡穿透百分比` float(10, 2) UNSIGNED NOT NULL DEFAULT 0.00 COMMENT '格挡穿透百分比(如100.00表示完全无视格挡)',
+  `伤害减免百分比` bigint(20) NOT NULL DEFAULT 0 COMMENT '幻境减伤，1-99=减伤，100=免疫，>100=增伤；99 表示只承受1%伤害',
+  `官方掉落` tinyint(3) UNSIGNED NOT NULL DEFAULT 1 COMMENT '官方掉落开关(1=保留官方掉落并追加掉落id1-4; 2=兼容旧配置,追加掉落id1-4)',
+  `装备属性倍率` float(10, 2) UNSIGNED NOT NULL DEFAULT 1.00 COMMENT '装备属性倍率系数(装备属性值=1时,最终倍率=本系数)',
+  `装备属性值` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '装备属性值(0=关闭,1=使用装备属性倍率,>1=使用固定值)',
+  `装备属性倍率模式` tinyint(4) NOT NULL DEFAULT 0 COMMENT '装备属性模式(-1=关闭,0=乘法,1=加法)',
+  `掉落id1` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '掉落id1',
+  `掉落id2` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '掉落id2',
+  `掉落id3` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '掉落id3',
+  `掉落id4` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '掉落id4',
+  `鉴定组` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '物品鉴定系统组ID(0=不自动鉴定,>0=使用指定鉴定组自动鉴定掉落装备)',
+  `鉴定品质` tinyint(3) UNSIGNED NOT NULL DEFAULT 0 COMMENT '鉴定最低品质要求(0=灰色,1=白色,2=绿色,3=蓝色,4=紫色,5=橙色,6=红色,7=金色)',
+  `鉴定物品等级` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '鉴定最低物品等级要求(0=无限制,>0=物品等级必须>=该值才会被鉴定)',
+  `动态难度开关` tinyint(3) UNSIGNED NOT NULL DEFAULT 1 COMMENT '0=关闭动态战力压制,1=开启动态战力压制',
+  `战力门槛` decimal(65, 0) UNSIGNED NOT NULL DEFAULT 0 COMMENT '0=按500级毕业预算曲线自动计算,>0=本配置固定达标战力',
+  `难度倍率` double UNSIGNED NOT NULL DEFAULT 1 COMMENT '动态难度倍率,1=默认,>1更难,0.01-1更简单',
+  PRIMARY KEY (`配置ID`) USING BTREE,
+  INDEX `生物模板ID`(`生物ID`) USING BTREE,
+  INDEX `地图ID`(`地图ID`) USING BTREE,
+  INDEX `地图区域难度`(`地图ID`, `区域ID`, `难度`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '地图生物属性控制表' ROW_FORMAT = DYNAMIC;
+
 -- _地图生物属性控制: 2 legacy rows.
 DELETE FROM `_地图生物属性控制` WHERE 1 = 0;
 INSERT IGNORE INTO `_地图生物属性控制` VALUES
@@ -4216,12 +4328,13 @@ INSERT IGNORE INTO `_模板_地图控制` VALUES
 
 -- _模板_地图生物控制: 5 legacy rows.
 DELETE FROM `_模板_地图生物控制` WHERE 1 = 0;
-INSERT IGNORE INTO `_模板_地图生物控制` VALUES
-(1, -1, -1, 389, -1, -1, '0', 45, 0, '[提示]: %s 刷新了', 0, 1, 0, 1),
-(2, 80007, -1, -1, -1, 0, '0', 44, 0, '[提示]: %s 刷新了', 0, 0, 0, 1),
-(3, 5428, -1, -1, -1, 0, '0', 1, 0, '[提示]: %s 刷新了', 0, 0, 0, 1),
-(4, 18466, -1, -1, -1, 0, '0', 1, 0, '[提示]: %s 刷新了', 0, 0, 0, 1),
-(5, 80388, -1, -1, -1, 0, '0', 2, 0, '[提示]: %s 刷新了', 0, 0, 0, 1);
+INSERT IGNORE INTO `_模板_地图生物控制`
+(`配置ID`, `生物ID`, `生物类型`, `地图ID`, `区域ID`, `难度`, `秘境难度`, `提示方式`, `刷新公告`, `刷新时间`, `动态难度开关`, `战力门槛`, `难度倍率`) VALUES
+(1, -1, -1, 389, -1, -1, '0', 0, '[提示]: %s 刷新了', 0, 1, 0, 1),
+(2, 80007, -1, -1, -1, 0, '0', 0, '[提示]: %s 刷新了', 0, 0, 0, 1),
+(3, 5428, -1, -1, -1, 0, '0', 0, '[提示]: %s 刷新了', 0, 0, 0, 1),
+(4, 18466, -1, -1, -1, 0, '0', 0, '[提示]: %s 刷新了', 0, 0, 0, 1),
+(5, 80388, -1, -1, -1, 0, '0', 0, '[提示]: %s 刷新了', 0, 0, 0, 1);
 
 -- _模板_物品成长: 905 legacy rows.
 DELETE FROM `_模板_物品成长` WHERE 1 = 0;
@@ -12415,6 +12528,17 @@ INSERT IGNORE INTO `_综合商人表` VALUES
 (80020, 60001, 0, 0, '|TInterface\\ICONS\\INV_Sword_27.png:30:30:-20:0|t 战士雕文2', 0, 0, ''),
 (80020, 60002, 0, 0, '|TInterface\\ICONS\\INV_Hammer_01.blp:30:30:-20:0|t 骑士雕文2', 0, 0, '');
 
+-- Structure restored from the legacy backup for 生物采集_成熟度配置.
+CREATE TABLE IF NOT EXISTS `生物采集_成熟度配置`  (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `配置ID` int(10) UNSIGNED NOT NULL COMMENT '关联配置表ID',
+  `成熟度` tinyint(3) UNSIGNED NOT NULL COMMENT '成熟度（0-100）',
+  `光环技能ID` int(10) UNSIGNED NOT NULL COMMENT '对应的光环技能ID',
+  `尺寸倍数` float NOT NULL DEFAULT 1 COMMENT '生物尺寸倍数',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_config_maturity`(`配置ID`, `成熟度`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '生物采集成熟度配置表（World库）' ROW_FORMAT = DYNAMIC;
+
 -- 生物采集_成熟度配置: 11 legacy rows.
 DELETE FROM `生物采集_成熟度配置` WHERE 1 = 0;
 INSERT IGNORE INTO `生物采集_成熟度配置` VALUES
@@ -12430,6 +12554,18 @@ INSERT IGNORE INTO `生物采集_成熟度配置` VALUES
 (10, 1, 90, 50090, 1),
 (11, 1, 100, 50100, 1);
 
+-- Structure restored from the legacy backup for 生物采集_掉落表.
+CREATE TABLE IF NOT EXISTS `生物采集_掉落表`  (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '掉落ID',
+  `配置ID` int(10) UNSIGNED NOT NULL COMMENT '关联配置表ID',
+  `掉落物品ID` int(10) UNSIGNED NOT NULL COMMENT '掉落的物品ID',
+  `最小数量` int(10) UNSIGNED NOT NULL DEFAULT 1 COMMENT '最小掉落数量',
+  `最大数量` int(10) UNSIGNED NOT NULL DEFAULT 1 COMMENT '最大掉落数量',
+  `掉落概率` float NOT NULL DEFAULT 100 COMMENT '掉落概率（0-100）',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_config`(`配置ID`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '生物采集掉落配置表（World库）' ROW_FORMAT = DYNAMIC;
+
 -- 生物采集_掉落表: 4 legacy rows.
 DELETE FROM `生物采集_掉落表` WHERE 1 = 0;
 INSERT IGNORE INTO `生物采集_掉落表` VALUES
@@ -12438,22 +12574,137 @@ INSERT IGNORE INTO `生物采集_掉落表` VALUES
 (3, 1, 3357, 3, 5, 100),
 (4, 1, 3358, 1, 2, 50);
 
+-- Structure restored from the legacy backup for 生物采集_肥料配置.
+CREATE TABLE IF NOT EXISTS `生物采集_肥料配置`  (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '配置ID',
+  `物品ID` int(10) UNSIGNED NOT NULL COMMENT '肥料物品ID',
+  `加速类型` enum('倍数','减少时间') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '倍数' COMMENT '加速类型',
+  `加速值` float NOT NULL DEFAULT 1 COMMENT '加速值（倍数如2.0=2倍速，减少时间为秒数）',
+  `使用提示` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '使用肥料成功！' COMMENT '使用成功提示',
+  `启用` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否启用',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_item`(`物品ID`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '生物采集肥料配置表（World库）' ROW_FORMAT = DYNAMIC;
+
 -- 生物采集_肥料配置: 2 legacy rows.
 DELETE FROM `生物采集_肥料配置` WHERE 1 = 0;
 INSERT IGNORE INTO `生物采集_肥料配置` VALUES
 (1, 10001, '倍数', 2, '使用肥料成功！生物成长速度提升为2倍！', 1),
 (2, 10002, '减少时间', 60, '使用肥料成功！生物成熟时间减少60秒！', 1);
 
+-- Structure restored from the legacy backup for 生物采集_配置表.
+CREATE TABLE IF NOT EXISTS `生物采集_配置表`  (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '配置ID',
+  `物品ID` int(10) UNSIGNED NOT NULL COMMENT '种植物品ID',
+  `生物ID` int(10) UNSIGNED NOT NULL COMMENT '召唤的生物ID',
+  `地图ID` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '限制的地图ID（0=不限制）',
+  `区域ID` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '限制的区域ID（0=不限制）',
+  `成熟时间` int(10) UNSIGNED NOT NULL DEFAULT 100 COMMENT '成熟时间（秒）',
+  `存续时间` int(10) UNSIGNED NOT NULL DEFAULT 300 COMMENT '成熟后存续时间（秒）',
+  `采集技能ID` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '用于采集的技能ID（0=直接采集）',
+  `他人采集百分比` float NOT NULL DEFAULT 30 COMMENT '非种植者采集百分比',
+  `他人采集冷却时间` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '他人采集冷却时间（秒，0=无限制）',
+  `每日种植上限` int(10) UNSIGNED NOT NULL DEFAULT 10 COMMENT '每个玩家每日种植上限',
+  `他人采集最大百分比` float NOT NULL DEFAULT 0 COMMENT '他人采集最大百分比（他人最多采集X%，剩余留给种植者，0=不限制）',
+  `种植距离` float NOT NULL DEFAULT 0 COMMENT '种植距离（两个生物种植的最小距离，单位码，0=不限制）',
+  `启用` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否启用',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_item`(`物品ID`) USING BTREE,
+  INDEX `idx_creature`(`生物ID`) USING BTREE,
+  INDEX `idx_enabled`(`启用`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '生物采集基础配置表（World库）' ROW_FORMAT = DYNAMIC;
+
 -- 生物采集_配置表: 1 legacy rows.
 DELETE FROM `生物采集_配置表` WHERE 1 = 0;
 INSERT IGNORE INTO `生物采集_配置表` VALUES
 (1, 25, 990101, 0, 0, 180, 600, 0, 30, 300, 10, 60, 10, 1);
+
+-- Structure restored from the legacy backup for 生物采集_余量配置.
+CREATE TABLE IF NOT EXISTS `生物采集_余量配置`  (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `配置ID` int(10) UNSIGNED NOT NULL COMMENT '关联配置表ID',
+  `余量百分比` float NOT NULL COMMENT '余量百分比（0-100），剩余量降至该值时触发',
+  `光环技能ID` int(10) UNSIGNED NOT NULL COMMENT '对应光环技能ID',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_config`(`配置ID`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '生物采集余量配置表（World库）' ROW_FORMAT = DYNAMIC;
 
 -- 生物采集_余量配置: 2 legacy rows.
 DELETE FROM `生物采集_余量配置` WHERE 1 = 0;
 INSERT IGNORE INTO `生物采集_余量配置` VALUES
 (1, 1, 50, 60001),
 (2, 1, 20, 60002);
+
+-- Structure restored from the legacy backup for creature_template_原始备份.
+CREATE TABLE IF NOT EXISTS `creature_template_原始备份`  (
+  `entry` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `difficulty_entry_1` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `difficulty_entry_2` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `difficulty_entry_3` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `KillCredit1` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `KillCredit2` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `modelid1` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `modelid2` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `modelid3` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `modelid4` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `name` char(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '0',
+  `subname` char(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `IconName` char(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `gossip_menu_id` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `minlevel` tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+  `maxlevel` tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+  `exp` smallint(6) NOT NULL DEFAULT 0,
+  `faction` smallint(5) UNSIGNED NOT NULL DEFAULT 0,
+  `npcflag` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `speed_walk` float NOT NULL DEFAULT 1 COMMENT 'Result of 2.5/2.5, most common value',
+  `speed_run` float NOT NULL DEFAULT 1.14286 COMMENT 'Result of 8.0/7.0, most common value',
+  `speed_swim` float NOT NULL DEFAULT 1,
+  `speed_flight` float NOT NULL DEFAULT 1,
+  `detection_range` float NOT NULL DEFAULT 20,
+  `scale` float NOT NULL DEFAULT 1,
+  `rank` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `dmgschool` tinyint(4) NOT NULL DEFAULT 0,
+  `DamageModifier` float NOT NULL DEFAULT 1,
+  `BaseAttackTime` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `RangeAttackTime` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `BaseVariance` float NOT NULL DEFAULT 1,
+  `RangeVariance` float NOT NULL DEFAULT 1,
+  `unit_class` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `unit_flags` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `unit_flags2` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `dynamicflags` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `family` tinyint(4) NOT NULL DEFAULT 0,
+  `trainer_type` tinyint(4) NOT NULL DEFAULT 0,
+  `trainer_spell` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `trainer_class` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `trainer_race` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `type` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `type_flags` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `lootid` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `pickpocketloot` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `skinloot` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `PetSpellDataId` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `VehicleId` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `mingold` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `maxgold` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `AIName` char(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `MovementType` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `HoverHeight` float NOT NULL DEFAULT 1,
+  `HealthModifier` float NOT NULL DEFAULT 1,
+  `ManaModifier` float NOT NULL DEFAULT 1,
+  `ArmorModifier` float NOT NULL DEFAULT 1,
+  `ExperienceModifier` float NOT NULL DEFAULT 1,
+  `RacialLeader` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `movementId` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `RegenHealth` tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+  `mechanic_immune_mask` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `spell_school_immune_mask` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `flags_extra` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `ScriptName` char(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `VerifiedBuild` smallint(6) NULL DEFAULT 0,
+  PRIMARY KEY (`entry`) USING BTREE,
+  INDEX `idx_name`(`name`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'Creature System' ROW_FORMAT = DYNAMIC;
 
 -- creature_template_原始备份: 29953 legacy rows.
 DELETE FROM `creature_template_原始备份` WHERE 1 = 0;
@@ -42412,6 +42663,21 @@ INSERT IGNORE INTO `creature_template_原始备份` VALUES
 (44607, 0, 0, 0, 0, 0, 25144, 0, 0, 0, 'Frost Sphere (3)', '', '', 0, 79, 80, 2, 1925, 0, 1, 1.14286, 1, 1, 20, 1, 0, 0, 1, 0, 2000, 1, 1, 1, 0, 2048, 8, 0, 0, 0, 0, 0, 8, 64, 0, 0, 0, 0, 0, 0, 0, '', 0, 1, 0.238095, 1, 1, 1, 0, 721, 0, 0, 0, 0, '', 10314),
 (45001, 0, 0, 0, 0, 0, 24860, 0, 0, 0, 'Q-9759 Trigger Barrel Bomb', '', '', 0, 1, 1, 0, 35, 0, 1, 1.14286, 1, 1, 20, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'SmartAI', 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, '', 0);
 
+-- Structure restored from the legacy backup for game_event_原始备份.
+CREATE TABLE IF NOT EXISTS `game_event_原始备份`  (
+  `eventEntry` smallint(6) UNSIGNED NOT NULL COMMENT 'Entry of the game event',
+  `start_time` timestamp NULL DEFAULT '2000-01-01 14:00:00' COMMENT 'Absolute start date, the event will never start before',
+  `end_time` timestamp NULL DEFAULT '2000-01-01 14:00:00' COMMENT 'Absolute end date, the event will never start after',
+  `occurence` bigint(20) UNSIGNED NOT NULL DEFAULT 5184000 COMMENT 'Delay in minutes between occurences of the event',
+  `length` bigint(20) UNSIGNED NOT NULL DEFAULT 2592000 COMMENT 'Length in minutes of the event',
+  `holiday` mediumint(8) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Client side holiday id',
+  `holidayStage` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Description of the event displayed in console',
+  `world_event` tinyint(3) UNSIGNED NOT NULL DEFAULT 0 COMMENT '0 if normal event, 1 if world event',
+  `announce` tinyint(3) UNSIGNED NOT NULL DEFAULT 2 COMMENT '0 dont announce, 1 announce, 2 value from config',
+  PRIMARY KEY (`eventEntry`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
 -- game_event_原始备份: 80 legacy rows.
 DELETE FROM `game_event_原始备份` WHERE 1 = 0;
 INSERT IGNORE INTO `game_event_原始备份` VALUES
@@ -42495,6 +42761,18 @@ INSERT IGNORE INTO `game_event_原始备份` VALUES
 (77, '2016-11-06 02:01:00', '2030-12-31 07:00:00', 131040, 4320, 376, 1, 'Darkmoon Faire Building (Terokkar Forest)', 0, 2),
 (88, '2016-10-28 18:00:00', '2030-12-30 23:00:00', 1440, 720, 0, 0, 'Evening', 0, 2),
 (89, '2016-10-28 20:00:00', '2030-12-30 23:00:00', 1440, 600, 0, 0, 'Leprithus', 0, 2);
+
+-- Structure restored from the legacy backup for npc_trainer_备份原始.
+CREATE TABLE IF NOT EXISTS `npc_trainer_备份原始`  (
+  `ID` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `SpellID` mediumint(9) NOT NULL DEFAULT 0,
+  `MoneyCost` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `ReqSkillLine` smallint(5) UNSIGNED NOT NULL DEFAULT 0,
+  `ReqSkillRank` smallint(5) UNSIGNED NOT NULL DEFAULT 0,
+  `ReqLevel` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `ReqSpell` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`ID`, `SpellID`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- npc_trainer_备份原始: 5043 legacy rows.
 DELETE FROM `npc_trainer_备份原始` WHERE 1 = 0;
@@ -47777,6 +48055,17 @@ INSERT IGNORE INTO `zs_图鉴_物品_页面关联` VALUES
 (9303, 64015, 0, 1, 1, 0, 15, '西游法宝图鉴'),
 (9303, 64016, 0, 1, 1, 0, 16, '西游法宝图鉴');
 
+-- Structure restored from the legacy backup for zs新商城_价格.
+CREATE TABLE IF NOT EXISTS `zs新商城_价格`  (
+  `序号` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '不重复即可',
+  `类型` int(10) UNSIGNED NOT NULL DEFAULT 1 COMMENT '1=金币 2=物品 3=自定义需求模版',
+  `名称` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `图标` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `参数` int(11) NOT NULL DEFAULT 0,
+  `提示内容` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  PRIMARY KEY (`序号`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
 -- zs新商城_价格: 4 legacy rows.
 DELETE FROM `zs新商城_价格` WHERE 1 = 0;
 INSERT IGNORE INTO `zs新商城_价格` VALUES
@@ -47784,6 +48073,17 @@ INSERT IGNORE INTO `zs新商城_价格` VALUES
 (2, 2, '物品', 'Token', 4540, '当前货币数量'),
 (3, 3, '需求模版', '', 999, '需求模版 如果不是本作者核心则无效'),
 (4, 4, '需求模版', '', 1, '需求模版 如果不是本作者核心则无效');
+
+-- Structure restored from the legacy backup for zs新商城_类别.
+CREATE TABLE IF NOT EXISTS `zs新商城_类别`  (
+  `序号` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `类别名` varchar(765) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `图标` varchar(765) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `需要级别` int(11) NOT NULL DEFAULT 0,
+  `标识` int(11) UNSIGNED NOT NULL DEFAULT 0,
+  `是否启用` int(11) UNSIGNED NOT NULL DEFAULT 1 COMMENT '0=不启用',
+  PRIMARY KEY (`序号`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- zs新商城_类别: 9 legacy rows.
 DELETE FROM `zs新商城_类别` WHERE 1 = 0;
@@ -47797,6 +48097,13 @@ INSERT IGNORE INTO `zs新商城_类别` VALUES
 (7, '增益效果', 'spell_holy_holynova', 0, 0, 1),
 (8, '折扣专卖店', 'inv_misc_toy_07', 0, 1, 1),
 (9, '会员相关', 'inv_misc_note_03', 4, 0, 1);
+
+-- Structure restored from the legacy backup for zs新商城_类别_售卖.
+CREATE TABLE IF NOT EXISTS `zs新商城_类别_售卖`  (
+  `类别` int(11) UNSIGNED NOT NULL DEFAULT 1,
+  `售卖序号` int(11) UNSIGNED NOT NULL DEFAULT 1,
+  PRIMARY KEY (`类别`, `售卖序号`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- zs新商城_类别_售卖: 13 legacy rows.
 DELETE FROM `zs新商城_类别_售卖` WHERE 1 = 0;
@@ -47814,6 +48121,42 @@ INSERT IGNORE INTO `zs新商城_类别_售卖` VALUES
 (6, 3),
 (6, 4),
 (7, 15);
+
+-- Structure restored from the legacy backup for zs新商城_配置_售卖.
+CREATE TABLE IF NOT EXISTS `zs新商城_配置_售卖`  (
+  `序号` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '不重复即可',
+  `类型` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `名称` varchar(765) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '显示在图标下方的名称',
+  `提示名称` varchar(765) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '1=物品\r\n2=金币\r\n3=坐骑\r\n4=宠物小伙伴\r\n5=BUFF光环\r\n6=未使用\r\n7=服务性的\r\n8=等级提升\r\n9=头衔',
+  `提示类型` enum('item','spell','') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '工具上的提示类型',
+  `提示内容` varchar(765) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '工具上的提示内容',
+  `图标` varchar(765) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `消耗数量` int(11) NOT NULL DEFAULT 0 COMMENT '根据 zs新商城_价格 的类型决定',
+  `消耗类型` int(11) NOT NULL DEFAULT 0 COMMENT '根据 zs新商城_价格 的类型决定 大于2的类型不支持折扣',
+  `链接的编号` int(11) NOT NULL DEFAULT 0 COMMENT '实际物品或技能的编号',
+  `生物编号` int(11) NOT NULL DEFAULT 0 COMMENT '生物编号(如坐骑等等)',
+  `折扣比例` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '如果消耗类型大于2 则此字段写0',
+  `标识` int(11) NOT NULL DEFAULT 0 COMMENT '标识 物品=1 技能=0 其他默认0',
+  `奖励1` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励2` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励3` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励4` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励5` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励6` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励7` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励8` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励数量1` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励数量2` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励数量3` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励数量4` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励数量5` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励数量6` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励数量7` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `奖励数量8` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `是否新上架` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '1=新上架 客户端会显示 新品',
+  `是否启用` int(10) UNSIGNED NOT NULL DEFAULT 1 COMMENT '0=不启用',
+  PRIMARY KEY (`序号`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- zs新商城_配置_售卖: 13 legacy rows.
 DELETE FROM `zs新商城_配置_售卖` WHERE 1 = 0;
