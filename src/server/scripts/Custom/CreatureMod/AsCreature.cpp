@@ -714,6 +714,12 @@ std::string AsCreature::GetOneLootIds(Creature* Me)
     if (IsNotFor(Me))
         return "";
 
+    if (HuanJingCreatureConfig const* config = sHuanJingSystem->GetMapCreatureConfig(Me, nullptr))
+    {
+        if (config->attributeTemplateId > 0)
+            return sHelper->GetCrePLootIdsByTempId(config->attributeTemplateId);
+    }
+
     if (sCombatPetMgr->IsCombatPetData(Me))
         return sHelper->GetCrePLootIdsByTempId(Me->StTempId);
 
@@ -1602,9 +1608,9 @@ void AsCreature::AsCustomFillLoot(Creature* Me, Loot* OnLoot, Player* Looter)
             OnLoot->FillLoot(EntryLootId, LootTemplates_Creature, Looter, false, false, Me->GetLootMode());
     }
 
-    // _模板_地图生物控制在加载时已经把属性模板写入 StTempId。
-    // 旧地图属性表关闭后 IsInCustom() 会返回 false，不能再用它拦截模板额外掉落。
-    if (Me->StTempId > 0 || IsInCustom(Me))
+    // The resolved HuanJing template is authoritative even when legacy attribute overrides skip StTempId assignment.
+    HuanJingCreatureConfig const* config = sHuanJingSystem->GetMapCreatureConfig(Me, nullptr);
+    if ((config && config->attributeTemplateId > 0) || Me->StTempId > 0 || IsInCustom(Me))
     {
         std::string LootAs = GetOneLootIds(Me);
         if (LootAs.empty())
