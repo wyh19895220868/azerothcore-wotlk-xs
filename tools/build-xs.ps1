@@ -1,6 +1,6 @@
 param(
     [ValidateSet('Release', 'RelWithDebInfo', 'Debug')]
-    [string]$Configuration = 'Release',
+    [string]$Configuration = 'RelWithDebInfo',
     [ValidateRange(1, 4)]
     [int]$Parallel = 2,
     [switch]$ConfigureOnly
