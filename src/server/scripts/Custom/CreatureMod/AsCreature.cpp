@@ -1538,6 +1538,12 @@ bool AsCreature::IsOnEtLoot(Creature* Me)
     if (IsNotFor(Me))
         return false;
 
+    if (HuanJingCreatureConfig const* config = sHuanJingSystem->GetMapCreatureConfig(Me, nullptr))
+    {
+        if (config->attributeTemplateId > 0)
+            return config->officialDrop == 0;
+    }
+
     if (sCombatPetMgr->IsCombatPetData(Me))
     {
         if (Me->StTempId && sHelper->GetCreOnEtByTempId(Me->StTempId))

@@ -231,7 +231,7 @@ bool TemporaryThreatModifierEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
 }
 
 Creature::Creature(bool isWorldObject): Unit(isWorldObject), MovableMapObject(), m_groupLootTimer(0), lootingGroupLowGUID(0), m_PlayerDamageReq(0), m_lootRecipientGroup(0),
-    m_corpseRemoveTime(0), m_respawnTime(0), m_respawnDelay(300), m_corpseDelay(60), m_wanderDistance(0.0f), m_boundaryCheckTime(2500),
+    m_corpseRemoveTime(0), m_respawnTime(0), m_corpseLootDecayApplied(false), m_respawnDelay(300), m_corpseDelay(60), m_wanderDistance(0.0f), m_boundaryCheckTime(2500),
     m_transportCheckTimer(1000), lootPickPocketRestoreTime(0),  m_reactState(REACT_AGGRESSIVE), m_defaultMovementType(IDLE_MOTION_TYPE),
     m_spawnId(0), m_equipmentId(0), m_originalEquipmentId(0), m_AlreadyCallAssistance(false),
     m_AlreadySearchedAssistance(false), m_regenHealth(true), m_regenPower(true), m_AI_locked(false), m_meleeDamageSchoolMask(SPELL_SCHOOL_MASK_NORMAL), m_originalEntry(0), m_moveInLineOfSightDisabled(false), m_moveInLineOfSightStrictlyDisabled(false),
@@ -2132,6 +2132,7 @@ void Creature::setDeathState(DeathState s, bool despawn)
     if (s == JUST_DIED)
     {
         _lastDamagedTime.reset();
+        m_corpseLootDecayApplied = false;
 
         /*m_corpseRemoveTime = GameTime::GetGameTime().count() + m_corpseDelay;
         m_respawnTime = GameTime::GetGameTime().count() + m_respawnDelay + m_corpseDelay;*/
@@ -3211,6 +3212,10 @@ void Creature::AllLootRemovedFromCorpse()
         return;
     }
 
+    if (m_corpseLootDecayApplied)
+        return;
+
+    m_corpseLootDecayApplied = true;
     float decayRate = sWorld->getRate(RATE_CORPSE_DECAY_LOOTED);
     time_t diff = time_t((m_corpseRemoveTime - now) * (1.0f - decayRate));
 

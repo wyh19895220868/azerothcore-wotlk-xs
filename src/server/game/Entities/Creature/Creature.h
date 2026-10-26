@@ -523,6 +523,7 @@ protected:
     /// Timers
     time_t m_corpseRemoveTime;                          // (secs) timer for death or corpse disappearance
     time_t m_respawnTime;                               // (secs) time of next respawn
+    bool m_corpseLootDecayApplied;                      // prevents repeated loot-release callbacks from reducing respawn time again
     time_t m_respawnedTime;                             // (secs) time when creature respawned
     uint32 m_respawnDelay;                              // (secs) delay between corpse disappearance and respawning
     uint32 m_corpseDelay;                               // (secs) delay between death and corpse disappearance
