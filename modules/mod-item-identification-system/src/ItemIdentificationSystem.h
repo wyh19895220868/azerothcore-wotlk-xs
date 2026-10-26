@@ -186,7 +186,7 @@ public:
     void HandleBatchQueryCommand(Player* player, uint32 itemID, uint32 guid);
 
     // 通过 Addon 消息发送批量数据（优先使用 ALL_MODULE_DATA:bag:slot:itemID:guid:...）
-    void SendAllModuleDataAddon(Player* player, uint32 itemID, uint32 guid);
+    void SendAllModuleDataAddon(Player* player, uint32 itemID, uint32 guid, bool invalidateCache = true);
 
 public:
     // 配置变量

@@ -14,6 +14,8 @@ constexpr uint16_t MaxValueBytes = 1023;
 constexpr uint16_t MaxIntegerBytes = 79;
 constexpr uint8_t LastUnitKind = 3;
 constexpr uint8_t LastSnapshotKind = 5;
+constexpr uint16_t TooltipProtocolVersion = 1;
+constexpr uint16_t MaxTooltipPayloadBytes = 65520;
 }
 
 #endif

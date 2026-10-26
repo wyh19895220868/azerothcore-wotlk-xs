@@ -148,6 +148,8 @@ void SendPlayerDisplayDamage(Player* player, AsInt64 amount, bool critical, uint
 {
     if (!player || AsInt64IsZero(amount))
         return;
+    if (player->GetSession() && player->GetSession()->HasNativeUI())
+        return;
 
     std::ostringstream msg;
     msg << "DMG:"
@@ -163,6 +165,8 @@ void SendPlayerDisplayDamage(Player* player, AsInt64 amount, bool critical, uint
 void SendPlayerIncomingDamage(Player* player, Unit* attacker, AsInt64 amount, uint32 schoolMask, uint32 spellId)
 {
     if (!player || !attacker || AsInt64IsZero(amount))
+        return;
+    if (player->GetSession() && player->GetSession()->HasNativeUI())
         return;
 
     std::string sourceName = attacker->GetName();
@@ -182,6 +186,8 @@ void SendPlayerIncomingDamage(Player* player, Unit* attacker, AsInt64 amount, ui
 void SendPlayerDisplayHeal(Player* player, AsInt64 amount, uint32 schoolMask, uint32 spellId)
 {
     if (!player || AsInt64IsZero(amount) || IsLegacyDamageLimitValue(amount))
+        return;
+    if (player->GetSession() && player->GetSession()->HasNativeUI())
         return;
 
     std::ostringstream msg;

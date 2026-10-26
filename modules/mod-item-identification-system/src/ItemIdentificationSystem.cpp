@@ -5690,11 +5690,12 @@ ItemIdentificationSystem::AllModuleData ItemIdentificationSystem::QueryAllModule
 
 
 // 通过 Addon 消息发送批量数据（ALL_MODULE_DATA:itemID:guid:...）
-void ItemIdentificationSystem::SendAllModuleDataAddon(Player* player, uint32 itemID, uint32 guid)
+void ItemIdentificationSystem::SendAllModuleDataAddon(Player* player, uint32 itemID, uint32 guid, bool invalidateCache)
 {
     if (!player)
         return;
 
+    if (invalidateCache)
     {
         std::lock_guard<std::mutex> lock(_batchCacheMutex);
         uint64 cacheKey = (static_cast<uint64>(itemID) << 32) | guid;
@@ -5742,7 +5743,10 @@ void ItemIdentificationSystem::SendAllModuleDataAddon(Player* player, uint32 ite
 
     std::string responseStr = response.str();
 
-    SendItemIdentificationAddonMessage(player, responseStr);
+    if (player->GetSession()->HasNativeUI())
+        player->GetSession()->SendNativeUITooltipData(itemID, guid, responseStr);
+    else
+        SendItemIdentificationAddonMessage(player, responseStr);
 }
 
 bool FrozenCoreQueryItemModuleData(uint32 itemId, uint32 guidLow, FrozenCoreModuleData& out)
@@ -5772,6 +5776,14 @@ void FrozenCoreSendItemModuleData(Player* player, uint32 itemId, uint32 guidLow)
         return;
 
     sItemIdentificationSystem->SendAllModuleDataAddon(player, itemId, guidLow);
+}
+
+void FrozenCoreSendItemModuleDataNative(Player* player, uint32 itemId, uint32 guidLow)
+{
+    if (!player || itemId == 0 || !sItemIdentificationSystem || !sItemIdentificationSystem->_enabled)
+        return;
+
+    sItemIdentificationSystem->SendAllModuleDataAddon(player, itemId, guidLow, false);
 }
 
 // 批量查询命令处理器（一次性返回所有数据）

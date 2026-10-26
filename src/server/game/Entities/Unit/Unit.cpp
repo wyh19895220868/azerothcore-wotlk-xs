@@ -128,14 +128,17 @@ void EndMatchingCombat(Unit* unit, Predicate matches)
 
 // 335XS NativeUI: the stock combat text path (COMBAT_TEXT_UPDATE) carries an
 // int32 amount, so large values are already truncated before the client sees
-// them. Sessions that performed the NativeUI handshake get the exact decimal amount over
-// SMSG_NATIVE_UI_COMBAT_TEXT and draw it themselves; everyone else is untouched.
-void SendNativeCombatText(Unit* source, Unit* victim, AsInt64 amount, uint8 kind)
+// them. NativeUI sessions receive the exact decimal amount and combat-log context
+// over SMSG_NATIVE_UI_COMBAT_TEXT; other clients keep the stock path.
+void SendNativeCombatText(Unit* source, Unit* victim, AsInt64 amount, uint8 kind, uint32 spellId = 0)
 {
     if (!victim || amount <= 0)
         return;
 
-    Player* players[2] = { source ? source->ToPlayer() : nullptr, victim->ToPlayer() };
+    Player* players[2] = {
+        source ? source->GetCharmerOrOwnerPlayerOrPlayerItself() : nullptr,
+        victim->GetCharmerOrOwnerPlayerOrPlayerItself()
+    };
 
     for (uint32 index = 0; index < 2; ++index)
     {
@@ -152,13 +155,14 @@ void SendNativeCombatText(Unit* source, Unit* victim, AsInt64 amount, uint8 kind
         if (!session || !session->HasNativeUI())
             continue;
 
-        WorldPacket data(SMSG_NATIVE_UI_COMBAT_TEXT, 32);
-        data << session->GetNativeUIVersion();
+        std::string text = AsInt64ToString(amount);
+        WorldPacket data(SMSG_NATIVE_UI_COMBAT_TEXT, 64);
+        uint16 packetVersion = session->GetNativeUIVersion() >= 2 ? 3 : 1;
+        data << packetVersion;
         data << uint8(kind);
         data << uint64(victim->GetGUID().GetRawValue());
-        if (session->GetNativeUIVersion() >= 2)
+        if (packetVersion >= 2)
         {
-            std::string text = AsInt64ToString(amount);
             data << uint16(text.size());
             data.append(text.data(), text.size());
         }
@@ -168,6 +172,16 @@ void SendNativeCombatText(Unit* source, Unit* victim, AsInt64 amount, uint8 kind
             data << static_cast<int64>(std::min(amount, limit));
         }
         data << uint8(0);
+        if (packetVersion >= 3)
+        {
+            data << spellId;
+            data << uint8(index == 1 ? 1 : 0);
+            std::string sourceName = source ? source->GetName() : std::string();
+            if (sourceName.size() > 255)
+                sourceName.resize(255);
+            data << uint8(sourceName.size());
+            data.append(sourceName.data(), sourceName.size());
+        }
         session->SendPacket(&data);
     }
 }
@@ -2456,7 +2470,7 @@ uint32 Unit::DealDamage(Unit* attacker, Unit* victim, uint32 damage, CleanDamage
 
         // 335XS NativeUI: float the exact decimal amount on clients that did the
         // NativeUI handshake (kind 1 = crit).
-        SendNativeCombatText(attacker, victim, displayDamage, critical ? 1 : 0);
+        SendNativeCombatText(attacker, victim, displayDamage, critical ? 1 : 0, spellProto ? spellProto->Id : 0);
 
         if (spellProto && (damagetype == SPELL_DIRECT_DAMAGE || damagetype == DOT))
             sScriptMgr->OnDamageSpellFinal(attacker, victim, spellProto->Id, displayDamage, critical);
@@ -12883,7 +12897,7 @@ int32 Unit::DealHeal(Unit* healer, Unit* victim, AsInt64 const& addhealth)
     if (addhealth > 0)
         asGain = victim->ModifyAsHealth(addhealth);
 
-    SendNativeCombatText(healer, victim, asGain, 2);
+    SendNativeCombatText(healer, victim, asGain, 2, 0);
 
     int32 gain = AsInt64ToInt32Clamp(asGain, std::numeric_limits<int32>::max());
 

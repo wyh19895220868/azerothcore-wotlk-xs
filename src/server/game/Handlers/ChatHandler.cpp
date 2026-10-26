@@ -28,6 +28,7 @@
 #include "Guild.h"
 #include "GuildMgr.h"
 #include "Language.h"
+#include "Item.h"
 #include "Log.h"
 #include "ObjectAccessor.h"
 #include "ObjectMgr.h"
@@ -47,6 +48,7 @@
 #include "StringConvert.h"
 #include "NativeUIProtocol.h"
 #include "../../scripts/Custom/AddonActive/DoAddon.h"
+#include "../../scripts/Custom/AddonActive/FrozenCoreModuleBridge.h"
 #include "..\..\scripts\Custom\_Helper\Helper.h"
 #include "../../scripts/Custom/_Helper/AsInt64.h"
 #include "../../scripts/Custom/_Helper/CombatPower.h"
@@ -977,6 +979,35 @@ void WorldSession::HandleNativeUIHello(WorldPacket& packet)
     _nativeUIUnits.clear();
     for (std::string& snapshot : _nativeUISnapshots)
         snapshot.clear();
+}
+
+void WorldSession::HandleNativeUITooltipQuery(WorldPacket& packet)
+{
+    uint16 version = 0;
+    uint32 itemId = 0;
+    uint32 guidLow = 0;
+    packet >> version >> itemId >> guidLow;
+    if (packet.rpos() != packet.size() || version != NativeUIProtocol::TooltipProtocolVersion ||
+        itemId == 0 || guidLow == 0 || !_nativeUIEnabled || !_player)
+        return;
+
+    Item* item = _player->GetItemByGuid(ObjectGuid(HighGuid::Item, guidLow));
+    if (!item || item->GetEntry() != itemId)
+        return;
+
+    FrozenCoreSendItemModuleDataNative(_player, itemId, guidLow);
+}
+
+void WorldSession::SendNativeUITooltipData(uint32 itemId, uint32 guidLow, std::string const& payload)
+{
+    if (!_nativeUIEnabled || !_player || !itemId || !guidLow || payload.empty() ||
+        payload.size() > NativeUIProtocol::MaxTooltipPayloadBytes)
+        return;
+
+    WorldPacket data(SMSG_NATIVE_UI_TOOLTIP_DATA, payload.size() + 12);
+    data << NativeUIProtocol::TooltipProtocolVersion << itemId << guidLow << uint16(payload.size());
+    data.append(payload.data(), payload.size());
+    SendPacket(&data);
 }
 
 void WorldSession::UpdateNativeUI(uint32 diff)
