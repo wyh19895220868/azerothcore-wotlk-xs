@@ -5,6 +5,7 @@
 -- 执行完成后，在游戏内以管理员执行：.dore 2
 
 DROP TEMPORARY TABLE IF EXISTS `tmp_五人副本等级路线`;
+DROP TEMPORARY TABLE IF EXISTS `tmp_五人副本等级路线匹配`;
 
 CREATE TEMPORARY TABLE `tmp_五人副本等级路线` (
     `排序` INT NOT NULL,
@@ -47,6 +48,26 @@ INSERT INTO `tmp_五人副本等级路线` (`排序`, `副本名`, `进入等级
     (28, '岩石大厅',   75, '77-79'),
     (29, '魔环',       77, '79-80');
 
+CREATE TEMPORARY TABLE `tmp_五人副本等级路线匹配` (
+    `副本名` VARCHAR(32) NOT NULL,
+    `匹配行数` INT NOT NULL DEFAULT 0,
+    `已有模版编号` INT NULL,
+    PRIMARY KEY (`副本名`)
+) ENGINE=MEMORY DEFAULT CHARSET=utf8;
+
+INSERT INTO `tmp_五人副本等级路线匹配` (`副本名`, `匹配行数`, `已有模版编号`)
+SELECT d0.`副本名`,
+       COUNT(f.`菜单编号`) AS `匹配行数`,
+       MAX(CASE
+           WHEN f.`标题` LIKE '%|r 进入%（推荐%级）'
+                AND f.`需求模版` > 0
+           THEN f.`需求模版`
+       END) AS `已有模版编号`
+FROM `tmp_五人副本等级路线` AS d0
+LEFT JOIN `_功能传送表` AS f
+    ON f.`标题` LIKE CONCAT('%【五人】', d0.`副本名`, '%')
+GROUP BY d0.`副本名`;
+
 START TRANSACTION;
 
 -- 为首次执行分配全新模版编号；已由本脚本格式化过的菜单项会继续使用原模版。
@@ -56,19 +77,7 @@ SET @five_man_template_base := GREATEST(
 ) + 1;
 
 UPDATE `tmp_五人副本等级路线` AS d
-LEFT JOIN (
-    SELECT d0.`副本名`,
-           COUNT(f.`菜单编号`) AS `匹配行数`,
-           MAX(CASE
-               WHEN f.`标题` LIKE '%|r 进入%（推荐%级）'
-                    AND f.`需求模版` > 0
-               THEN f.`需求模版`
-           END) AS `已有模版编号`
-    FROM `tmp_五人副本等级路线` AS d0
-    LEFT JOIN `_功能传送表` AS f
-        ON f.`标题` LIKE CONCAT('%【五人】', d0.`副本名`, '%')
-    GROUP BY d0.`副本名`
-) AS m ON m.`副本名` = d.`副本名`
+LEFT JOIN `tmp_五人副本等级路线匹配` AS m ON m.`副本名` = d.`副本名`
 SET d.`匹配行数` = m.`匹配行数`,
     d.`模版编号` = COALESCE(m.`已有模版编号`, @five_man_template_base + d.`排序`);
 
@@ -140,3 +149,4 @@ SELECT ROW_COUNT() AS `已更新WLK父菜单数`;
 COMMIT;
 
 DROP TEMPORARY TABLE `tmp_五人副本等级路线`;
+DROP TEMPORARY TABLE `tmp_五人副本等级路线匹配`;
