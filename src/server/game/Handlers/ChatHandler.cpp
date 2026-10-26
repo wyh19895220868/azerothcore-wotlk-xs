@@ -988,19 +988,28 @@ void WorldSession::HandleNativeUITooltipQuery(WorldPacket& packet)
     uint32 guidLow = 0;
     packet >> version >> itemId >> guidLow;
     if (packet.rpos() != packet.size() || version != NativeUIProtocol::TooltipProtocolVersion ||
-        itemId == 0 || guidLow == 0 || !_nativeUIEnabled || !_player)
+        itemId == 0 || !_nativeUIEnabled || !_player)
         return;
+
+    if (guidLow == 0)
+    {
+        FrozenCoreSendItemTemplateDataNative(_player, itemId);
+        return;
+    }
 
     Item* item = _player->GetItemByGuid(ObjectGuid(HighGuid::Item, guidLow));
     if (!item || item->GetEntry() != itemId)
+    {
+        FrozenCoreSendItemTemplateDataNative(_player, itemId);
         return;
+    }
 
     FrozenCoreSendItemModuleDataNative(_player, itemId, guidLow);
 }
 
 void WorldSession::SendNativeUITooltipData(uint32 itemId, uint32 guidLow, std::string const& payload)
 {
-    if (!_nativeUIEnabled || !_player || !itemId || !guidLow || payload.empty() ||
+    if (!_nativeUIEnabled || !_player || !itemId || payload.empty() ||
         payload.size() > NativeUIProtocol::MaxTooltipPayloadBytes)
         return;
 

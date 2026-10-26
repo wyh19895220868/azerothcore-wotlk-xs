@@ -5786,6 +5786,24 @@ void FrozenCoreSendItemModuleDataNative(Player* player, uint32 itemId, uint32 gu
     sItemIdentificationSystem->SendAllModuleDataAddon(player, itemId, guidLow, false);
 }
 
+void FrozenCoreSendItemTemplateDataNative(Player* player, uint32 itemId)
+{
+    if (!player || !itemId || !sItemIdentificationSystem || !sItemIdentificationSystem->_enabled ||
+        !sObjectMgr->GetItemTemplate(itemId))
+        return;
+
+    std::string templateStats = BuildTemplateStatsData(itemId);
+    if (templateStats.empty())
+        return;
+
+    std::ostringstream response;
+    response << "ALL_MODULE_DATA:" << itemId << ":0";
+    for (uint8 index = 0; index < 9; ++index)
+        response << ":";
+    response << ":" << templateStats;
+    player->GetSession()->SendNativeUITooltipData(itemId, 0, response.str());
+}
+
 // 批量查询命令处理器（一次性返回所有数据）
 void ItemIdentificationSystem::HandleBatchQueryCommand(Player* player, uint32 itemID, uint32 guid)
 {

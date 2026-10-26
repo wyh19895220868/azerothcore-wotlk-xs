@@ -25,5 +25,6 @@ struct FrozenCoreModuleData
 bool FrozenCoreQueryItemModuleData(uint32 itemId, uint32 guidLow, FrozenCoreModuleData& out);
 void FrozenCoreSendItemModuleData(Player* player, uint32 itemId, uint32 guidLow);
 void FrozenCoreSendItemModuleDataNative(Player* player, uint32 itemId, uint32 guidLow);
+void FrozenCoreSendItemTemplateDataNative(Player* player, uint32 itemId);
 
 #endif
