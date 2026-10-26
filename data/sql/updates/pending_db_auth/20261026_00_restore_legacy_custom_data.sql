@@ -1,5 +1,5 @@
--- Restore legacy custom data from E:/xs-wow/数据库备份/最新纯净库/A库.sql.
--- Existing rows in the new database win; this migration only fills missing keys.
+-- Restore all custom tables and data from E:/xs-wow/数据库备份/最新纯净库/A库.sql.
+-- Existing rows in the new database win; this migration fills missing keys.
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
