@@ -129,13 +129,17 @@ void EndMatchingCombat(Unit* unit, Predicate matches)
 // 335XS NativeUI: the stock combat text path (COMBAT_TEXT_UPDATE) carries an
 // int32 amount, so large values are already truncated before the client sees
 // them. Sessions that performed the NativeUI handshake get the exact decimal amount over
-// SMSG_NATIVE_UI_COMBAT_TEXT and draw it themselves; everyone else is untouched.
+// SMSG_NATIVE_UI_COMBAT_TEXT and draw it with the engine world text.
+// Pet and summon hits go to the controlling player, who is the one watching.
 void SendNativeCombatText(Unit* source, Unit* victim, AsInt64 amount, uint8 kind)
 {
     if (!victim || amount <= 0)
         return;
 
-    Player* players[2] = { source ? source->ToPlayer() : nullptr, victim->ToPlayer() };
+    Player* players[2] = {
+        source ? source->GetCharmerOrOwnerPlayerOrPlayerItself() : nullptr,
+        victim->ToPlayer()
+    };
 
     for (uint32 index = 0; index < 2; ++index)
     {
