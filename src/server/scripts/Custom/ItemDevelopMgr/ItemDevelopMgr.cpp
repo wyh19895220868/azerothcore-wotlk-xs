@@ -152,13 +152,6 @@ void ItemDevelopMgr::CreateSendDataDevelop(Item* DoItem)
     St.NowXp = DoItem->DeveLopXp;
     ItemDevelopCacheStore[DoItem->GetGUIDLow()] = St;
 
-    CharacterDatabasePreparedStatement* Rtmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ITEM_DEVELOP_AT);
-    Rtmt->SetData(0, DoItem->GetGUIDLow());
-    Rtmt->SetData(1, DoItem->GetEntry());
-    Rtmt->SetData(2, DoItem->DeveLopRank);
-    Rtmt->SetData(3, DoItem->DeveLopXp);
-    CharacterDatabase.Execute(Rtmt);
-
     std::string SendMsg;
     SendMsg.append(std::to_string(DoItem->GetGUIDLow()) + "#" + std::to_string(DoItem->DeveLopRank) + "#" + std::to_string(DoItem->DeveLopXp) + "#" + std::to_string(NextRankXp));
     sDoAddon->SendPacketToClient(DoItem->GetOwner(), "ClientDevelopData", SendMsg);
@@ -266,13 +259,6 @@ public:
             St.Rank = NewDeveLopRank;
             St.NowXp = NewDeveLopXp;
             ItemDevelopCacheStore[GuidLow] = St;
-
-            CharacterDatabasePreparedStatement* Rtmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ITEM_DEVELOP_AT);
-            Rtmt->SetData(0, GuidLow);
-            Rtmt->SetData(1, ItemId);
-            Rtmt->SetData(2, NewDeveLopRank);
-            Rtmt->SetData(3, NewDeveLopXp);
-            CharacterDatabase.Execute(Rtmt);
 
             std::string SendMsg;
             SendMsg.append(std::to_string(GuidLow) + "#" + std::to_string(NewDeveLopRank) + "#" + std::to_string(NewDeveLopXp) + "#" + std::to_string(NextRankXp));
@@ -533,13 +519,6 @@ public:
                         St.Rank = NewDeveLopRank;
                         St.NowXp = NewDeveLopXp;
                         ItemDevelopCacheStore[GuidLow] = St;
-
-                        CharacterDatabasePreparedStatement* Rtmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ITEM_DEVELOP_AT);
-                        Rtmt->SetData(0, GuidLow);
-                        Rtmt->SetData(1, ItemId);
-                        Rtmt->SetData(2, NewDeveLopRank);
-                        Rtmt->SetData(3, NewDeveLopXp);
-                        CharacterDatabase.Execute(Rtmt);
 
                         std::string SendMsg;
                         SendMsg.append(std::to_string(GuidLow) + "#" + std::to_string(NewDeveLopRank) + "#" + std::to_string(NewDeveLopXp) + "#" + std::to_string(NextRankXp));

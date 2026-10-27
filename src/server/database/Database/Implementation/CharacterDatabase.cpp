@@ -711,9 +711,6 @@ void CharacterDatabaseConnection::DoPrepareStatements()
         "命中躲闪等级 = ?, 暴击躲闪等级 = ?, 韧性等级 = ?, 急速等级 = ?, 精准等级 = ?, 攻击强度 = ?, 远程攻击强度 = ?, 形态攻击强度 = ?, 法术治疗效果 = ?, 法术伤害效果 = ?, 每5秒回复法力 = ?, "
         "护甲穿透等级 = ?, 法术强度提高 = ?, 每5秒回复生命 = ?, 法术穿透 = ?, 格挡值提高 = ? WHERE 玩家标识 = ?", CONNECTION_ASYNC);
 
-    PrepareStatement(CHAR_SEL_ITEM_DEVELOP_AT, "SELECT 装备标识, 装备编号, 成长等级, 当前经验 FROM _装备特殊成长经验存档 WHERE 装备标识 = ?", CONNECTION_SYNCH);
-    PrepareStatement(CHAR_UPD_ITEM_DEVELOP_AT, "REPLACE INTO _装备特殊成长经验存档 (装备标识, 装备编号, 成长等级, 当前经验) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
-
     PrepareStatement(CHAR_UPD_GUILD_BAT, "REPLACE INTO _公会战存档 (公会编号, 当前胜利次数) VALUES (?, ?)", CONNECTION_ASYNC);
 
     PrepareStatement(CHAR_SEL_COMBAT_PET_DATA, "SELECT 战宠位置, 战宠编号, 战宠阶级, 战宠经验 FROM _玩家战宠存档 WHERE 玩家标识 = ?", CONNECTION_SYNCH);

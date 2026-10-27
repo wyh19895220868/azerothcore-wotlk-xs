@@ -599,8 +599,6 @@ enum CharacterDatabaseStatements : uint32
     CHAR_INS_ZS_STAT_PLAYER,
     CHAR_UPD_ZS_STAT_PLAYER,
 
-    CHAR_SEL_ITEM_DEVELOP_AT,
-    CHAR_UPD_ITEM_DEVELOP_AT,
 
     CHAR_UPD_GUILD_BAT,
 

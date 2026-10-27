@@ -9270,22 +9270,6 @@ void Helper::DoAsLoadDataCacheStore()
         } while (Result->NextRow());
     }
 
-    Result = CharacterDatabase.Query("SELECT 装备标识, 装备编号, 成长等级, 当前经验 FROM _装备特殊成长经验存档;");
-    if (Result)
-    {
-        do
-        {
-            Field* Fields = Result->Fetch();
-            uint32 ItemGuid = Fields[0].Get<uint32>();
-            ItemDevelopCacheTemp St;
-            St.ItemId = Fields[1].Get<uint32>();
-            St.Rank = Fields[2].Get<uint32>();
-            St.NowXp = Fields[3].Get<uint32>();
-            ItemDevelopCacheStore.insert(std::make_pair(ItemGuid, St));
-
-        } while (Result->NextRow());
-    }
-
     ItemTempKtCacheStore.clear();
     Result = CharacterDatabase.Query("SELECT 物品标识, 序号, 变量 FROM ______物品;");
     if (Result)
