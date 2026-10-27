@@ -9403,8 +9403,6 @@ public:
         LOG_INFO("server.loading", "功能表 >> 加载 [_在线商城出售表] 总计 {} 条数据", ItemShopStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_战场控制表] 总计 {} 条数据", BGTempStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_装备栏强化] 总计 {} 条数据", EqSlotTempStore.size());
-        LOG_INFO("server.loading", "功能表 >> 加载 [_装备超级随机模板总表] 加载完毕");
-        LOG_INFO("server.loading", "功能表 >> 加载 [_装备超级随机强化秒升表] 总计 {} 条数据", OnUpRankAtStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_装备符文配置表] 总计 {} 条数据", AtRunesTempStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_装备符文宝石表] 总计 {} 条数据", ItemRunesTempStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_装备符文技能组合表] 总计 {} 条数据", SpGroupTempStore.size());

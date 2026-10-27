@@ -48,14 +48,12 @@
 #pragma execution_character_set("utf-8")
 
 GenerateItemAtMap GenerateItemAtStore;
-//_装备超级随机模板总表
 GTempItemListMap GTempItemAtStore;
 StatItemGroupMap StatItemAtStore;
 SpellItemGroupMap SpellItemAtStore;
 UItemAtTempMap UItemAtTempStore;
 EnchItemGroupMap EnchItemAtStore;
 SuperUpSellTempVect SuperUpSellStore;
-//_装备超级随机强化秒升表
 OnUpRankAtVect OnUpRankAtStore;
 ResetResAtVect ResetResAtStore;
 //__生物超级掉落组表
@@ -231,65 +229,7 @@ void ItemRandomAtMgr::LoadItemRandomAt()
     if (sHelper->GetBoolean(22011))
         return;
 
-    QueryResult Result = WorldDatabase.Query("SELECT 模板组号, 序号, 几率, 前缀名称, 后缀名称, 武器最小伤害Min, 武器最小伤害Max, 武器最大伤害Min, 武器最大伤害Max, 属性组, 属性条数, 技能组, 技能条数, 随机附魔组, 随机附魔条数 FROM _装备超级随机模板总表;");
-    if (!Result)
-    {
-
-    }
-    else
-    {
-        do
-        {
-            Field* Fields = Result->Fetch();
-            GTempItemAt St;
-            St.GroupTempId = Fields[0].Get<uint32>();
-            St.Num = Fields[1].Get<uint32>();
-            St.Chance = Fields[2].Get<float>();
-            St.Prefix = Fields[3].Get<std::string>();
-            St.Suffix = Fields[4].Get<std::string>();
-            St.MinWpDmg1 = AsInt64FromString(Fields[5].Get<std::string>());
-            St.MinWpDmg2 = AsInt64FromString(Fields[6].Get<std::string>());
-            St.MaxWpDmg1 = AsInt64FromString(Fields[7].Get<std::string>());
-            St.MaxWpDmg2 = AsInt64FromString(Fields[8].Get<std::string>());
-            St.StatGroupId = Fields[9].Get<uint32>();
-            St.StatCount = Fields[10].Get<uint32>();
-            St.SpellGroupId = Fields[11].Get<uint32>();
-            St.SpellCount = Fields[12].Get<uint32>();
-            St.EnchGroupId = Fields[13].Get<uint32>();
-            St.EnchCount = Fields[14].Get<uint32>();
-            if (St.StatCount > MAX_AT_A_COUNT)
-                St.StatCount = MAX_AT_A_COUNT;
-            if (St.SpellCount > MAX_AT_B_COUNT)
-                St.SpellCount = MAX_AT_B_COUNT;
-            if (St.EnchCount > MAX_EN_COUNT)
-                St.EnchCount = MAX_EN_COUNT;
-
-            GTempItemAtStore[St.GroupTempId].push_back(St);
-
-        } while (Result->NextRow());
-    }
-
-    Result = WorldDatabase.Query("SELECT 使用物品编号, 目标装备编号, 秒升等级, 几率 FROM _装备超级随机强化秒升表;");
-    if (!Result)
-    {
-
-    }
-    else
-    {
-        do
-        {
-            Field* Fields = Result->Fetch();
-            OnUpRankAt St;
-            St.UseItemId = Fields[0].Get<uint32>();
-            St.TarItemId = Fields[1].Get<uint32>();
-            St.ORank = Fields[2].Get<uint32>();
-            St.OChance = Fields[3].Get<float>();
-            OnUpRankAtStore.push_back(St);
-
-        } while (Result->NextRow());
-    }
-
-    Result = WorldDatabase.Query("SELECT 组号, 物品编号, 几率, 超级模版组号 FROM __生物超级掉落组表;");
+    QueryResult Result = WorldDatabase.Query("SELECT 组号, 物品编号, 几率, 超级模版组号 FROM __生物超级掉落组表;");
     if (!Result)
     {
 
