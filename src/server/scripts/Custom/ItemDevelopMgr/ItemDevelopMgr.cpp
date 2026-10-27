@@ -50,54 +50,7 @@ ItemDevelopCacheMap ItemDevelopCacheStore;
 void ItemDevelopMgr::LoadItemDevelopData()
 {
     DevelopConfigStore.clear();
-    QueryResult Result = WorldDatabase.Query("SELECT 装备编号, 成长等级, 需要成长经验, 满足经验后物品编号, 满足经验后超级模版, 地图类型, 地图类型编号, 击杀普通怪物经验值Min, "
-                                                                             "击杀普通怪物经验值Max, 击杀BOSS经验值Min, 击杀BOSS经验值Max, 指定怪物编号, 指定怪物经验值Min, 指定怪物经验值Max, 成长设置选项 FROM _装备特殊成长经验配置表;");
-    if (Result)
-    {
-        do
-        {
-            Field* Fields = Result->Fetch();
-            DevelopTemp St;
-            St.ItemId = Fields[0].Get<uint32>();
-            St.Rank = Fields[1].Get<uint32>();
-            St.NeedXp = Fields[2].Get<uint32>();
-            St.NewIdType = Fields[3].Get<uint32>();
-            St.STempId = Fields[4].Get<uint32>();
-            St.MapType = Fields[5].Get<int32>();
-            St.MapEntry = Fields[6].Get<uint32>();
-            St.KillXpMin1 = Fields[7].Get<uint32>();
-            St.KillXpMax1 = Fields[8].Get<uint32>();
-            St.KillXpMin2 = Fields[9].Get<uint32>();
-            St.KillXpMax2 = Fields[10].Get<uint32>();
-
-            Tokenizer OnData(Fields[11].Get<std::string>(), '#');
-            for (auto Itr = OnData.begin(); Itr != OnData.end(); ++Itr)
-                St.ToEntrySets.insert(uint32(atol(*Itr)));
-
-            St.KillXpMin3 = Fields[12].Get<uint32>();
-            St.KillXpMax3 = Fields[13].Get<uint32>();
-            St.UpRankType = Fields[14].Get<uint32>();
-
-            DevelopConfigStore.push_back(St);
-        } while (Result->NextRow());
-    }
-
     UseXpGroupStore.clear();
-    Result = WorldDatabase.Query("SELECT 物品成长卷轴编号, 目标装备编号, 卷轴经验值Min, 卷轴经验值Max FROM _装备特殊成长使用经验卷轴表;");
-    if (Result)
-    {
-        do
-        {
-            Field* Fields = Result->Fetch();
-            UseXpGroupTemp St;
-            St.UseItemId = Fields[0].Get<uint32>();
-            St.TarItemId = Fields[1].Get<uint32>();
-            St.RewXpMin = Fields[2].Get<uint32>();
-            St.RewXpMax = Fields[3].Get<uint32>();
-
-            UseXpGroupStore.push_back(St);
-        } while (Result->NextRow());
-    }
 }
 
 bool ItemDevelopMgr::IsInItemDevelop(uint32 ItemId)

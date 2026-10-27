@@ -250,15 +250,6 @@ struct UseItemLimit
 typedef std::unordered_map<uint32, UseItemLimit> UseItemLimitMap;
 extern UseItemLimitMap UseItemLimitStore;
 
-struct ItemEntryTipTemp
-{
-    uint32 TarItemId;
-    float Mod;
-};
-
-typedef std::map<uint32, ItemEntryTipTemp> ItemEntryTipMap;
-extern ItemEntryTipMap ItemEntryTipStore;
-
 typedef std::map<uint32, uint32> ItemEquipMap;
 extern ItemEquipMap ItemEquipStore;
 
@@ -405,10 +396,7 @@ public:
 
     void ResetLimitItem();
 
-    int32 GetItemEntryTipIndex(ItemTemplate* Info, uint32 Typ);
-    void LoadItemEntryTip();
     uint32 GetEquipTempId(uint32 ItemId);
-    bool InItemEntryTip(uint32 ItemId);
 
     uint32 GetLimitNowCount(Player* player, uint32 ItemId);
     bool CheckBuyItemLimit(Player* player, uint32 BuyItemId, uint32 BuyCount);

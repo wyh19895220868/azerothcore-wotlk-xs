@@ -63,7 +63,6 @@
 #include <Custom/ItemMagicMgr/ItemMagicMgr.h>
 #include <Custom/ItemUpMgr/ItemUpMgr.h>
 #include <Custom/ItemPlayerStatMod/ItemPlayerStatMod.h>
-#include <Custom/ItemDevelopMgr/ItemDevelopMgr.h>
 #include <Custom/GuildBattleMgr/GuildBattleMgr.h>
 #include <Custom/DBCMgr/DBCMgr.h>
 #include <Custom/AsItemMgr/NpcBeastmaster.h>
@@ -145,7 +144,6 @@ public:
             { "2",   HandleDoReloadAsTempCommand, SEC_ADMINISTRATOR, Console::Yes },
             { "3",   HandleDoReloadItemFuncCommand, SEC_ADMINISTRATOR, Console::Yes },
             { "4",   HandleDoReloadClassModCommand, SEC_ADMINISTRATOR, Console::Yes },
-            { "5",   HandleDoReloadItemEntryTipMgrCommand, SEC_ADMINISTRATOR, Console::Yes },
             { "6",   HandleDoReloadDmgRankCommand, SEC_ADMINISTRATOR, Console::Yes },
             { "7",   HandleDoReloadAsCreatureCommand, SEC_ADMINISTRATOR, Console::Yes },
             { "8",   HandleDoReloadNoticeMgrCommand, SEC_ADMINISTRATOR, Console::Yes },
@@ -169,7 +167,6 @@ public:
             { "26",   HandleDoReloadItemMagicCommand, SEC_ADMINISTRATOR, Console::Yes },
             { "27", HandleItemCtUpMgrCommand, SEC_ADMINISTRATOR, Console::Yes },
             { "29", HandleItemPlayerStatCommand, SEC_ADMINISTRATOR, Console::Yes },
-            { "30", HandleItemDevelopCommand, SEC_ADMINISTRATOR, Console::Yes },
             { "31", HandleGuildBattleCommand, SEC_ADMINISTRATOR, Console::Yes },
             { "32",   HandleDoReloadItemZodiacCommand, SEC_ADMINISTRATOR, Console::Yes },
             { "33",   HandleDoReloadBeastMasterCommand, SEC_ADMINISTRATOR, Console::Yes },
@@ -1446,17 +1443,6 @@ public:
         return false;
     }
 
-    static bool HandleItemDevelopCommand(ChatHandler* handler, char const* /*args*/)
-    {
-        handler->SetSentErrorMessage(true);
-
-        sItemDevelopMgr->LoadItemDevelopData();
-
-        LOG_INFO("server.loading", ">> 重载 装备特殊成长经验 相关");
-        handler->SendGlobalGMSysMessage("[GM频道]: 重载 装备特殊成长经验 相关");
-        return false;
-    }
-
     static bool HandleItemPlayerStatCommand(ChatHandler* handler, char const* /*args*/)
     {
         handler->SetSentErrorMessage(true);
@@ -2014,12 +2000,6 @@ public:
         }
 
         uint32 Entry = static_cast<uint32>(ParsedEntry);
-        if (sItemFuncMgr->InItemEntryTip(Entry))
-        {
-            handler->SendGlobalGMSysMessage("[GM频道]: 此物品不能重载 关联 _装备属性倍率调整");
-            return false;
-        }
-
         if (!sObjectMgr->UpdateItemTempForEntry(Entry))
         {
             handler->SendGlobalGMSysMessage("[GM频道]: 数据库不存在此物品 无法重载");
@@ -2441,7 +2421,6 @@ public:
         HandleDoReloadBeastMasterCommand(handler, "");
         HandleDoReloadItemZodiacCommand(handler, "");
         HandleGuildBattleCommand(handler, "");
-        HandleItemDevelopCommand(handler, "");
         HandleItemPlayerStatCommand(handler, "");
         HandleItemCtUpMgrCommand(handler, "");
         HandleDoReloadItemMagicCommand(handler, "");
@@ -2459,7 +2438,6 @@ public:
         HandleDoReloadAsTempCommand(handler, "");
         HandleDoReloadItemFuncCommand(handler, "");
         HandleDoReloadClassModCommand(handler, "");
-        HandleDoReloadItemEntryTipMgrCommand(handler, "");
         HandleDoReloadDmgRankCommand(handler, "");
         HandleDoReloadAsCreatureCommand(handler, "");
         HandleDoReloadNoticeMgrCommand(handler, "");
@@ -2575,16 +2553,6 @@ public:
             sCustomClass->SendConfigStatData(Itr->second->GetPlayer());
         }
 
-        return false;
-    }
-
-    static bool HandleDoReloadItemEntryTipMgrCommand(ChatHandler* handler, char const* /*args*/)
-    {
-        handler->SetSentErrorMessage(true);
-
-        /*sItemFuncMgr->LoadItemEntryTip();
-        TC_LOG_INFO("server.loading", ">> 重载 _装备属性倍率调整 生效");
-        handler->SendGlobalGMSysMessage("重载 _装备属性倍率调整 生效");*/
         return false;
     }
 

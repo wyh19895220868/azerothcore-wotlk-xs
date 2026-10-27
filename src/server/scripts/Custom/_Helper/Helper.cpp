@@ -9015,7 +9015,6 @@ void Helper::WorldDoAllLoad()
     sItemMagicMgr->LoadItemZodiacData();
     sItemUpMgr->LoadItemUpData();
     sItemPlayerStatMod->LoadItemPlayerStatMod();
-    sItemDevelopMgr->LoadItemDevelopData();
     sGuildBattleMgr->LoadGuildBattle();
     sAsPlayerBattleMgr->LoadAsPlayerBattle();
     sNpcBeastMaster->LoadSystem();
@@ -9026,7 +9025,6 @@ void Helper::WorldDoAllLoad()
     sPicGuideMgr->LoadPicGuideData();
     sPlayerAction->LoadPlayerAction();
 
-    sItemFuncMgr->LoadItemEntryTip();
 }
 
 void Helper::DoZoneInCombatForPlayer(Creature* creature)
@@ -9420,17 +9418,9 @@ public:
         LOG_INFO("server.loading", "功能表 >> 加载 [_签到奖励表] 总计 {} 条数据", SignRewardStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_在线商城出售表] 总计 {} 条数据", ItemShopStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_战场控制表] 总计 {} 条数据", BGTempStore.size());
-        LOG_INFO("server.loading", "功能表 >> 加载 [_装备属性倍率调整] 总计 {} 条数据", ItemEntryTipStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_装备栏强化] 总计 {} 条数据", EqSlotTempStore.size());
-        LOG_INFO("server.loading", "功能表 >> 加载 [_装备超级随机生成总表] 总计 {} 条数据", GenerateItemAtStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_装备超级随机模板总表] 加载完毕");
-        LOG_INFO("server.loading", "功能表 >> 加载 [_装备超级随机属性组表] 加载完毕");
-        LOG_INFO("server.loading", "功能表 >> 加载 [_装备超级随机技能组表] 加载完毕");
-        LOG_INFO("server.loading", "功能表 >> 加载 [_装备超级随机附魔组表] 加载完毕");
-        LOG_INFO("server.loading", "功能表 >> 加载 [_装备超级随机强化总表] 加载完毕");
-        LOG_INFO("server.loading", "功能表 >> 加载 [_装备超级强化售卖奖励表] 总计 {} 条数据", SuperUpSellStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_装备超级随机强化秒升表] 总计 {} 条数据", OnUpRankAtStore.size());
-        LOG_INFO("server.loading", "功能表 >> 加载 [_装备超级随机重置总表] 总计 {} 条数据", ResetResAtStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_装备符文配置表] 总计 {} 条数据", AtRunesTempStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_装备符文宝石表] 总计 {} 条数据", ItemRunesTempStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_装备符文技能组合表] 总计 {} 条数据", SpGroupTempStore.size());
@@ -9448,8 +9438,6 @@ public:
         LOG_INFO("server.loading", "功能表 >> 加载 [_物品普通升级合成表] 总计 {} 条数据", MUpStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_物品属性奖励表] 总计 {} 条数据", ZsStatTempStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_物品玩家使用次数表] 总计 {} 条数据", UseItemLimitStore.size());
-        LOG_INFO("server.loading", "功能表 >> 加载 [_装备特殊成长经验配置表] 总计 {} 条数据", DevelopConfigStore.size());
-        LOG_INFO("server.loading", "功能表 >> 加载 [_装备特殊成长使用经验卷轴组表] 总计 {} 条数据", UseXpGroupStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_比武大会] 完毕");
         LOG_INFO("server.loading", "功能表 >> 加载 [_地图区域综合控制表] 总计 {} 条数据", AreaFuncTempStore.size());
         LOG_INFO("server.loading", "功能表 >> 加载 [_动作触发功能表] 总计 {} 条数据", sPlayerAction->GetActionCount());

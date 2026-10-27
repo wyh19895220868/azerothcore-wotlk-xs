@@ -66,7 +66,6 @@ ItemRyGroupMap ItemRyGroupStore;
 ItemClearBindMap ItemClearBindStore;
 AtAddItemLimitMap AtAddItemLimitStore;
 UseItemLimitMap UseItemLimitStore;
-ItemEntryTipMap ItemEntryTipStore;
 ItemEquipMap ItemEquipStore;
 IDTransmogMap IDTransmogStore;
 ItemSubNameMap ItemSubNameStore;
@@ -2676,111 +2675,10 @@ void ItemFuncMgr::ResetLimitItem()
     LoginDatabase.Execute(LoginDatabase.GetPreparedStatement(LOGIN_DEL_ITEM_LIMIT));
 }
 
-int32 ItemFuncMgr::GetItemEntryTipIndex(ItemTemplate* Info, uint32 Typ)
-{
-    int32 Index = -1;
-    for (uint8 i = 0; i < MAX_ITEM_PROTO_STATS; ++i)
-    {
-        uint32 SType = Info->ItemStat[i].ItemStatType;
-        if (SType == Typ)
-            Index = i;
-    }
-
-    return Index;
-}
-
-void ItemFuncMgr::LoadItemEntryTip()
-{
-    ItemEntryTipStore.clear();
-    uint32 Ct = 0;
-    QueryResult Result = WorldDatabase.Query("SELECT 装备编号, 目标装备编号, 属性倍率 FROM _装备属性倍率调整;");
-    if (!Result)
-    {
-
-    }
-    else
-    {
-        do
-        {
-            Field* Fields = Result->Fetch();
-            uint32 ItemId = Fields[0].Get<uint32>();
-            ItemEntryTipTemp St;
-            St.TarItemId = Fields[1].Get<uint32>();
-            St.Mod = Fields[2].Get<float>();
-            ItemEntryTipStore.insert(std::make_pair(ItemId, St));
-            ++Ct;
-        } while (Result->NextRow());
-    }
-
-    if (ItemEntryTipStore.empty())
-        return;
-
-    for (auto Itr = ItemEntryTipStore.begin(); Itr != ItemEntryTipStore.end(); Itr++)
-    {
-        ItemTemplate* SrcInfo = const_cast<ItemTemplate*>(sObjectMgr->GetItemTemplate(Itr->first));
-        if (!SrcInfo)
-            continue;
-
-        const ItemTemplate* TarInfo = sObjectMgr->GetCustomItemTemplateOs(Itr->second.TarItemId);
-        if (!TarInfo)
-            continue;
-
-        SrcInfo->Damage[0].DamageMin = TarInfo->Damage[0].DamageMin * Itr->second.Mod;
-        SrcInfo->Damage[0].DamageMax = TarInfo->Damage[0].DamageMax * Itr->second.Mod;
-
-        for (uint8 i = 0; i < MAX_ITEM_PROTO_STATS; ++i)
-        {
-            SrcInfo->ItemStat[i].ItemStatType = 0;
-            SrcInfo->ItemStat[i].ItemStatValue = 0;
-            SrcInfo->AsItemStatValue[i] = AsInt64Zero();
-            if (i >= TarInfo->StatsCount)
-                continue;
-
-            uint32 SType = TarInfo->ItemStat[i].ItemStatType;
-            AsInt64 Value = TarInfo->AsItemStatValue[i];
-            if (AsInt64IsZero(Value))
-                Value = TarInfo->ItemStat[i].ItemStatValue;
-            if (AsInt64IsZero(Value))
-                continue;
-
-            SrcInfo->ItemStat[i].ItemStatType = SType;
-            SrcInfo->AsItemStatValue[i] = Value;
-            SrcInfo->ItemStat[i].ItemStatValue = AsInt64ToInt32Clamp(Value);
-
-            int32 Index = GetItemEntryTipIndex(SrcInfo, SType);
-            switch (SType)
-            {
-            case ITEM_MOD_AGILITY:
-            case ITEM_MOD_STRENGTH:
-            case ITEM_MOD_INTELLECT:
-            case ITEM_MOD_SPIRIT:
-            case ITEM_MOD_STAMINA:
-            case ITEM_MOD_ATTACK_POWER:
-            case ITEM_MOD_RANGED_ATTACK_POWER:
-            case ITEM_MOD_SPELL_POWER:
-            {
-                if (Index > -1)
-                {
-                    SrcInfo->AsItemStatValue[Index] = ScaleAsInt64ByDouble(Value, Itr->second.Mod);
-                    SrcInfo->ItemStat[Index].ItemStatValue = AsInt64ToInt32Clamp(SrcInfo->AsItemStatValue[Index]);
-                }
-            }
-            break;
-            }
-        }
-    }
-}
-
 uint32 ItemFuncMgr::GetEquipTempId(uint32 ItemId)
 {
     auto Itr = ItemEquipStore.find(ItemId);
     return (Itr != ItemEquipStore.end()) ? Itr->second : 0;
-}
-
-bool ItemFuncMgr::InItemEntryTip(uint32 ItemId)
-{
-    auto Itr = ItemEntryTipStore.find(ItemId);
-    return (Itr != ItemEntryTipStore.end());
 }
 
 uint32 ItemFuncMgr::GetLimitNowCount(Player* player, uint32 ItemId)
