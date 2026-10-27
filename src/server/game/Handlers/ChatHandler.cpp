@@ -29,6 +29,7 @@
 #include "GuildMgr.h"
 #include "Language.h"
 #include "Log.h"
+#include "Map.h"
 #include "ObjectAccessor.h"
 #include "ObjectMgr.h"
 #include "Opcodes.h"
@@ -962,6 +963,29 @@ std::vector<std::string> NativeResourceFields(Unit* unit)
         "POWER_TYPE=" + std::to_string(uint32(power))
     };
 }
+}
+
+void NativeUIBroadcastUnitResources(Unit* unit)
+{
+    if (!unit || !unit->IsInWorld())
+        return;
+
+    Map* map = unit->GetMap();
+    if (!map)
+        return;
+
+    std::vector<std::string> fields = NativeResourceFields(unit);
+    for (auto const& playerRef : map->GetPlayers())
+    {
+        Player* player = playerRef.GetSource();
+        if (!player || !player->GetSession() || !player->GetSession()->HasNativeUI())
+            continue;
+
+        if (player != unit && player->GetSelectedUnit() != unit && !player->HaveAtClient(unit))
+            continue;
+
+        player->GetSession()->SendNativeUISnapshot(3, unit->GetGUID(), fields);
+    }
 }
 
 void WorldSession::HandleNativeUIHello(WorldPacket& packet)

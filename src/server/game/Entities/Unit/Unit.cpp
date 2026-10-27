@@ -18072,6 +18072,9 @@ void Unit::SetHealth(uint32 val)
                 }
         }
     }
+
+    if (!m_asHealthUpdating && IsInWorld())
+        NativeUIBroadcastUnitResources(this);
 }
 
 void Unit::SetMaxHealth(uint32 val)
@@ -18140,6 +18143,9 @@ void Unit::SetAsMaxHealth(AsInt64 const& val)
     if (Creature* creature = ToCreature())
         if (IsInWorld() && creature->MaxMultipleHp > 1 && sHelper->GetBoolean(17000))
             sAsCreature->SendUpdateMultipleHp(nullptr, creature);
+
+    if (IsInWorld())
+        NativeUIBroadcastUnitResources(this);
 }
 
 void Unit::SetAsHealth(AsInt64 const& val)
@@ -18174,6 +18180,9 @@ void Unit::SetAsHealth(AsInt64 const& val)
     if (Creature* creature = ToCreature())
         if (IsInWorld() && creature->MaxMultipleHp > 1 && sHelper->GetBoolean(17000))
             sAsCreature->SendUpdateMultipleHp(nullptr, creature);
+
+    if (IsInWorld())
+        NativeUIBroadcastUnitResources(this);
 }
 
 AsInt64 Unit::ModifyAsHealth(AsInt64 const& val)

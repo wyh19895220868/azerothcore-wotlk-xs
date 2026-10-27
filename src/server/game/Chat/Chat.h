@@ -297,4 +297,6 @@ class AC_GAME_API AddonChannelCommandHandler : public ChatHandler
         bool humanReadable = false;
 };
 
+void NativeUIBroadcastUnitResources(Unit* unit);
+
 #endif
