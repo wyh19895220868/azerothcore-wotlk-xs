@@ -6843,7 +6843,7 @@ std::string Helper::GetNItemLink(Item* DoItem) const
 
     std::string Name = Temp->Name1;
 
-    LocaleConstant Index = GetLocaleByName(Name);
+    LocaleConstant Index = sWorld->GetDefaultDbcLocale();
 
     if (ItemLocale const* Locale = sObjectMgr->GetItemLocale(Temp->ItemId))
         ObjectMgr::GetLocaleString(Locale->Name, Index, Name);
@@ -6890,7 +6890,7 @@ std::string Helper::GetItemLink(uint32 ItemId) const
         return " ";
 
     std::string Name = Temp->Name1;
-    LocaleConstant Index = GetLocaleByName(Name);
+    LocaleConstant Index = sWorld->GetDefaultDbcLocale();
 
     if (ItemLocale const* Locale = sObjectMgr->GetItemLocale(Temp->ItemId))
         ObjectMgr::GetLocaleString(Locale->Name, Index, Name);
