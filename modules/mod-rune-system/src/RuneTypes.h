@@ -39,7 +39,7 @@ struct CustomRuneInfo
     uint32 runeId;                  // 符文ID
     uint32 itemId;                  // 物品ID (0=不绑定, >0=绑定物品ID)
     std::string name;               // 符文名称
-    uint32 runeSlot;                // 符文槽位 (1-20)
+    uint32 runeSlot;                // 符文槽位 (1-28)
     uint32 runeQuality;             // 符文品质
     uint32 spellId;                 // 关联法术ID
     uint32 cooldown;                // 冷却时间

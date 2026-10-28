@@ -191,7 +191,7 @@ public:
     static std::string CreateSlotIdList(uint32 count)
     {
         std::vector<uint32> slots;
-        for (uint32 i = 1; i <= count && i <= 20; ++i)
+        for (uint32 i = 1; i <= count && i <= 28; ++i)
         {
             slots.push_back(i);
         }

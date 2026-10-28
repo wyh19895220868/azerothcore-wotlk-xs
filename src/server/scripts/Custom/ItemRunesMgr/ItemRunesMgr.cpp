@@ -54,6 +54,24 @@ ItemASlotRunesTempMap ItemASlotRunesTempStore;
 //符文缓存器
 ItemRunesCacheMap ItemRunesCacheStore;
 
+static void BindItemRuneArchive(CharacterDatabasePreparedStatement* stmt, Item* item)
+{
+    stmt->SetData(0, item->GetGUIDLow());
+    stmt->SetData(1, item->GetEntry());
+    stmt->SetData(2, item->NowCount);
+    stmt->SetData(3, item->RunesCount);
+    for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
+        stmt->SetData(4 + i, item->ResItems[i]);
+
+    uint8 spellBase = static_cast<uint8>(4 + MAX_RUNES_COUNT);
+    for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
+        stmt->SetData(spellBase + i, item->OSpells[i]);
+
+    uint8 nameIndex = static_cast<uint8>(spellBase + MAX_RUNES_COUNT);
+    stmt->SetData(nameIndex, item->GSpellName);
+    stmt->SetData(nameIndex + 1, item->GSpellListStr);
+}
+
 static void UpdateFrozenCoreRuneCache(Item* DoItem)
 {
     if (!DoItem)
@@ -261,18 +279,7 @@ void ItemRunesMgr::AutoGenerateRandomRunesCount(Item* DoItem)
     SendMsg.clear();
 
     CharacterDatabasePreparedStatement* Utmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ITEM_RUNES_AT);
-    Utmt->SetData(0, DoItem->GetGUIDLow());
-    Utmt->SetData(1, DoItem->GetEntry());
-    Utmt->SetData(2, DoItem->NowCount);
-    Utmt->SetData(3, DoItem->RunesCount);
-    for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
-        Utmt->SetData(i + 4, DoItem->ResItems[i]);
-    for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
-        Utmt->SetData(i + 12, DoItem->OSpells[i]);
-
-    Utmt->SetData(20, DoItem->GSpellName);
-    Utmt->SetData(21, DoItem->GSpellListStr);
-
+    BindItemRuneArchive(Utmt, DoItem);
     CharacterDatabase.Execute(Utmt);
 
     ItemRunesCacheTemp Temp;
@@ -458,18 +465,7 @@ bool ItemRunesMgr::DoAddRunes(Item* DoItem, uint32 RunesItem, uint8 Slot, Player
     SendMsg.clear();
 
     CharacterDatabasePreparedStatement* Utmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ITEM_RUNES_AT);
-    Utmt->SetData(0, DoItem->GetGUIDLow());
-    Utmt->SetData(1, DoItem->GetEntry());
-    Utmt->SetData(2, DoItem->NowCount);
-    Utmt->SetData(3, DoItem->RunesCount);
-    for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
-        Utmt->SetData(i + 4, DoItem->ResItems[i]);
-    for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
-        Utmt->SetData(i + 12, DoItem->OSpells[i]);
-
-    Utmt->SetData(20, DoItem->GSpellName);
-    Utmt->SetData(21, DoItem->GSpellListStr);
-
+    BindItemRuneArchive(Utmt, DoItem);
     CharacterDatabase.Execute(Utmt);
 
     ItemRunesCacheTemp Temp;
@@ -550,18 +546,7 @@ bool ItemRunesMgr::DoDeleteRunes(Item* DoItem, uint32 RunesItem, uint8 Slot, Pla
     SendMsg.clear();
 
     CharacterDatabasePreparedStatement* Utmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ITEM_RUNES_AT);
-    Utmt->SetData(0, DoItem->GetGUIDLow());
-    Utmt->SetData(1, DoItem->GetEntry());
-    Utmt->SetData(2, DoItem->NowCount);
-    Utmt->SetData(3, DoItem->RunesCount);
-    for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
-        Utmt->SetData(i + 4, DoItem->ResItems[i]);
-    for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
-        Utmt->SetData(i + 12, DoItem->OSpells[i]);
-
-    Utmt->SetData(20, DoItem->GSpellName);
-    Utmt->SetData(21, DoItem->GSpellListStr);
-
+    BindItemRuneArchive(Utmt, DoItem);
     CharacterDatabase.Execute(Utmt);
 
     ItemRunesCacheTemp Temp;
@@ -631,18 +616,7 @@ bool ItemRunesMgr::DoDeleteAsRunes(Item* DoItem, Player* player)
     SendMsg.clear();
 
     CharacterDatabasePreparedStatement* Utmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ITEM_RUNES_AT);
-    Utmt->SetData(0, DoItem->GetGUIDLow());
-    Utmt->SetData(1, DoItem->GetEntry());
-    Utmt->SetData(2, DoItem->NowCount);
-    Utmt->SetData(3, DoItem->RunesCount);
-    for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
-        Utmt->SetData(i + 4, DoItem->ResItems[i]);
-    for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
-        Utmt->SetData(i + 12, DoItem->OSpells[i]);
-
-    Utmt->SetData(20, DoItem->GSpellName);
-    Utmt->SetData(21, DoItem->GSpellListStr);
-
+    BindItemRuneArchive(Utmt, DoItem);
     CharacterDatabase.Execute(Utmt);
 
     ItemRunesCacheTemp Temp;

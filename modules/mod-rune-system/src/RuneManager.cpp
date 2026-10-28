@@ -88,7 +88,7 @@ bool RuneManager::DeleteRune(uint32 runeId)
 
 bool RuneManager::AddRuneSlotToItem(Item* item, uint32 slotCount)
 {
-    if (!item || slotCount == 0 || slotCount > 20)
+    if (!item || slotCount == 0 || slotCount > 28)
     {
         return false;
     }

@@ -129,9 +129,9 @@ public:
         uint32 itemGuid = atoi(itemGuidStr);
         uint32 slotCount = atoi(slotCountStr);
 
-        if (slotCount == 0 || slotCount > 20)
+        if (slotCount == 0 || slotCount > 28)
         {
-            handler->SendSysMessage("插槽数量必须在 1-20 之间。");
+            handler->SendSysMessage("插槽数量必须在 1-28 之间。");
             return false;
         }
 

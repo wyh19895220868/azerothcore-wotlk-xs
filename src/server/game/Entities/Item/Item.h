@@ -227,7 +227,7 @@ extern ItemTempKtCacheMap ItemTempKtCacheStore;
 typedef std::vector<std::pair<int32, AsInt64>> RmAtStatVect;
 #define MAX_AT_A_COUNT 16     //属性
 #define MAX_AT_B_COUNT 8       //技能
-#define MAX_RUNES_COUNT 8       //最多符文槽
+#define MAX_RUNES_COUNT 28      //最多符文槽，对应符文孔位表的四排孔
 
 #define MAX_SX_B_COUNT 7       //随机属性
 #define MAX_KEY_SPELLS_COUNT 24       //秘境最多技能数

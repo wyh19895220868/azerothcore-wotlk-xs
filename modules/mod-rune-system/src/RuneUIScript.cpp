@@ -20,7 +20,7 @@
 namespace
 {
 constexpr char RUNE_UI_PREFIX[] = "IRUN";
-constexpr uint32 RUNE_UI_MAX_SLOTS = 20;
+constexpr uint32 RUNE_UI_MAX_SLOTS = 28;
 
 std::vector<std::string> Split(std::string const& text, char delimiter)
 {

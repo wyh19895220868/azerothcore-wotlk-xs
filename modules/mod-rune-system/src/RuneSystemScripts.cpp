@@ -275,28 +275,12 @@ public:
 
         // 构建响应数据
         // 格式: [RUNEDATA]物品GUID:最大插槽,已使用插槽,符文类型1,符文类型2,...
-        static const std::array<uint32, 21> slotColorMap = {
+        static const std::array<uint32, 29> slotColorMap = {
             0,
-            1, // 1
-            2, // 2
-            3, // 3
-            4, // 4
-            1, // 5
-            2, // 6
-            3, // 7
-            4, // 8
-            1, // 9
-            2, // 10
-            3, // 11
-            4, // 12
-            1, // 13
-            2, // 14
-            3, // 15
-            4, // 16
-            1, // 17
-            2, // 18
-            3, // 19
-            4  // 20
+            1, 1, 1, 1, 1, 1, 1,
+            2, 2, 2, 2, 2, 2, 2,
+            3, 3, 3, 3, 3, 3, 3,
+            4, 4, 4, 4, 4, 4, 4
         };
 
         std::ostringstream oss;
@@ -922,7 +906,7 @@ public:
         if (!nameStr || !slotStr || !qualityStr ||
             !spellIdStr || !cooldownStr || !procChanceStr || !effectTypeStr)
         {
-            handler->SendSysMessage("用法: .符文 创建 <名称>,<槽位(1-20)>,<品质>,<法术ID>,<冷却时间>,<触发几率>,<效果类型>");
+            handler->SendSysMessage("用法: .符文 创建 <名称>,<槽位(1-28)>,<品质>,<法术ID>,<冷却时间>,<触发几率>,<效果类型>");
             handler->SetSentErrorMessage(true);
             return false;
         }

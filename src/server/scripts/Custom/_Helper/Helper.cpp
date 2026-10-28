@@ -9232,7 +9232,7 @@ void Helper::DoAsLoadDataCacheStore()
         } while (Result->NextRow());
     }
 
-    Result = CharacterDatabase.Query("SELECT 装备标识, 装备编号, 当前插入数量, 符文插槽数量, 符文宝石1, 符文宝石2, 符文宝石3, 符文宝石4, 符文宝石5, 符文宝石6, 符文宝石7, 符文宝石8, 自带技能1, 自带技能2, 自带技能3, 自带技能4, 自带技能5, 自带技能6, 自带技能7, 自带技能8, 组合技名称, 组合技能列表 FROM _装备符文存档;");
+    Result = CharacterDatabase.Query("SELECT 装备标识, 装备编号, 当前插入数量, 符文插槽数量, 符文宝石1, 符文宝石2, 符文宝石3, 符文宝石4, 符文宝石5, 符文宝石6, 符文宝石7, 符文宝石8, 符文宝石9, 符文宝石10, 符文宝石11, 符文宝石12, 符文宝石13, 符文宝石14, 符文宝石15, 符文宝石16, 符文宝石17, 符文宝石18, 符文宝石19, 符文宝石20, 符文宝石21, 符文宝石22, 符文宝石23, 符文宝石24, 符文宝石25, 符文宝石26, 符文宝石27, 符文宝石28, 自带技能1, 自带技能2, 自带技能3, 自带技能4, 自带技能5, 自带技能6, 自带技能7, 自带技能8, 自带技能9, 自带技能10, 自带技能11, 自带技能12, 自带技能13, 自带技能14, 自带技能15, 自带技能16, 自带技能17, 自带技能18, 自带技能19, 自带技能20, 自带技能21, 自带技能22, 自带技能23, 自带技能24, 自带技能25, 自带技能26, 自带技能27, 自带技能28, 组合技名称, 组合技能列表 FROM _装备符文存档;");
     if (Result)
     {
         do
@@ -9245,11 +9245,13 @@ void Helper::DoAsLoadDataCacheStore()
             Temp.RunesCount = Fields[3].Get<uint8>();
 
             for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
-                Temp.ResItems[i] = Fields[i + 4].Get<uint32>();
+                Temp.ResItems[i] = Fields[4 + i].Get<uint32>();
+            uint8 spellBase = static_cast<uint8>(4 + MAX_RUNES_COUNT);
             for (uint8 i = 0; i < MAX_RUNES_COUNT; ++i)
-                Temp.OSpells[i] = Fields[i + 12].Get<uint32>();
-            Temp.GSpellName = Fields[20].Get<std::string>();
-            Temp.GSpellListStr = Fields[21].Get<std::string>();
+                Temp.OSpells[i] = Fields[spellBase + i].Get<uint32>();
+            uint8 nameIndex = static_cast<uint8>(spellBase + MAX_RUNES_COUNT);
+            Temp.GSpellName = Fields[nameIndex].Get<std::string>();
+            Temp.GSpellListStr = Fields[nameIndex + 1].Get<std::string>();
 
             ItemRunesCacheStore[ItemGuid] = Temp;
 
