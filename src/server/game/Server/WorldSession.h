@@ -1016,10 +1016,12 @@ public:                                                 // opcodes handlers
 
     void HandleMessagechatOpcode(WorldPacket& recvPacket);
     void HandleNativeUIHello(WorldPacket& packet);
+    void HandleNativeUITooltipQuery(WorldPacket& packet);
     void UpdateNativeUI(uint32 diff);
     bool HasNativeUI() const { return _nativeUIEnabled; }
     uint16 GetNativeUIVersion() const { return _nativeUIVersion; }
     void SendNativeUISnapshot(uint8 kind, ObjectGuid guid, std::vector<std::string> const& fields);
+    void SendNativeUITooltipData(uint32 itemId, uint32 guidLow, std::string const& payload);
     void SendPlayerNotFoundNotice(std::string const& name);
     void SendPlayerAmbiguousNotice(std::string const& name);
     void SendWrongFactionNotice();
