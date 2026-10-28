@@ -52,6 +52,8 @@
 #include "World.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
+#include "../../../../modules/mod-huanjinxitong/src/HuanJingSystem.h"
+#include "../../scripts/Custom/CreatureMod/AsCreature.h"
 #include <zlib.h>
 
 #include "Corpse.h"
@@ -539,7 +541,33 @@ void WorldSession::HandleSetSelectionOpcode(WorldPacket& recv_data)
     ObjectGuid guid;
     recv_data >> guid;
 
+    Creature* preparedCreature = nullptr;
+
+    // Resolve and apply custom creature health before the selection field is
+    // updated. The stock target frame reads the creature's public health as
+    // soon as selection changes; doing this afterwards makes it briefly show
+    // the template value before the extended health-bar packet arrives.
+    if (guid)
+    {
+        if (Unit* unit = ObjectAccessor::GetUnit(*_player, guid))
+        {
+            if (Creature* creature = unit->ToCreature())
+            {
+                if (creature->IsAlive())
+                {
+                    preparedCreature = creature;
+                    sHuanJingSystem->GetMapCreatureConfig(creature, _player);
+                    sHuanJingSystem->AdjustCreatureStatsForPlayer(creature, _player);
+                    sHuanJingSystem->EnsureCreatureHealthBarsFromConfig(creature, _player, false);
+                }
+            }
+        }
+    }
+
     _player->SetSelection(guid);
+
+    if (preparedCreature)
+        sAsCreature->SendUpdateMultipleHp(_player, preparedCreature);
 
     // Refresh the NativeUI target snapshot now that the selection changed; waiting
     // for the periodic tick left the custom health bar text blank for up to 250ms.
