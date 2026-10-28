@@ -169,7 +169,11 @@ void ItemShopMgr::SendDataForSearch(Player* player, std::string IdOrName)
                 continue;
 
             std::string IName = Proto->Name1;
-            if (IName.find(ItemName) != std::string::npos)
+            if (ItemLocale const* Locale = sObjectMgr->GetItemLocale(Proto->ItemId))
+                ObjectMgr::GetLocaleString(Locale->Name, sWorld->GetDefaultDbcLocale(), IName);
+
+            // Match the localized (zhCN) name as well as the English template name.
+            if (IName.find(ItemName) != std::string::npos || Proto->Name1.find(ItemName) != std::string::npos)
                 ItemList.push_back(Itr->first);
         }
     }
