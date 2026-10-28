@@ -293,6 +293,8 @@ public:
     bool HandleUnitKill(Unit* killer, Unit* victim, SpellInfo const* spellProto);
 
     // 生物属性调整
+    // 只有配置了具体生物、地图或区域的行才改属性。全 -1 通配行和没有配置的生物保持当前血量。
+    bool CreatureUsesDedicatedStats(Creature* creature, Player* player) const;
     void AdjustCreatureStats(Creature* creature, Player* player, bool allowInCombat = false);
     // 按指定玩家的幻境等级单体调整生物属性：
     // - 如果该生物尚未调整，则按此玩家等级调整；

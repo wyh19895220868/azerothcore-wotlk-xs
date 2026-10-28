@@ -47,6 +47,7 @@
 #include "WorldSession.h"
 #include "StringConvert.h"
 #include "NativeUIProtocol.h"
+#include "../../../../modules/mod-huanjinxitong/src/HuanJingSystem.h"
 #include "../../scripts/Custom/AddonActive/DoAddon.h"
 #include "..\..\scripts\Custom\_Helper\Helper.h"
 #include "../../scripts/Custom/_Helper/AsInt64.h"
@@ -1049,6 +1050,14 @@ void NativeUISendTargetNow(WorldSession* session)
     Player* player = session->GetPlayer();
     if (!player || !player->IsInWorld())
         return;
+
+    // Dedicated 幻境 creatures are scaled before this snapshot, so the bar receives
+    // the adjusted health in the selection packet. Creatures without a specific
+    // creature, map, or area row keep the health they already have.
+    if (Unit* selected = player->GetSelectedUnit())
+        if (selected->IsAlive())
+            if (Creature* creature = selected->ToCreature())
+                sHuanJingSystem->AdjustCreatureStatsForPlayer(creature, player);
 
     // Sends kind 1, including the "no target" packet on deselect so the frame clears.
     PattrSendTarget(player, "");

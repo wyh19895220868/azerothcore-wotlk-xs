@@ -1775,6 +1775,15 @@ void HuanJingSystem::ForgetResolvedCreatureConfig(Creature const* creature)
     _resolvedCreatureConfigs.erase(GenerateCreatureKey(creature));
 }
 
+bool HuanJingSystem::CreatureUsesDedicatedStats(Creature* creature, Player* player) const
+{
+    HuanJingCreatureConfig const* config = GetCreatureConfig(creature, player);
+    if (!config)
+        return false;
+
+    return config->creatureId != -1 || config->mapId != -1 || config->areaId != -1;
+}
+
 const HuanJingCreatureConfig* HuanJingSystem::GetCreatureConfig(Creature* creature, Player* player) const
 {
     if (!creature)
@@ -1853,6 +1862,13 @@ void HuanJingSystem::AdjustCreatureStats(Creature* creature, Player* player, boo
         {
             SendCreatureHuanJingBroadcastToPlayer(player, creature, "CombatProtection");
         }
+        return;
+    }
+
+    if (!CreatureUsesDedicatedStats(creature, player))
+    {
+        if (!creature->IsInCombat() && GetCreatureAdjustedHuanJingLevel(creature) > 0)
+            RestoreCreatureToOriginalStats(creature);
         return;
     }
 
@@ -2080,7 +2096,7 @@ void HuanJingSystem::AdjustCreatureStats(Creature* creature, Player* player, boo
         config = &scaledConfig;
     }
 
-    // 如果没有找到匹配的配置，仍然继续调整生物属性（使用基础调整逻辑）
+    // 没有专属配置的生物已在函数入口返回。这里只处理带具体生物、地图或区域的配置。
     bool useBasicAdjustment = (config == nullptr);
     AsInt64 configuredHealthForCombat = 0;
 
@@ -7351,8 +7367,8 @@ void HuanJingSystemPlayerScript::OnPlayerUpdate(Player* player, uint32 diff)
                 // Resolve the route again when the player first selects one.
                 sHuanJingSystem->GetMapCreatureConfig(creature, nullptr);
 
-                // 目标切换时，按当前玩家的幻境等级单体调整当前目标生物属性；
-                // 若该生物已按更高等级调整，则保持不变。
+                // 选中包已经按专属配置重算过。等级相同会直接返回。
+                // 没有具体生物、地图或区域配置的生物不会被改血量。
                 sHuanJingSystem->AdjustCreatureStatsForPlayer(creature, player);
 
                 // Attribute templates now use the legacy MultipleHp UI. Send its
@@ -8937,6 +8953,13 @@ void HuanJingSystem::AdjustCreatureStatsForPlayer(Creature* creature, Player* pl
                 SendCreatureHuanJingBroadcastToPlayer(player, creature, "CombatProtection");
             }
         }
+        return;
+    }
+
+    if (!CreatureUsesDedicatedStats(creature, player))
+    {
+        if (!inCombat && currentAdjustedLevel > 0)
+            RestoreCreatureToOriginalStats(creature);
         return;
     }
 
