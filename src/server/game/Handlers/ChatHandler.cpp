@@ -927,6 +927,7 @@ std::vector<std::string> NativeResourceFields(Unit* unit)
 {
     AsInt64 health = unit->GetAsHealth();
     AsInt64 maximum = unit->GetAsMaxHealth();
+    uint32 healthBars = 1;
     if (Player* player = unit->ToPlayer())
         if (player->GetAsRealMaxHealth() > 0)
             maximum = player->GetAsRealMaxHealth();
@@ -938,6 +939,7 @@ std::vector<std::string> NativeResourceFields(Unit* unit)
     {
         if (sHelper->GetBoolean(17000) && creature->MaxMultipleHp > 1 && maximum > 0)
         {
+            healthBars = creature->MaxMultipleHp;
             uint32 remaining = std::min(creature->MultipleHp, creature->MaxMultipleHp);
             AsInt64 barHealth = maximum;
             maximum = MultiplyDivideAsInt256(barHealth, creature->MaxMultipleHp, 1);
@@ -959,6 +961,7 @@ std::vector<std::string> NativeResourceFields(Unit* unit)
         "INT256=1",
         "CUR_HEALTH=" + AsInt64ToString(std::max<AsInt64>(0, health)),
         "MAX_HEALTH=" + AsInt64ToString(std::max<AsInt64>(0, maximum)),
+        "HEALTH_BARS=" + std::to_string(healthBars),
         "CUR_POWER=" + AsInt64ToString(std::max<AsInt64>(0, curPower)),
         "MAX_POWER=" + AsInt64ToString(std::max<AsInt64>(0, maxPower)),
         "POWER_TYPE=" + std::to_string(uint32(power))
