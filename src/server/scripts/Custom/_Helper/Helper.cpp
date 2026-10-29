@@ -6583,6 +6583,13 @@ std::string Helper::GetCreatureNameByEntry(uint32 CreatureId)
     if (!Info)
         return "未知";
 
+    // creature_template.name is the English row. The client shows this string, so
+    // prefer the localized row the same way the generated item links do.
+    LocaleConstant Index = sWorld->GetDefaultDbcLocale();
+    if (CreatureLocale const* Locale = sObjectMgr->GetCreatureLocale(CreatureId))
+        if (Index < Locale->Name.size() && !Locale->Name[Index].empty())
+            return Locale->Name[Index];
+
     return Info->Name;
 }
 
