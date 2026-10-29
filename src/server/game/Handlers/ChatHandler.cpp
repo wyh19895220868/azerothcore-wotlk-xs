@@ -928,6 +928,9 @@ std::vector<std::string> NativeResourceFields(Unit* unit)
     AsInt64 health = unit->GetAsHealth();
     AsInt64 maximum = unit->GetAsMaxHealth();
     uint32 healthBars = 1;
+    uint32 currentHealthBars = 1;
+    AsInt64 totalHealth = health;
+    AsInt64 totalMaximum = maximum;
     if (Player* player = unit->ToPlayer())
         if (player->GetAsRealMaxHealth() > 0)
             maximum = player->GetAsRealMaxHealth();
@@ -940,13 +943,21 @@ std::vector<std::string> NativeResourceFields(Unit* unit)
         if (sHelper->GetBoolean(17000) && creature->MaxMultipleHp > 1 && maximum > 0)
         {
             healthBars = creature->MaxMultipleHp;
-            uint32 remaining = std::min(creature->MultipleHp, creature->MaxMultipleHp);
-            AsInt64 barHealth = maximum;
-            maximum = MultiplyDivideAsInt256(barHealth, creature->MaxMultipleHp, 1);
-            boost::multiprecision::int512_t total = health;
-            if (remaining > 1)
-                total += boost::multiprecision::int512_t(barHealth) * (remaining - 1);
-            health = !unit->IsAlive() || remaining == 0 ? AsInt64Zero() : ClampAsInt256(total);
+            currentHealthBars = unit->IsAlive() ? std::min(creature->MultipleHp, creature->MaxMultipleHp) : 0;
+            // CUR_HEALTH/MAX_HEALTH stay the single visible bar so the target
+            // frame shows one bar instead of the sum of every bar. The totals
+            // travel in separate fields for the native multi-bar panel.
+            totalMaximum = maximum * AsInt64(healthBars);
+            if (!unit->IsAlive() || currentHealthBars == 0)
+                totalHealth = AsInt64Zero();
+            else
+            {
+                totalHealth = health;
+                if (currentHealthBars > 1)
+                    totalHealth += maximum * AsInt64(currentHealthBars - 1);
+                if (totalHealth > totalMaximum)
+                    totalHealth = totalMaximum;
+            }
         }
     }
     Powers power = unit->getPowerType();
@@ -962,6 +973,9 @@ std::vector<std::string> NativeResourceFields(Unit* unit)
         "CUR_HEALTH=" + AsInt64ToString(std::max<AsInt64>(0, health)),
         "MAX_HEALTH=" + AsInt64ToString(std::max<AsInt64>(0, maximum)),
         "HEALTH_BARS=" + std::to_string(healthBars),
+        "CURRENT_HEALTH_BARS=" + std::to_string(currentHealthBars),
+        "TOTAL_HEALTH=" + AsInt64ToString(std::max<AsInt64>(0, totalHealth)),
+        "MAX_TOTAL_HEALTH=" + AsInt64ToString(std::max<AsInt64>(0, totalMaximum)),
         "CUR_POWER=" + AsInt64ToString(std::max<AsInt64>(0, curPower)),
         "MAX_POWER=" + AsInt64ToString(std::max<AsInt64>(0, maxPower)),
         "POWER_TYPE=" + std::to_string(uint32(power))
