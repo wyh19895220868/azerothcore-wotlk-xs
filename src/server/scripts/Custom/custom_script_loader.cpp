@@ -57,6 +57,7 @@ void AddSC_BeastCardMgr();
 void AddSC_ChatFilterMgr();
 void AddSC_SpellCooldownMgr();
 void AddSC_AntiGCDHackMgr();
+void AddSC_StarVeinMgr();
 
 void AddCustomScripts()
 {
@@ -96,4 +97,5 @@ void AddCustomScripts()
     AddSC_ChatFilterMgr();
     AddSC_SpellCooldownMgr();
     AddSC_AntiGCDHackMgr();
+    AddSC_StarVeinMgr();
 }

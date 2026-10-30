@@ -83,6 +83,7 @@
 #include <Custom/PlayerAction/PlayerAction.h>
 #include <Custom/ReincarnationMgr/ReincarnationMgr.h>
 #include <Custom/BeastCardMgr/BeastCardMgr.h>
+#include <Custom/StarVeinMgr/StarVeinMgr.h>
 #include <Custom/ChatFilterMgr/ChatFilterMgr.h>
 #include <Custom/SpellCooldownMgr/SpellCooldownMgr.h>
 #include <Custom/AntiGCDHackMgr/AntiGCDHackMgr.h>
@@ -9336,6 +9337,9 @@ public:
         // 加载转生配置表
         sReincarnationMgr->LoadReincarnationTemplate();
         sBeastCardMgr->LoadConfig();
+
+        // 加载星脉衍化节点配置
+        sStarVeinMgr->LoadConfig();
 
         // 加载聊天屏蔽和GCD功能
         sChatFilterMgr->Load();

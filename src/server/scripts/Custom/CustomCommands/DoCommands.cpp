@@ -75,6 +75,7 @@
 #include <Custom/CustomVendorMgr/CustomVendorMgr.h>
 #include <Custom/ReincarnationMgr/ReincarnationMgr.h>
 #include <Custom/BeastCardMgr/BeastCardMgr.h>
+#include <Custom/StarVeinMgr/StarVeinMgr.h>
 #include <Custom/ChatFilterMgr/ChatFilterMgr.h>
 #include <Custom/SpellCooldownMgr/SpellCooldownMgr.h>
 #include <Custom/AntiGCDHackMgr/AntiGCDHackMgr.h>
@@ -184,6 +185,9 @@ public:
         { "45",   HandleDoReloadAntiGCDHackCommand, SEC_ADMINISTRATOR, Console::Yes },
         { "46",   HandleDoReloadModulesCommand, SEC_ADMINISTRATOR, Console::Yes },
         { "47",   HandleDoReloadBeastCardCommand, SEC_ADMINISTRATOR, Console::Yes },
+        { "49",   HandleDoReloadStarVeinCommand, SEC_ADMINISTRATOR, Console::Yes },
+        { "xmyh", HandleDoReloadStarVeinCommand, SEC_ADMINISTRATOR, Console::Yes },
+        { "星脉衍化", HandleDoReloadStarVeinCommand, SEC_ADMINISTRATOR, Console::Yes },
         { "模块", HandleDoReloadModulesCommand, SEC_ADMINISTRATOR, Console::Yes },
         { "module", HandleDoReloadModulesCommand, SEC_ADMINISTRATOR, Console::Yes },
         { "modules", HandleDoReloadModulesCommand, SEC_ADMINISTRATOR, Console::Yes },
@@ -2453,6 +2457,7 @@ public:
         HandleDoReloadChatFilterCommand(handler, "");
         HandleDoReloadGCDWhitelistCommand(handler, "");
         HandleDoReloadAntiGCDHackCommand(handler, "");
+        HandleDoReloadStarVeinCommand(handler, "");
         HandleDoReloadModulesCommand(handler, "");
 
         return false;
@@ -2762,6 +2767,17 @@ public:
         sAntiGCDHackMgr->Reload();
         LOG_INFO("server.loading", ">> 重载 反GCD工具配置 生效");
         handler->SendGlobalGMSysMessage("[GM频道]: 重载 反GCD工具配置 生效");
+
+        return false;
+    }
+
+    static bool HandleDoReloadStarVeinCommand(ChatHandler* handler, char const* /*args*/)
+    {
+        handler->SetSentErrorMessage(true);
+
+        sStarVeinMgr->Reload();
+        LOG_INFO("server.loading", ">> 重载 [_星脉衍化节点配置] 生效");
+        handler->SendGlobalGMSysMessage("[GM频道]: 重载 [_星脉衍化节点配置] 生效");
 
         return false;
     }
