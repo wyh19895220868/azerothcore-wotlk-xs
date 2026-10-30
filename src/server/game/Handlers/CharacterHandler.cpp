@@ -1126,6 +1126,13 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder const& holder)
         sScriptMgr->OnPlayerFirstLogin(pCurrChar);
     }
 
+    // 上线满血：登录钩子（属性点、VIP/装备成长模板、区域光环）会在
+    // Player::LoadFromDB 还原存档血量之后继续抬高最大血量，而
+    // Unit::SetAsMaxHealth 只保留当前绝对值，导致玩家进世界时血条低于满值。
+    // 这里是登录流程最后一次上限变动，统一按当前上限补满。
+    if (pCurrChar->IsAlive())
+        pCurrChar->SetFullHealth();
+
     if (pCurrChar->UpdateUI)
     {
         pCurrChar->UpdateUI = false;
