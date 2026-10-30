@@ -5739,7 +5739,44 @@ void ItemIdentificationSystem::SendAllModuleDataAddon(Player* player, uint32 ite
              << data.huanjingData;
     if (!data.pendingIdentifyData.empty())
         response << ":" << data.pendingIdentifyData;
-    response << ":" << data.templateStatsData;
+        if (player)
+    {
+        std::string limitSection;
+        auto appendLimit = [&limitSection](char const* label, uint32 now, uint32 limit)
+        {
+            if (!limit)
+                return;
+            if (!limitSection.empty())
+                limitSection += "\n";
+            limitSection += std::string("|cFFFFD200") + label + "|r " + std::to_string(now) + " / " + std::to_string(limit);
+        };
+
+        auto current = [&player, itemID](auto const& map) -> uint32
+        {
+            auto it = map.find(itemID);
+            return it == map.end() ? 0u : it->second;
+        };
+
+        auto limitItr = AtAddItemLimitStore.find(itemID);
+        if (limitItr != AtAddItemLimitStore.end())
+        {
+            appendLimit("角色每日限制", current(player->PlayerDayItemLimitMap), limitItr->second.CharDayLimt);
+            appendLimit("角色每周限制", current(player->PlayerFrItemLimitMap), limitItr->second.CharFrLimt);
+            appendLimit("账号每日限制", current(player->PlayerAccDayItemLimitMap), limitItr->second.AccDayLimt);
+            appendLimit("账号每周限制", current(player->PlayerAccFrItemLimitMap), limitItr->second.AccFrLimt);
+        }
+
+        auto useItr = UseItemLimitStore.find(itemID);
+        if (useItr != UseItemLimitStore.end())
+        {
+            appendLimit("每日使用上限", current(player->DayUseItemLimitMap), useItr->second.UseDayLimt);
+            appendLimit("每周使用上限", current(player->FrUseItemLimitMap), useItr->second.UseFrLimt);
+        }
+
+        if (!limitSection.empty())
+            response << ":" << "LIMIT|" << limitSection;
+    }
+response << ":" << data.templateStatsData;
 
     std::string responseStr = response.str();
 
