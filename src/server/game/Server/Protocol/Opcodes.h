@@ -1345,7 +1345,8 @@ enum Opcodes : uint16
     SMSG_NATIVE_UI_COMBAT_TEXT                      = 0x523,
     CMSG_NATIVE_UI_TOOLTIP_QUERY                    = 0x524,
     SMSG_NATIVE_UI_TOOLTIP_DATA                     = 0x525,
-    NUM_MSG_TYPES                                   = 0x526
+    SMSG_NATIVE_UI_COMBAT_LOG                       = 0x526,
+    NUM_MSG_TYPES                                   = 0x527
 };
 
 enum OpcodeMisc : uint16
