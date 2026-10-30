@@ -205,6 +205,7 @@ struct CreatureDeathIdentificationContext
     uint32 identificationItemLevel = 0;
     uint32 equipAttrValue = 0;
     float equipAttrMultiplier = 1.0f;
+    bool fromMapControl = false;
 };
 
 class HuanJingSystem

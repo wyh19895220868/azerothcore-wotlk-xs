@@ -6608,9 +6608,23 @@ void HuanJingSystemUnitScript::OnUnitDeath(Unit* unit, Unit* killer)
     Creature* creature = unit->ToCreature();
     ObjectGuid guid = creature->GetGUID();
 
+    // Loot belongs to the resolved map template even when another system owns stats.
+    HuanJingCreatureConfig const* lootConfig = sHuanJingSystem->GetMapCreatureConfig(creature, nullptr);
+    if (lootConfig && !lootConfig->attributeTemplateId)
+        lootConfig = nullptr;
+    if (lootConfig)
+    {
+        std::lock_guard<std::mutex> lock(sHuanJingSystem->_creatureMutex);
+        sHuanJingSystem->_creatureDeathIdentificationGroup[guid] = {
+            lootConfig->identificationGroup,
+            ResolveConfiguredItemAttributeMode(lootConfig->equipAttrValue, lootConfig->equipAttrMode),
+            lootConfig->identificationQuality, lootConfig->identificationItemLevel,
+            lootConfig->equipAttrValue, lootConfig->equipAttrMultiplier, true };
+    }
+
     if (sHuanJingSystem->HasCreatureAttributeOverride(creature))
     {
-        sHuanJingSystem->CleanupCreatureAdjustmentData(creature);
+        sHuanJingSystem->CleanupCreatureAdjustmentData(creature, lootConfig != nullptr);
         sHuanJingSystem->RemoveCreatureHealthBars(creature);
         sHuanJingSystem->ClearCreatureVirtualMana(guid);
         return;
@@ -6672,7 +6686,7 @@ void HuanJingSystemUnitScript::OnUnitDeath(Unit* unit, Unit* killer)
 
     // 【关键修复】获取并保存鉴定组ID时，使用击杀玩家当前的幻境等级
     // 而不是生物被调整时的等级，这样玩家切换等级后立即生效
-    if (creatureAdjustedLevel > 0)
+    if (creatureAdjustedLevel > 0 && !lootConfig)
     {
         // 【修复】使用击杀玩家当前的幻境等级来获取鉴定组配置
         uint32 playerCurrentLevel = sHuanJingSystem->GetPlayerHuanJingLevel(player);
@@ -6747,6 +6761,28 @@ void HuanJingSystemPlayerScript::OnPlayerLootItem(Player* player, Item* item, ui
     // 而不是使用击杀时记录的等级，这样每个玩家拾取时按自己的幻境等级获得对应的鉴定
     uint32 huanJingLevel = sHuanJingSystem->GetPlayerHuanJingLevel(player);
 
+    CreatureDeathIdentificationContext deathContext;
+    bool foundInCache = false;
+    {
+        std::lock_guard<std::mutex> lock(sHuanJingSystem->_creatureMutex);
+        auto context = sHuanJingSystem->_creatureDeathIdentificationGroup.find(lootguid);
+        if (context != sHuanJingSystem->_creatureDeathIdentificationGroup.end())
+        {
+            deathContext = context->second;
+            foundInCache = true;
+        }
+    }
+    HuanJingCreatureConfig const* templateLootConfig = nullptr;
+    bool hasTemplateLoot = foundInCache && deathContext.fromMapControl;
+    if (!hasTemplateLoot && lootguid.IsCreatureOrVehicle())
+    {
+        if (Creature* lootCreature = ObjectAccessor::GetCreature(*player, lootguid))
+            templateLootConfig = sHuanJingSystem->GetMapCreatureConfig(lootCreature, nullptr);
+        if (templateLootConfig && !templateLootConfig->attributeTemplateId)
+            templateLootConfig = nullptr;
+        hasTemplateLoot = templateLootConfig != nullptr;
+    }
+
     // 【经济漏洞修复 二-A8】生物被调整/死亡记录的等级作为奖励上限：
     // 原实现只按拾取者当前等级解析，低等级杀怪后切高等级再拾取即可低难度拿高倍率装备
     uint32 capLevel = 0;
@@ -6782,7 +6818,7 @@ void HuanJingSystemPlayerScript::OnPlayerLootItem(Player* player, Item* item, ui
                 }
             }
 
-            if (!hasAdjustment)
+            if (!hasAdjustment && !hasTemplateLoot)
             {
                 // 生物没有被幻境系统调整过，不应该掉落倍率装备
                 LOG_DEBUG("module.huanjing", ModuleOldFormat("拾取：生物 %s 未被幻境系统调整，不处理倍率装备", creature->GetEntry()).c_str());
@@ -6795,7 +6831,7 @@ void HuanJingSystemPlayerScript::OnPlayerLootItem(Player* player, Item* item, ui
         {
             // 生物对象不存在，检查是否有死亡记录
             uint32 deathLevel = sHuanJingSystem->GetCreatureDeathHuanJingLevel(lootguid);
-            if (deathLevel == 0)
+            if (deathLevel == 0 && !hasTemplateLoot)
             {
                 // 没有死亡记录，不处理倍率装备
                 LOG_DEBUG("module.huanjing", "拾取：生物对象不存在且无死亡记录，不处理倍率装备");
@@ -6814,7 +6850,7 @@ void HuanJingSystemPlayerScript::OnPlayerLootItem(Player* player, Item* item, ui
     }
 
     // 如果拾取者幻境等级为0，则不处理倍率装备
-    if (huanJingLevel == 0)
+    if (huanJingLevel == 0 && !hasTemplateLoot)
     {
         LOG_DEBUG("module.huanjing", ModuleOldFormat("[待鉴定调试] 跳过: 拾取者幻境等级为0, 物品ID=%s", item->GetEntry()).c_str());
         return;
@@ -6847,23 +6883,16 @@ void HuanJingSystemPlayerScript::OnPlayerLootItem(Player* player, Item* item, ui
     uint32 identificationGroupId = 0;
     uint8 identificationQuality = 0;
     uint32 identificationItemLevel = 0;
-    bool foundInCache = false;
+    if (foundInCache && (!hasTemplateLoot || deathContext.fromMapControl))
     {
-        std::lock_guard<std::mutex> lock(sHuanJingSystem->_creatureMutex);
-        auto identIt = sHuanJingSystem->_creatureDeathIdentificationGroup.find(lootguid);
-        if (identIt != sHuanJingSystem->_creatureDeathIdentificationGroup.end())
-        {
-            // 从缓存中找到了完整的鉴定上下文
-            identificationGroupId = identIt->second.identificationGroupId;
-            identificationQuality = identIt->second.identificationQuality;
-            identificationItemLevel = identIt->second.identificationItemLevel;
-            resolveItemAttributeFromConfig(
-                identIt->second.equipAttrValue,
-                identIt->second.equipAttrMultiplier,
-                identIt->second.multiplierMode);
-            foundInCache = true;
-        }
+        identificationGroupId = deathContext.identificationGroupId;
+        identificationQuality = deathContext.identificationQuality;
+        identificationItemLevel = deathContext.identificationItemLevel;
+        resolveItemAttributeFromConfig(
+            deathContext.equipAttrValue, deathContext.equipAttrMultiplier, deathContext.multiplierMode);
     }
+    else
+        foundInCache = false;
 
     // 获取配置以检查品质和物品等级要求
     HuanJingCreatureConfig const* config = nullptr;
@@ -6880,7 +6909,7 @@ void HuanJingSystemPlayerScript::OnPlayerLootItem(Player* player, Item* item, ui
             uint32 creatureLevel = creature->GetLevel();
             uint32 creatureType = sHuanJingSystem->GetCreatureTypeByEntry(creatureId);
 
-            config = sHuanJingSystem->GetCreatureConfig(creature, player);
+            config = hasTemplateLoot ? templateLootConfig : sHuanJingSystem->GetCreatureConfig(creature, player);
 
             if (config)
             {
@@ -6891,9 +6920,9 @@ void HuanJingSystemPlayerScript::OnPlayerLootItem(Player* player, Item* item, ui
             }
         }
     }
-    else
+    else if (!hasTemplateLoot)
     {
-        // 从缓存获取到了完整上下文；如果还能拿到生物对象，则按拾取者当前等级重新匹配一次配置
+        // Map-control corpses retain the template selected at death.
         Creature* creature = ObjectAccessor::GetCreature(*player, lootguid);
         if (creature)
         {
