@@ -8201,6 +8201,24 @@ void Unit::SendSpellNonMeleeReflectLog(SpellNonMeleeDamage* log, Unit* attacker)
 
 void Unit::SendSpellNonMeleeDamageLog(SpellNonMeleeDamage* log)
 {
+    // 335XS: the log packet stores damage as uint32, so anything past 21亿 clamps.
+    // Sessions on NativeUI v2 get the exact decimal value over 0x526 instead.
+    if (log && log->asDamage > AsInt64(std::numeric_limits<uint32>::max()))
+    {
+        Player* viewer = log->attacker ? log->attacker->GetCharmerOrOwnerPlayerOrPlayerItself() : nullptr;
+        if (viewer && viewer->GetSession() && viewer->GetSession()->HasNativeUI() &&
+            viewer->GetSession()->GetNativeUIVersion() >= 2)
+        {
+            AsInt64 overkill = log->asDamage - AsInt64(log->target->GetHealth());
+            if (overkill < AsInt64Zero())
+                overkill = AsInt64Zero();
+            SendNativeCombatLog(log->target, viewer, 1,
+                log->spellInfo ? log->spellInfo->Id : 0,
+                log->asDamage, overkill, uint8(log->schoolMask), false);
+            return;
+        }
+    }
+
     WorldPacket data(SMSG_SPELLNONMELEEDAMAGELOG, (16 + 4 + 4 + 4 + 1 + 4 + 4 + 1 + 1 + 4 + 4 + 1)); // we guess size
     //IF we are in cheat mode we swap absorb with damage and set damage to 0, this way we can still debug damage but our hp bar will not drop
     uint32 damage = log->damage;
