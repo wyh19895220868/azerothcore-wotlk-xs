@@ -175,6 +175,39 @@ void SendNativeCombatText(Unit* source, Unit* victim, AsInt64 amount, uint8 kind
         session->SendPacket(&data);
     }
 }
+
+// 335XS NativeUI: the combat log packet stores damage as uint32, so anything past
+// 21亿 is clamped before the client can read it. When the caller detects that, the
+// exact decimal values are sent here instead and the stock packet is skipped for
+// sessions that performed the NativeUI handshake.
+void SendNativeCombatLog(Unit* victim, Player* attacker, uint8 kind, uint32 spellId,
+    AsInt64 const& damage, AsInt64 const& overkill, uint8 school, bool crit)
+{
+    if (!victim || !attacker)
+        return;
+
+    WorldSession* session = attacker->GetSession();
+    // 2 == NativeUIProtocol::WideVersion; this translation unit does not include
+    // the shared protocol header, and the value is part of the wire contract.
+    if (!session || !session->HasNativeUI() || session->GetNativeUIVersion() < 2)
+        return;
+
+    std::string damageText = AsInt64ToString(damage);
+    std::string overkillText = AsInt64ToString(overkill);
+
+    WorldPacket data(SMSG_NATIVE_UI_COMBAT_LOG, 64);
+    data << session->GetNativeUIVersion();
+    data << uint8(kind);
+    data << uint64(victim->GetGUID().GetRawValue());
+    data << uint32(spellId);
+    data << uint16(damageText.size());
+    data.append(damageText.data(), damageText.size());
+    data << uint16(overkillText.size());
+    data.append(overkillText.data(), overkillText.size());
+    data << uint8(school);
+    data << uint8(crit ? 1 : 0);
+    session->SendPacket(&data);
+}
 }
 
 // Speeds at Rate.MoveSpeed.NPC/Player = 1
