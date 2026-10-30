@@ -45,6 +45,7 @@
 #include <Custom\ItemFuncMgr\ItemFuncMgr.h>
 #include <Custom\PlayerModMgr\PlayerModMgr.h>
 #include <Custom/CreatureMod/AsCreature.h>
+#include "../../../../../modules/mod-huanjinxitong/src/HuanJingSystem.h"
 #pragma execution_character_set("utf-8")
 
 GenerateItemAtMap GenerateItemAtStore;
@@ -1793,6 +1794,14 @@ std::string ItemRandomAtMgr::GetLevelStr(uint32 ItemId, uint32 Level)
 
 uint32 ItemRandomAtMgr::GetStTempId(Creature* Me)
 {
+    // The new map control resolves the attribute template for each creature.
+    // Super loot is configured on that template, so it follows the resolved id:
+    // StTempId stays 0 for creatures taken over by _属性调整_生物 and the
+    // template's 超级掉落组号/几率/数量 would otherwise never be rolled.
+    if (HuanJingCreatureConfig const* config = sHuanJingSystem->GetMapCreatureConfig(Me, nullptr))
+        if (config->attributeTemplateId > 0)
+            return config->attributeTemplateId;
+
     if (Me && Me->StTempId > 0)
         return Me->StTempId;
 
