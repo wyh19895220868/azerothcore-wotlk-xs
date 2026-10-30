@@ -8357,6 +8357,29 @@ void Unit::SendSpellDamageImmune(Unit* target, uint32 spellId)
 
 void Unit::SendAttackStateUpdate(CalcDamageInfo* damageInfo)
 {
+    // 335XS: the stock log packet stores damage as uint32, so anything past 21亿 clamps.
+    // Sessions on NativeUI v2 get the exact value over 0x526 instead.
+    if (damageInfo)
+    {
+        AsInt64 wideDamage = damageInfo->asDamage > AsInt64(damageInfo->damage)
+            ? damageInfo->asDamage : AsInt64(damageInfo->damage);
+        if (wideDamage > AsInt64(std::numeric_limits<uint32>::max()))
+        {
+            Player* viewer = damageInfo->attacker
+                ? damageInfo->attacker->GetCharmerOrOwnerPlayerOrPlayerItself() : nullptr;
+            if (viewer && viewer->GetSession() && viewer->GetSession()->HasNativeUI() &&
+                viewer->GetSession()->GetNativeUIVersion() >= 2)
+            {
+                AsInt64 overkill = wideDamage - AsInt64(damageInfo->target->GetHealth());
+                if (overkill < AsInt64Zero())
+                    overkill = AsInt64Zero();
+                SendNativeCombatLog(damageInfo->target, viewer, 0, 0, wideDamage, overkill,
+                    uint8(damageInfo->damageSchoolMask), false);
+                return;
+            }
+        }
+    }
+
     LOG_DEBUG("entities.unit", "WORLD: Sending SMSG_ATTACKERSTATEUPDATE");
 
     //IF we are in cheat mode we swap absorb with damage and set damage to 0, this way we can still debug damage but our hp bar will not drop
