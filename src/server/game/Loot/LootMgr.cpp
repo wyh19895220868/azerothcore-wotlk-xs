@@ -978,7 +978,7 @@ ByteBuffer& operator<<(ByteBuffer& b, LootView const& lv)
 {
     if (lv.permission == NONE_PERMISSION)
     {
-        b << uint64(0);                                     //gold
+        b << uint32(0);                                     //gold
         b << uint8(0);                                      // item count
         return b;                                           // nothing output more
     }
@@ -987,7 +987,7 @@ ByteBuffer& operator<<(ByteBuffer& b, LootView const& lv)
 
     uint8 itemsShown = 0;
 
-    b << uint64(l.gold);                                    //gold
+    b << uint32(l.gold);                                    //gold
 
     std::size_t count_pos = b.wpos();                            // pos of item count byte
     b << uint8(0);                                          // item count placeholder
