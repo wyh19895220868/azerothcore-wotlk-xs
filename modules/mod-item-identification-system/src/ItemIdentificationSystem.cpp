@@ -1428,6 +1428,12 @@ bool ItemIdentificationSystem::ApplyIdentification(Player* player, Item* item, u
     // 0. 检查物品是否已鉴定（防止重复鉴定）
     uint32 itemPropertySeed = item->GetGUID().GetCounter();
     uint32 itemGuid = itemPropertySeed;  // 使用 PROPERTY_SEED 作为唯一标识
+    auto failIdentification = [&](char const* stage)
+    {
+        LOG_WARN("module.itemidentification", "鉴定未完成: 物品={}, GUID={}, 鉴定组={}, 模板={}, 失败阶段={}",
+            item->GetEntry(), itemGuid, groupId, templateId, stage);
+        return false;
+    };
     if (IsItemIdentified(itemGuid))
     {
         DebugLog(ModuleOldFormat("物品已经被鉴定过了: GUID=%s", itemGuid).c_str());
@@ -1467,7 +1473,7 @@ bool ItemIdentificationSystem::ApplyIdentification(Player* player, Item* item, u
         !rollback.Capture("_物品套装_数据"))
     {
         ChatHandler(player->GetSession()).SendSysMessage("无法读取原装备数据，鉴定已取消，未扣费");
-        return false;
+        return failIdentification("读取装备快照");
     }
 
     if (item->IsEquipped())
@@ -1618,7 +1624,7 @@ bool ItemIdentificationSystem::ApplyIdentification(Player* player, Item* item, u
         // 首次鉴定保留原有清理规则；失败时由快照恢复。
         ItemAttributesDBHelper::ClearItemAttributes(itemGuid);
         if (!ApplyBaseAttributes(player, item, tmpl, attrDetails, attrCount, attrGroup))
-            return false;
+            return failIdentification("生成基础属性");
 
         // 只要attrCount > 0就认为应用成功（即使无法读取详情）
         if (attrCount > 0)
@@ -1655,7 +1661,7 @@ bool ItemIdentificationSystem::ApplyIdentification(Player* player, Item* item, u
             "固定值").c_str());
         auto additionalResult = ApplyAdditionalAttributes(player, item, tmpl, record.additionalAttrGroups);
         if (!additionalResult)
-            return false;
+            return failIdentification("生成追加属性");
         uint32 appliedAdditionalCount = *additionalResult;
         if (appliedAdditionalCount > 0)
         {
@@ -1679,7 +1685,7 @@ bool ItemIdentificationSystem::ApplyIdentification(Player* player, Item* item, u
     if (!tmpl.itemSkillsGroups.empty() && tmpl.additionalSkillMaxCount > 0)
     {
         if (!ApplyAdditionalSkills(player, item, tmpl, record.skillGroups))
-            return false;
+            return failIdentification("生成追加技能");
         record.hasSkills = !record.skillGroups.empty();
 
     }
@@ -1694,7 +1700,7 @@ bool ItemIdentificationSystem::ApplyIdentification(Player* player, Item* item, u
     {
         auto slots = ApplyRuneSystem(player, item, tmpl);
         if (!slots)
-            return false;
+            return failIdentification("生成符文插槽");
         record.runeSlotCount = *slots;
         record.hasRuneSlots = record.runeSlotCount > 0;
 
@@ -1714,7 +1720,7 @@ bool ItemIdentificationSystem::ApplyIdentification(Player* player, Item* item, u
     {
         auto selectedSetId = ApplySkillSets(player, item, tmpl, record.setGroup);
         if (!selectedSetId)
-            return false;
+            return failIdentification("分配套装");
         if (*selectedSetId > 0)
         {
             record.hasSet = true;
@@ -1727,7 +1733,7 @@ bool ItemIdentificationSystem::ApplyIdentification(Player* player, Item* item, u
     {
         auto enchantItr = _identificationEnchantGroups.find(tmpl.enchantGroup);
         if (enchantItr == _identificationEnchantGroups.end())
-            return false;
+            return failIdentification("查找随机附魔组");
         if (enchantItr != _identificationEnchantGroups.end())
         {
             std::vector<uint32> candidates;
@@ -1740,7 +1746,7 @@ bool ItemIdentificationSystem::ApplyIdentification(Player* player, Item* item, u
             }
 
             if (candidates.empty())
-                return false;
+                return failIdentification("选择随机附魔");
             std::shuffle(candidates.begin(), candidates.end(), GetRandomGenerator());
             uint32 applyCount = std::min<uint32>(tmpl.enchantCount, candidates.size());
             uint32 candidateIndex = 0;
@@ -1763,12 +1769,12 @@ bool ItemIdentificationSystem::ApplyIdentification(Player* player, Item* item, u
     if (incomplete)
     {
         ChatHandler(player->GetSession()).SendSysMessage("鉴定配置未能完整生成结果，已取消，未扣费");
-        return false;
+        return failIdentification("核对成长强化与属性数量");
     }
 
     if ((record.hasBaseAttributes || record.hasAdditionalAttributes || record.hasEnhancement) &&
         !VerifyItemAttributes(itemGuid))
-        return false;
+        return failIdentification("校验属性存档");
 
     // 10. 更新物品状态
     item->SetState(ITEM_CHANGED, player);
@@ -1776,7 +1782,7 @@ bool ItemIdentificationSystem::ApplyIdentification(Player* player, Item* item, u
     // 10. 保存鉴定记录到数据库。必须确认落库成功后才允许进入已鉴定缓存，
     // 否则数据库断线时会出现日志成功但悬停/重查没有鉴定数据。
     if (!SaveIdentificationRecord(record) || !SaveOperationItemState(item))
-        return false;
+        return failIdentification("保存鉴定结果");
 
     std::vector<uint32> requirements{tmpl.requirementTemplate};
     if (record.hasSet)
@@ -1788,7 +1794,7 @@ bool ItemIdentificationSystem::ApplyIdentification(Player* player, Item* item, u
     if (!PayItemOperation(player, item, requirements, reservedGold, true))
     {
         ChatHandler(player->GetSession()).SendSysMessage("鉴定与套装的合计需求不足，已取消，未扣费");
-        return false;
+        return failIdentification("核对鉴定与套装消耗");
     }
     rollback.Commit();
     if (item->IsEquipped())

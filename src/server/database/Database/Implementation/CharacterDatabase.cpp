@@ -907,6 +907,20 @@ void CharacterDatabaseConnection::DoPrepareStatements()
         "SELECT flags, enchantments FROM item_instance WHERE guid = ?",
         CONNECTION_SYNCH);
 
+    PrepareStatement(CHAR_UPSERT_PENDING_LOOT_IDENTIFICATION,
+        "INSERT INTO `待鉴定物品标记` "
+        "(`物品GUID`, `物品ID`, `玩家GUID`, `幻境倍率`, `幻境倍率模式`, `鉴定组ID`) "
+        "VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE "
+        "`幻境倍率` = VALUES(`幻境倍率`), `幻境倍率模式` = VALUES(`幻境倍率模式`), "
+        "`鉴定组ID` = VALUES(`鉴定组ID`)",
+        CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_PENDING_LOOT_IDENTIFICATION,
+        "DELETE FROM `待鉴定物品标记` WHERE `物品GUID` = ?",
+        CONNECTION_SYNCH);
+    PrepareStatement(CHAR_UPD_LOOT_IDENTIFICATION_GROUP,
+        "UPDATE `玩家装备属性增强` SET `鉴定组ID` = ? WHERE `装备GUID` = ?",
+        CONNECTION_SYNCH);
+
 }
 
 CharacterDatabaseConnection::CharacterDatabaseConnection(MySQLConnectionInfo& connInfo) : MySQLConnection(connInfo)

@@ -2,10 +2,6 @@
 #include "StringConvert.h"
 #include "HuanJingSystem.h"
 
-template <typename... Args>
-static void HuanJingAutoIdentifyTraceLog(Args&&...)
-{
-}
 #include "Log.h"
 #include "ObjectMgr.h"
 #include "Random.h"
@@ -7008,18 +7004,17 @@ void HuanJingSystemPlayerScript::OnPlayerLootItem(Player* player, Item* item, ui
     // 修复：白装等可能不触发倍率增强，但仍应允许进入鉴定流程
     if (!HasItemAttributeEffect(multiplier, multiplierMode) && identificationGroupId == 0)
     {
-        LOG_DEBUG("module.huanjing", Acore::StringFormat("[待鉴定调试] 跳过: 幻境属性无效且无鉴定组, 物品ID=%u, 模式=%c, 数值=%u",
-            itemId, multiplierMode, multiplier).c_str());
+        LOG_DEBUG("module.huanjing", "[待鉴定调试] 跳过: 幻境属性无效且无鉴定组, 物品ID={}, 模式={}, 数值={}",
+            itemId, multiplierMode, multiplier);
         return;
     }
 
     auto savePendingIdentification = [itemGuid, itemId, playerGuid, multiplier, multiplierMode, identificationGroupId]()
     {
-        CharacterDatabase.Execute(Acore::StringFormat(
-            "INSERT INTO `待鉴定物品标记` (`物品GUID`, `物品ID`, `玩家GUID`, `幻境倍率`, `幻境倍率模式`, `鉴定组ID`) "
-            "VALUES (%u, %u, %u, %u, %u, %u) "
-            "ON DUPLICATE KEY UPDATE `幻境倍率` = VALUES(`幻境倍率`), `幻境倍率模式` = VALUES(`幻境倍率模式`), `鉴定组ID` = VALUES(`鉴定组ID`)",
-            itemGuid, itemId, playerGuid, multiplier, ItemAttributeModeToDbValue(multiplierMode), identificationGroupId).c_str());
+        auto* pending = CharacterDatabase.GetPreparedStatement(CHAR_UPSERT_PENDING_LOOT_IDENTIFICATION);
+        pending->SetArguments(itemGuid, itemId, playerGuid, multiplier,
+            ItemAttributeModeToDbValue(multiplierMode), identificationGroupId);
+        CharacterDatabase.Execute(pending);
     };
 
     // 配置了鉴定组时，拾取后延迟到物品进入玩家背包后再鉴定。
@@ -7029,10 +7024,11 @@ void HuanJingSystemPlayerScript::OnPlayerLootItem(Player* player, Item* item, ui
         ObjectGuid playerObjectGuid = player->GetGUID();
         bool const hasAttributeEffect = HasItemAttributeEffect(multiplier, multiplierMode);
 
-        HuanJingAutoIdentifyTraceLog("module.huanjing", Acore::StringFormat("[拾取自动鉴定] 已排队: 玩家=%s, 物品ID=%u, GUID=%u, 鉴定组=%u, 幻境属性=%c%u",
-            player->GetName().c_str(), itemId, itemGuid, identificationGroupId, multiplierMode, multiplier).c_str());
+        LOG_DEBUG("module.huanjing", "[拾取自动鉴定] 已排队: 玩家={}, 物品ID={}, GUID={}, 鉴定组={}, 幻境属性={}{}",
+            player->GetName(), itemId, itemGuid, identificationGroupId, multiplierMode, multiplier);
 
-        player->m_Events.AddEventAtOffset([playerObjectGuid, itemId, itemGuid, playerGuid, multiplier, multiplierMode, identificationGroupId, hasAttributeEffect]()
+        player->m_Events.AddEventAtOffset([playerObjectGuid, itemId, itemGuid, multiplier, multiplierMode,
+            identificationGroupId, hasAttributeEffect, savePendingIdentification]()
         {
             Player* p = ObjectAccessor::FindPlayer(playerObjectGuid);
             if (!p || !p->IsInWorld())
@@ -7041,21 +7037,17 @@ void HuanJingSystemPlayerScript::OnPlayerLootItem(Player* player, Item* item, ui
             Item* liveItem = p->GetItemByGuid(ObjectGuid::Create<HighGuid::Item>(itemGuid));
             if (!liveItem || liveItem->GetEntry() != itemId)
             {
-                HuanJingAutoIdentifyTraceLog("module.huanjing", Acore::StringFormat("[拾取自动鉴定] 延迟执行未找到物品: 玩家=%s, 物品ID=%u, GUID=%u, 鉴定组=%u",
-                    p->GetName().c_str(), itemId, itemGuid, identificationGroupId).c_str());
+                LOG_DEBUG("module.huanjing", "[拾取自动鉴定] 延迟执行未找到物品: 玩家={}, 物品ID={}, GUID={}, 鉴定组={}",
+                    p->GetName(), itemId, itemGuid, identificationGroupId);
                 return;
             }
 
             if (!sItemIdentificationSystem || !sItemIdentificationSystem->_enabled)
             {
-                CharacterDatabase.Execute(Acore::StringFormat(
-                    "INSERT INTO `待鉴定物品标记` (`物品GUID`, `物品ID`, `玩家GUID`, `幻境倍率`, `幻境倍率模式`, `鉴定组ID`) "
-                    "VALUES (%u, %u, %u, %u, %u, %u) "
-                    "ON DUPLICATE KEY UPDATE `幻境倍率` = VALUES(`幻境倍率`), `幻境倍率模式` = VALUES(`幻境倍率模式`), `鉴定组ID` = VALUES(`鉴定组ID`)",
-                    itemGuid, itemId, playerGuid, multiplier, ItemAttributeModeToDbValue(multiplierMode), identificationGroupId).c_str());
+                savePendingIdentification();
 
-                HuanJingAutoIdentifyTraceLog("module.huanjing", Acore::StringFormat("[拾取自动鉴定] 延迟执行时鉴定系统不可用，已写入待鉴定标记: 玩家=%s, 物品ID=%u, GUID=%u, 鉴定组=%u",
-                    p->GetName().c_str(), itemId, itemGuid, identificationGroupId).c_str());
+                LOG_DEBUG("module.huanjing", "[拾取自动鉴定] 延迟执行时鉴定系统不可用，已写入待鉴定标记: "
+                    "玩家={}, 物品ID={}, GUID={}, 鉴定组={}", p->GetName(), itemId, itemGuid, identificationGroupId);
                 return;
             }
 
@@ -7070,30 +7062,28 @@ void HuanJingSystemPlayerScript::OnPlayerLootItem(Player* player, Item* item, ui
             {
                 if (hasAttributeEffect)
                 {
-                    CharacterDatabase.DirectExecute(Acore::StringFormat(
-                        "UPDATE `玩家装备属性增强` SET `鉴定组ID` = %u WHERE `装备GUID` = %u",
-                        identificationGroupId, itemGuid).c_str());
+                    auto* update = CharacterDatabase.GetPreparedStatement(CHAR_UPD_LOOT_IDENTIFICATION_GROUP);
+                    update->SetArguments(identificationGroupId, itemGuid);
+                    CharacterDatabase.DirectExecute(update);
                     sHuanJingSystem->UpdateItemIdentificationGroup(itemGuid, identificationGroupId);
                 }
 
-                CharacterDatabase.DirectExecute(Acore::StringFormat("DELETE FROM `待鉴定物品标记` WHERE `物品GUID` = %u", itemGuid).c_str());
+                auto* erase = CharacterDatabase.GetPreparedStatement(CHAR_DEL_PENDING_LOOT_IDENTIFICATION);
+                erase->SetData(0, itemGuid);
+                CharacterDatabase.DirectExecute(erase);
                 sItemIdentificationSystem->ClearItemCache(itemId, itemGuid);
                 sItemIdentificationSystem->AddToIdentifiedCache(itemGuid);
                 sItemIdentificationSystem->SendAllModuleDataAddon(p, itemId, itemGuid);
 
-                HuanJingAutoIdentifyTraceLog("module.huanjing", Acore::StringFormat("[拾取自动鉴定] 延迟执行成功: 玩家=%s, 物品ID=%u, GUID=%u, 鉴定组=%u",
-                    p->GetName().c_str(), itemId, itemGuid, identificationGroupId).c_str());
+                LOG_DEBUG("module.huanjing", "[拾取自动鉴定] 延迟执行成功: 玩家={}, 物品ID={}, GUID={}, 鉴定组={}",
+                    p->GetName(), itemId, itemGuid, identificationGroupId);
                 return;
             }
 
-            CharacterDatabase.Execute(Acore::StringFormat(
-                "INSERT INTO `待鉴定物品标记` (`物品GUID`, `物品ID`, `玩家GUID`, `幻境倍率`, `幻境倍率模式`, `鉴定组ID`) "
-                "VALUES (%u, %u, %u, %u, %u, %u) "
-                "ON DUPLICATE KEY UPDATE `幻境倍率` = VALUES(`幻境倍率`), `幻境倍率模式` = VALUES(`幻境倍率模式`), `鉴定组ID` = VALUES(`鉴定组ID`)",
-                itemGuid, itemId, playerGuid, multiplier, ItemAttributeModeToDbValue(multiplierMode), identificationGroupId).c_str());
+            savePendingIdentification();
 
-            HuanJingAutoIdentifyTraceLog("module.huanjing", Acore::StringFormat("[拾取自动鉴定] 延迟执行失败，已写入待鉴定标记: 玩家=%s, 物品ID=%u, GUID=%u, 鉴定组=%u",
-                p->GetName().c_str(), itemId, itemGuid, identificationGroupId).c_str());
+            LOG_WARN("module.huanjing", "拾取自动鉴定失败，已保留待鉴定标记: 玩家={}, 物品ID={}, GUID={}, 鉴定组={}",
+                p->GetName(), itemId, itemGuid, identificationGroupId);
         }, 500ms);
 
         return;
@@ -7103,8 +7093,8 @@ void HuanJingSystemPlayerScript::OnPlayerLootItem(Player* player, Item* item, ui
     // 自动鉴定不可用、失败，或仅有幻境倍率无鉴定组时，保留待鉴定标记作为兜底。
     savePendingIdentification();
 
-    LOG_DEBUG("module.huanjing", Acore::StringFormat("[待鉴定兜底] 已写入标记: 玩家=%s, 物品ID=%u, GUID=%u, 鉴定组=%u",
-        player->GetName().c_str(), itemId, itemGuid, identificationGroupId).c_str());
+    LOG_DEBUG("module.huanjing", "[待鉴定兜底] 已写入标记: 玩家={}, 物品ID={}, GUID={}, 鉴定组={}",
+        player->GetName(), itemId, itemGuid, identificationGroupId);
 }
 
 
