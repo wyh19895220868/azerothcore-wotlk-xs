@@ -2536,6 +2536,9 @@ public:
         handler->SetSentErrorMessage(true);
 
         sHelper->LoadAsTemp();
+        // Attribute templates are copied into the resolved map-control config,
+        // so those per-creature copies must be dropped together with the reload.
+        sHuanJingSystem->InvalidateResolvedCreatureConfigs();
         LOG_INFO("server.loading", ">> 重载 模版总表 生效");
         handler->SendGlobalGMSysMessage("重载 模版总表 生效");
         return false;

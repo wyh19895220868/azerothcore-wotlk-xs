@@ -231,6 +231,7 @@ public:
     uint32 GetStTempId(Creature* Me);
     void DeleteForDoVect(std::vector<DoTemp> &DoVect, int32 ItemId);
     std::vector<std::pair<int32, int32>> DoGenerateGroupLootItemAndStTempId(std::vector<DoTemp> DoVect, uint32 Count);
+    void FillSuperLoot(Creature* Me, Loot* OnLoot, Player* Looter, uint32 GroupId, float Chance, uint32 Min, uint32 Max);
     void AsRandomAtCustomFillLoot(Creature* Me, Loot* OnLoot, Player* Looter);
 
     uint32 GetSuperXyItem(uint32 ItemId, uint32 Level);

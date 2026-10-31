@@ -1794,14 +1794,6 @@ std::string ItemRandomAtMgr::GetLevelStr(uint32 ItemId, uint32 Level)
 
 uint32 ItemRandomAtMgr::GetStTempId(Creature* Me)
 {
-    // The new map control resolves the attribute template for each creature.
-    // Super loot is configured on that template, so it follows the resolved id:
-    // StTempId stays 0 for creatures taken over by _属性调整_生物 and the
-    // template's 超级掉落组号/几率/数量 would otherwise never be rolled.
-    if (HuanJingCreatureConfig const* config = sHuanJingSystem->GetMapCreatureConfig(Me, nullptr))
-        if (config->attributeTemplateId > 0)
-            return config->attributeTemplateId;
-
     if (Me && Me->StTempId > 0)
         return Me->StTempId;
 
@@ -1909,18 +1901,32 @@ void ItemRandomAtMgr::AsRandomAtCustomFillLoot(Creature* Me, Loot* OnLoot, Playe
     if (sAsCreature->IsNotFor(Me))
         return;
 
+    // The map-control template owns 超级掉落组号/几率/抽取数量 once the creature
+    // is routed, and those fields travel in the resolved config.
+    if (HuanJingCreatureConfig const* config = sHuanJingSystem->GetCreatureLootConfig(Me))
+    {
+        FillSuperLoot(Me, OnLoot, Looter, config->superLootGroupId, config->superLootChance,
+            config->superLootMin, config->superLootMax);
+        return;
+    }
+
     uint32 StTempId = GetStTempId(Me);
     auto Itr = AtCreatureStatTempStore.find(StTempId);
     if (Itr == AtCreatureStatTempStore.end())
         return;
 
-    if (!Itr->second.RAtLootGroupId || Itr->second.RAtLootChance <= 0.0f)
+    FillSuperLoot(Me, OnLoot, Looter, Itr->second.RAtLootGroupId, Itr->second.RAtLootChance,
+        Itr->second.RAtLootMin, Itr->second.RAtLootMax);
+}
+
+void ItemRandomAtMgr::FillSuperLoot(Creature* Me, Loot* OnLoot, Player* Looter, uint32 GroupId, float Chance, uint32 Min, uint32 Max)
+{
+    if (!GroupId || Chance <= 0.0f)
         return;
 
-    if (!roll_chance_f(Itr->second.RAtLootChance))
+    if (!roll_chance_f(Chance))
         return;
 
-    uint32 GroupId = Itr->second.RAtLootGroupId;
     std::vector<DoTemp> TempStore;
     for (auto It = RAtLootGroupStore.begin(); It != RAtLootGroupStore.end(); It++)
     {
@@ -1937,7 +1943,7 @@ void ItemRandomAtMgr::AsRandomAtCustomFillLoot(Creature* Me, Loot* OnLoot, Playe
     if (TempStore.empty())
         return;
 
-    uint32 GCount = urand(Itr->second.RAtLootMin, Itr->second.RAtLootMax);
+    uint32 GCount = urand(Min, Max);
     auto TempVect = DoGenerateGroupLootItemAndStTempId(TempStore, GCount);
     if (!TempVect.empty())
     {

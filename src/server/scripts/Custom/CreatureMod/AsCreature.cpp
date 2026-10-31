@@ -714,11 +714,8 @@ std::string AsCreature::GetOneLootIds(Creature* Me)
     if (IsNotFor(Me))
         return "";
 
-    if (HuanJingCreatureConfig const* config = sHuanJingSystem->GetMapCreatureConfig(Me, nullptr))
-    {
-        if (config->attributeTemplateId > 0)
-            return sHelper->GetCrePLootIdsByTempId(config->attributeTemplateId);
-    }
+    if (HuanJingCreatureConfig const* config = sHuanJingSystem->GetCreatureLootConfig(Me))
+        return config->lootIds;
 
     if (sCombatPetMgr->IsCombatPetData(Me))
         return sHelper->GetCrePLootIdsByTempId(Me->StTempId);
@@ -1544,11 +1541,8 @@ bool AsCreature::IsOnEtLoot(Creature* Me)
     if (IsNotFor(Me))
         return false;
 
-    if (HuanJingCreatureConfig const* config = sHuanJingSystem->GetMapCreatureConfig(Me, nullptr))
-    {
-        if (config->attributeTemplateId > 0)
-            return config->officialDrop == 0;
-    }
+    if (HuanJingCreatureConfig const* config = sHuanJingSystem->GetCreatureLootConfig(Me))
+        return config->officialDrop == 0;
 
     if (sCombatPetMgr->IsCombatPetData(Me))
     {
@@ -1608,9 +1602,10 @@ void AsCreature::AsCustomFillLoot(Creature* Me, Loot* OnLoot, Player* Looter)
             OnLoot->FillLoot(EntryLootId, LootTemplates_Creature, Looter, false, false, Me->GetLootMode());
     }
 
-    // The resolved HuanJing template is authoritative even when legacy attribute overrides skip StTempId assignment.
-    HuanJingCreatureConfig const* config = sHuanJingSystem->GetMapCreatureConfig(Me, nullptr);
-    if ((config && config->attributeTemplateId > 0) || Me->StTempId > 0 || IsInCustom(Me))
+    // The resolved map-control template is authoritative: its loot fields were
+    // copied into the config when the creature was routed.
+    HuanJingCreatureConfig const* config = sHuanJingSystem->GetCreatureLootConfig(Me);
+    if (config || Me->StTempId > 0 || IsInCustom(Me))
     {
         std::string LootAs = GetOneLootIds(Me);
         if (LootAs.empty())

@@ -157,6 +157,14 @@ struct HuanJingCreatureConfig
     // 官方掉落配置
     uint32 officialDrop = 1;
 
+    // 掉落配置：属性模板的掉落字段在解析时复制到这里，掉落流程只读本结构，
+    // 不再回查 __模版生物属性表。
+    std::string lootIds;            // 额外掉落编号，# 分隔
+    uint32 superLootGroupId = 0;    // 超级掉落组号（__生物超级掉落组表）
+    float superLootChance = 0.0f;   // 超级掉落几率
+    uint32 superLootMin = 0;        // 超级掉落抽取数量 Min
+    uint32 superLootMax = 0;        // 超级掉落抽取数量 Max
+
     // 物品鉴定系统集成
     uint32 identificationGroup = 0;  // 鉴定组ID（0=不自动鉴定，>0=使用指定鉴定组）
     uint8 identificationQuality = 0; // 鉴定最低品质要求（0=灰色,1=白色,2=绿色,3=蓝色,4=紫色,5=橙色,6=红色,7=金色）
@@ -245,6 +253,12 @@ public:
     uint32 GetCreatureConfigCount() const;
     const HuanJingCreatureConfig* GetMapCreatureConfig(Creature* creature, Player* player = nullptr) const;
     const HuanJingCreatureConfig* GetCreatureConfig(Creature* creature, Player* player = nullptr) const;
+    // 掉落流程入口：只读已解析的配置，掉落/鉴定字段都从这里取，不回查属性模板表。
+    // 未解析过的生物才回落到一次正常解析。
+    HuanJingCreatureConfig const* GetCreatureLootConfig(Creature* creature) const;
+    HuanJingCreatureConfig const* GetResolvedCreatureConfig(Creature* creature) const;
+    // 属性模板表重载后调用：解析结果里的掉落/鉴定副本必须全部作废。
+    void InvalidateResolvedCreatureConfigs();
     void ForgetResolvedCreatureConfig(Creature const* creature);
     bool HasCreatureAttributeOverride(uint32 creatureId) const;
     bool HasCreatureAttributeOverride(Creature const* creature) const;

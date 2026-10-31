@@ -1614,6 +1614,11 @@ void ApplyCreatureAttributeTemplate(HuanJingCreatureConfig& config, AtCreatureSt
     config.blockPenetrationPct = attribute.BlockPenetrationPct;
     config.damageReductionPct = attribute.DamageReductionPct;
     config.officialDrop = attribute.OfficialDrop;
+    config.lootIds = attribute.PLootIds;
+    config.superLootGroupId = attribute.RAtLootGroupId;
+    config.superLootChance = attribute.RAtLootChance;
+    config.superLootMin = attribute.RAtLootMin;
+    config.superLootMax = attribute.RAtLootMax;
     config.equipAttrMultiplier = attribute.EquipAttrMultiplier;
     config.equipAttrValue = attribute.EquipAttrValue;
     config.equipAttrMode = DbValueToItemAttributeMode(attribute.EquipAttrMode);
@@ -1773,6 +1778,48 @@ void HuanJingSystem::ForgetResolvedCreatureConfig(Creature const* creature)
 
     std::lock_guard<std::mutex> lock(_creatureMutex);
     _resolvedCreatureConfigs.erase(GenerateCreatureKey(creature));
+}
+
+HuanJingCreatureConfig const* HuanJingSystem::GetResolvedCreatureConfig(Creature* creature) const
+{
+    if (!creature || !sHelper->GetBoolean(22010))
+        return nullptr;
+
+    std::lock_guard<std::mutex> lock(_creatureMutex);
+    auto found = _resolvedCreatureConfigs.find(GenerateCreatureKey(creature));
+    return found != _resolvedCreatureConfigs.end() ? &found->second : nullptr;
+}
+
+HuanJingCreatureConfig const* HuanJingSystem::GetCreatureLootConfig(Creature* creature) const
+{
+    // Loot reads the resolved copy only: it must not re-roll the control group
+    // or reapply appearance when the corpse is looted.
+    if (HuanJingCreatureConfig const* resolved = GetResolvedCreatureConfig(creature))
+    {
+        if (resolved->attributeTemplateId > 0)
+            return resolved;
+    }
+
+    // A creature that never reached the route resolver (spawned before the
+    // tables finished loading) still resolves once here.
+    if (HuanJingCreatureConfig const* config = GetMapCreatureConfig(creature, nullptr))
+    {
+        if (config->attributeTemplateId > 0)
+            return config;
+    }
+
+    return nullptr;
+}
+
+void HuanJingSystem::InvalidateResolvedCreatureConfigs()
+{
+    {
+        std::lock_guard<std::mutex> lock(_creatureMutex);
+        _resolvedCreatureConfigs.clear();
+    }
+
+    std::lock_guard<std::mutex> cacheLock(_configMatchCacheMutex);
+    _configMatchCache.clear();
 }
 
 bool HuanJingSystem::CreatureUsesDedicatedStats(Creature* creature, Player* player) const
