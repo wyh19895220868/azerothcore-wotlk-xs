@@ -248,8 +248,8 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket& /*recvData*/)
                     continue;
                 (*i)->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_MONEY, finalGold);
 
-                WorldPacket data(SMSG_LOOT_MONEY_NOTIFY, 4 + 1);
-                data << uint32(finalGold);
+                WorldPacket data(SMSG_LOOT_MONEY_NOTIFY, 8 + 1);
+                data << uint64(finalGold);
                 data << uint8(playersNear.size() > 1 ? 0 : 1);     // Controls the text displayed in chat. 0 is "Your share is..." and 1 is "You loot..."
                 (*i)->SendDirectMessage(&data);
             }
@@ -276,8 +276,8 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket& /*recvData*/)
                     return;
                 player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_MONEY, finalGold);
 
-                WorldPacket data(SMSG_LOOT_MONEY_NOTIFY, 4 + 1);
-                data << uint32(finalGold);
+                WorldPacket data(SMSG_LOOT_MONEY_NOTIFY, 8 + 1);
+                data << uint64(finalGold);
                 data << uint8(1);   // "You loot..."
                 SendPacket(&data);
             }

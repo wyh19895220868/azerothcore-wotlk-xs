@@ -1932,8 +1932,8 @@ public:
             AtLoot->NotifyMoneyRemoved();
             player->ModifyMoney(AtLoot->gold);
             player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_MONEY, AtLoot->gold);
-            WorldPacket Packet(SMSG_LOOT_MONEY_NOTIFY, 4 + 1);
-            Packet << uint32(AtLoot->gold);
+            WorldPacket Packet(SMSG_LOOT_MONEY_NOTIFY, 8 + 1);
+            Packet << uint64(AtLoot->gold);
             Packet << uint8(1);
             player->GetSession()->SendPacket(&Packet);
             AtLoot->gold = 0;
