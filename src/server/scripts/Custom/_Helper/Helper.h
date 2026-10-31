@@ -149,10 +149,6 @@ struct AtCreatureStatTemp
     int32 School4;                        //冰霜抗性
     int32 School5;                        //暗影抗性
     int32 School6;                        //奥术抗性
-    uint32 RAtLootGroupId;                   //超级掉落组号
-    float RAtLootChance;                   //超级掉落几率
-    uint32 RAtLootMin;                   //超级掉落数量Min
-    uint32 RAtLootMax;                   //超级掉落数量Max
 
     // 地图生物控制和旧生物调用共用同一套属性字段。
     float HealthMultiplier = 1.0f;

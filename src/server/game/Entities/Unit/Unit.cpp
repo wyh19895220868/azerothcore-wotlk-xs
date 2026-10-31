@@ -21067,7 +21067,6 @@ void Unit::Kill(Unit* killer, Unit* victim, bool durabilityLoss, WeaponAttackTyp
             loot->clear();
 
             sAsCreature->AsCustomFillLoot(creature, loot, looter);
-            sItemRandomAtMgr->AsRandomAtCustomFillLoot(creature, loot, looter);
 
             if (creature->GetLootMode())
                 loot->generateMoneyLoot(creature->GetCreatureTemplate()->mingold, creature->GetCreatureTemplate()->maxgold);

@@ -742,7 +742,7 @@ void Helper::LoadAsTemp()
         "神圣抗性, 火焰抗性, 火抗倍率, 自然抗性, 自然抗倍率, 冰霜抗性, 冰霜抗倍率, 暗影抗性, 暗影抗倍率, 奥术抗性, 奥术抗倍率, "
         "攻击速度倍率, 攻击速度值, 施法速度倍率, 施法速度值, 移动速度倍率, 移动速度值, 命中率加成, 护甲穿透值, 护甲穿透百分比, "
         "格挡穿透值, 格挡穿透百分比, 生物光环组, 生物光环几率, 生物光环数量, 生物固定光环, 官方掉落, 额外掉落编号, "
-        "超级掉落组号, 超级掉落几率, 超级掉落抽取数量Min, 超级掉落抽取数量Max, 装备属性倍率, 装备属性值, 装备属性倍率模式, 鉴定组, 鉴定品质, 鉴定物品等级 FROM __模版生物属性表;");
+        "装备属性倍率, 装备属性值, 装备属性倍率模式, 鉴定组, 鉴定品质, 鉴定物品等级 FROM __模版生物属性表;");
     if (Result)
     {
         do
@@ -817,10 +817,6 @@ void Helper::LoadAsTemp()
 
             St.OfficialDrop = Fields[index++].Get<uint32>();
             St.PLootIds = Fields[index++].Get<std::string>();
-            St.RAtLootGroupId = Fields[index++].Get<uint32>();
-            St.RAtLootChance = Fields[index++].Get<float>();
-            St.RAtLootMin = Fields[index++].Get<uint32>();
-            St.RAtLootMax = Fields[index++].Get<uint32>();
             St.EquipAttrMultiplier = Fields[index++].Get<float>();
             St.EquipAttrValue = Fields[index++].Get<uint32>();
             St.EquipAttrMode = Fields[index++].Get<int32>();

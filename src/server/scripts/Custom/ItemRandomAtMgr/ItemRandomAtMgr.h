@@ -150,19 +150,6 @@ struct ResetResAt
 typedef std::vector<ResetResAt> ResetResAtVect;
 extern ResetResAtVect ResetResAtStore;
 
-struct RAtLootGroupTemp
-{
-    uint32 RAtLootGroup;
-    uint32 ItemId;
-    float Chance;
-    uint32 SpGTempId;             //超级模版组号
-};
-
-typedef std::vector<RAtLootGroupTemp> RAtLootGroupVect;
-extern RAtLootGroupVect RAtLootGroupStore;
-
-struct DoTemp { uint32 ItemId; float Chance; int32 SpGTempId; };
-
 class ItemRandomAtMgr
 {
 public:
@@ -229,10 +216,6 @@ public:
     std::string GetLevelStr(uint32 ItemId, uint32 Level);
 
     uint32 GetStTempId(Creature* Me);
-    void DeleteForDoVect(std::vector<DoTemp> &DoVect, int32 ItemId);
-    std::vector<std::pair<int32, int32>> DoGenerateGroupLootItemAndStTempId(std::vector<DoTemp> DoVect, uint32 Count);
-    void FillSuperLoot(Creature* Me, Loot* OnLoot, Player* Looter, uint32 GroupId, float Chance, uint32 Min, uint32 Max);
-    void AsRandomAtCustomFillLoot(Creature* Me, Loot* OnLoot, Player* Looter);
 
     uint32 GetSuperXyItem(uint32 ItemId, uint32 Level);
     float GetSuperXyOdds(uint32 ItemId, uint32 Level);

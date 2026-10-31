@@ -45,7 +45,6 @@
 #include <Custom\ItemFuncMgr\ItemFuncMgr.h>
 #include <Custom\PlayerModMgr\PlayerModMgr.h>
 #include <Custom/CreatureMod/AsCreature.h>
-#include "../../../../../modules/mod-huanjinxitong/src/HuanJingSystem.h"
 #pragma execution_character_set("utf-8")
 
 GenerateItemAtMap GenerateItemAtStore;
@@ -57,8 +56,6 @@ EnchItemGroupMap EnchItemAtStore;
 SuperUpSellTempVect SuperUpSellStore;
 OnUpRankAtVect OnUpRankAtStore;
 ResetResAtVect ResetResAtStore;
-//__生物超级掉落组表
-RAtLootGroupVect RAtLootGroupStore;
 
 //总缓存
 ItemAtCacheMap ItemAtCacheStore;
@@ -224,31 +221,10 @@ void ItemRandomAtMgr::LoadItemRandomAt()
     SuperUpSellStore.clear();
     OnUpRankAtStore.clear();
     ResetResAtStore.clear();
-    RAtLootGroupStore.clear();
 
     // 22011=1: use template item systems and disable the legacy super-random equipment system.
     if (sHelper->GetBoolean(22011))
         return;
-
-    QueryResult Result = WorldDatabase.Query("SELECT 组号, 物品编号, 几率, 超级模版组号 FROM __生物超级掉落组表;");
-    if (!Result)
-    {
-
-    }
-    else
-    {
-        do
-        {
-            Field* Fields = Result->Fetch();
-            RAtLootGroupTemp St;
-            St.RAtLootGroup = Fields[0].Get<uint32>();
-            St.ItemId = Fields[1].Get<uint32>();
-            St.Chance = Fields[2].Get<float>();
-            St.SpGTempId = Fields[3].Get<uint32>();
-            RAtLootGroupStore.push_back(St);
-
-        } while (Result->NextRow());
-    }
 }
 
 bool ItemRandomAtMgr::IsGenerateItemAt(uint32 ItemId)
@@ -1833,129 +1809,6 @@ uint32 ItemRandomAtMgr::GetStTempId(Creature* Me)
     }
 
     return 0;
-}
-
-void ItemRandomAtMgr::DeleteForDoVect(std::vector<DoTemp>& DoVect, int32 ItemId)
-{
-    for (auto Itr = DoVect.begin(); Itr != DoVect.end();)
-    {
-        if (Itr->ItemId == ItemId)
-            Itr = DoVect.erase(Itr);
-        else
-            Itr++;
-    }
-}
-
-std::vector<std::pair<int32, int32>> ItemRandomAtMgr::DoGenerateGroupLootItemAndStTempId(std::vector<DoTemp> DoVect, uint32 Count)
-{
-    std::vector<std::pair<int32, int32>> TempVect;
-    if (!Count)
-        return TempVect;
-
-    for (uint32 i = 0; i < Count; i++)
-    {
-        std::vector<DoTemp> ChanceList;
-        ChanceList.clear();
-
-        for (auto It = DoVect.begin(); It != DoVect.end(); It++)
-        {
-            DoTemp St;
-            St.ItemId = It->ItemId;
-            St.Chance = It->Chance;
-            St.SpGTempId = int32(It->SpGTempId);
-            ChanceList.push_back(St);
-        }
-
-        if (!ChanceList.empty())
-        {
-            float RIdx = 0.0f;
-            for (auto Itr = ChanceList.begin(); Itr != ChanceList.end(); Itr++)
-                RIdx += Itr->Chance;
-
-            for (auto It = ChanceList.begin(); It != ChanceList.end(); It++)
-            {
-                if (frand(0, RIdx) <= It->Chance)
-                {
-                    int32 ItemId = int32(It->ItemId);
-                    int32 SpGTempId = It->SpGTempId;
-                    TempVect.push_back(std::pair(ItemId, SpGTempId));
-                    DeleteForDoVect(DoVect, int32(It->ItemId));
-                    break;
-                }
-                else
-                    RIdx -= It->Chance;
-            }
-
-            ChanceList.clear();
-        }
-    }
-
-    return TempVect;
-}
-
-void ItemRandomAtMgr::AsRandomAtCustomFillLoot(Creature* Me, Loot* OnLoot, Player* Looter)
-{
-    if (sHelper->GetBoolean(22011))
-        return;
-
-    if (sAsCreature->IsNotFor(Me))
-        return;
-
-    // The map-control template owns 超级掉落组号/几率/抽取数量 once the creature
-    // is routed, and those fields travel in the resolved config.
-    if (HuanJingCreatureConfig const* config = sHuanJingSystem->GetCreatureLootConfig(Me))
-    {
-        FillSuperLoot(Me, OnLoot, Looter, config->superLootGroupId, config->superLootChance,
-            config->superLootMin, config->superLootMax);
-        return;
-    }
-
-    uint32 StTempId = GetStTempId(Me);
-    auto Itr = AtCreatureStatTempStore.find(StTempId);
-    if (Itr == AtCreatureStatTempStore.end())
-        return;
-
-    FillSuperLoot(Me, OnLoot, Looter, Itr->second.RAtLootGroupId, Itr->second.RAtLootChance,
-        Itr->second.RAtLootMin, Itr->second.RAtLootMax);
-}
-
-void ItemRandomAtMgr::FillSuperLoot(Creature* Me, Loot* OnLoot, Player* Looter, uint32 GroupId, float Chance, uint32 Min, uint32 Max)
-{
-    if (!GroupId || Chance <= 0.0f)
-        return;
-
-    if (!roll_chance_f(Chance))
-        return;
-
-    std::vector<DoTemp> TempStore;
-    for (auto It = RAtLootGroupStore.begin(); It != RAtLootGroupStore.end(); It++)
-    {
-        if (It->RAtLootGroup == GroupId)
-        {
-            DoTemp St;
-            St.ItemId = It->ItemId;
-            St.Chance = It->Chance;
-            St.SpGTempId = It->SpGTempId;
-            TempStore.push_back(St);
-        }
-    }
-
-    if (TempStore.empty())
-        return;
-
-    uint32 GCount = urand(Min, Max);
-    auto TempVect = DoGenerateGroupLootItemAndStTempId(TempStore, GCount);
-    if (!TempVect.empty())
-    {
-        if (OnLoot->empty())
-            OnLoot->FillLoot(0, LootTemplates_Creature, Looter, false, true, Me->GetLootMode(), Me);
-
-        for (auto It = TempVect.begin(); It != TempVect.end(); It++)
-        {
-            LootStoreItem StoreItem = LootStoreItem(uint32(It->first), 0, 100.0f, false, LOOT_MODE_DEFAULT, 0, 1, 1);
-            OnLoot->AddItem(StoreItem, Looter, It->second);
-        }
-    }
 }
 
 uint32 ItemRandomAtMgr::GetSuperXyItem(uint32 ItemId, uint32 Level)

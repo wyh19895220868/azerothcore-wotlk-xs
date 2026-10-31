@@ -1615,10 +1615,6 @@ void ApplyCreatureAttributeTemplate(HuanJingCreatureConfig& config, AtCreatureSt
     config.damageReductionPct = attribute.DamageReductionPct;
     config.officialDrop = attribute.OfficialDrop;
     config.lootIds = attribute.PLootIds;
-    config.superLootGroupId = attribute.RAtLootGroupId;
-    config.superLootChance = attribute.RAtLootChance;
-    config.superLootMin = attribute.RAtLootMin;
-    config.superLootMax = attribute.RAtLootMax;
     config.equipAttrMultiplier = attribute.EquipAttrMultiplier;
     config.equipAttrValue = attribute.EquipAttrValue;
     config.equipAttrMode = DbValueToItemAttributeMode(attribute.EquipAttrMode);

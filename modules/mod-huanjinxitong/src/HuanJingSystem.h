@@ -160,10 +160,6 @@ struct HuanJingCreatureConfig
     // 掉落配置：属性模板的掉落字段在解析时复制到这里，掉落流程只读本结构，
     // 不再回查 __模版生物属性表。
     std::string lootIds;            // 额外掉落编号，# 分隔
-    uint32 superLootGroupId = 0;    // 超级掉落组号（__生物超级掉落组表）
-    float superLootChance = 0.0f;   // 超级掉落几率
-    uint32 superLootMin = 0;        // 超级掉落抽取数量 Min
-    uint32 superLootMax = 0;        // 超级掉落抽取数量 Max
 
     // 物品鉴定系统集成
     uint32 identificationGroup = 0;  // 鉴定组ID（0=不自动鉴定，>0=使用指定鉴定组）
